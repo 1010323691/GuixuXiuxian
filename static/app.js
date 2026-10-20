@@ -34,6 +34,456 @@
     return node;
   }
 
+  const svgNS = "http://www.w3.org/2000/svg";
+  const qualityNames = ["凡品", "下品", "中品", "上品", "极品"];
+  const reducedMotion = () => globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  let previousResourceValues = null;
+  let previousLogs = null;
+  let previousRealm = null;
+
+  function icon(name) {
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("class", "icon");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const use = document.createElementNS(svgNS, "use");
+    use.setAttribute("href", `#i-${name}`);
+    svg.append(use);
+    return svg;
+  }
+
+  function qualityBadge(quality) {
+    const badge = element("span", "quality", quality);
+    const index = qualityNames.indexOf(quality);
+    if (index >= 0) badge.dataset.q = String(index);
+    return badge;
+  }
+
+  const sceneMarks = {
+    world: '<path class="sb-far" d="M250 150 L330 40 L380 110 L420 60 L500 150Z"/><path class="sb-ink" d="M560 50q8-6 16 0q8-6 16 0M600 70q6-5 12 0q6-5 12 0" fill="none"/>',
+    character: '<circle class="sb-moon" cx="560" cy="58" r="30"/><path class="sb-near" d="M330 170 q40-34 90-30 q40 4 60 30Z"/><path class="sb-ink" d="M404 142 q-4-16 4-26 q8 10 4 26Z M408 112 a6 6 0 1 0 .1 0"/>',
+    sects: '<path class="sb-near" d="M300 175 L340 120 L470 120 L510 175Z"/><path class="sb-roof" d="M330 98 Q405 70 480 98 L470 106 Q405 86 340 106Z M352 120 V106 M458 120 V106"/><rect class="sb-wall" x="352" y="104" width="106" height="18"/><path class="sb-roof" d="M366 74 Q405 54 444 74 L436 80 Q405 66 374 80Z"/><rect class="sb-wall" x="378" y="78" width="54" height="22"/>',
+    social: '<path class="sb-roof" d="M330 112 Q400 86 470 112 L462 118 Q400 100 338 118Z"/><rect class="sb-wall" x="350" y="118" width="100" height="6"/><path class="sb-ink" d="M356 124 V160 M444 124 V160" fill="none"/><path class="sb-ink" d="M380 160 q0-16 8-20 q8 4 8 20Z M410 160 q0-16 8-20 q8 4 8 20Z M392 132a5 5 0 1 0 .1 0 M422 132a5 5 0 1 0 .1 0"/>',
+    craft: '<path class="sb-gold" d="M360 118 H450 L440 160 H370Z"/><path class="sb-ink" d="M352 118 H458 M378 160 l-6 14 M432 160 l6 14" fill="none"/><path class="sb-smoke" d="M390 112 q-12-16 0-30 q12-14 0-30 M420 112 q12-16 0-32 q-10-14 4-28" fill="none"/>',
+    exploration: '<path class="sb-mid" d="M260 175 Q300 60 405 52 Q510 60 550 175Z"/><path class="sb-cave" d="M360 175 Q365 112 405 108 Q445 112 450 175Z"/><circle class="sb-glow" cx="405" cy="150" r="14"/>',
+    estate: '<path class="sb-roof" d="M330 116 L400 88 L470 116 L462 120 L400 96 L338 120Z"/><rect class="sb-wall" x="346" y="118" width="108" height="42"/><rect class="sb-cave" x="388" y="130" width="24" height="30"/><path class="sb-bamboo" d="M500 175 V60 M520 175 V80 M540 175 V50 M500 90 l14-10 M520 110 l-14-8 M540 80 l14-10" fill="none"/>',
+    market: '<path class="sb-ink" d="M250 60 Q400 100 550 60" fill="none"/><g class="sb-lantern"><ellipse cx="300" cy="86" rx="12" ry="15"/><ellipse cx="360" cy="96" rx="12" ry="15"/><ellipse cx="440" cy="96" rx="12" ry="15"/><ellipse cx="500" cy="86" rx="12" ry="15"/></g><path class="sb-roof" d="M300 140 L340 124 L380 140Z M420 140 L460 124 L500 140Z"/><rect class="sb-wall" x="310" y="140" width="60" height="22"/><rect class="sb-wall" x="430" y="140" width="60" height="22"/>',
+    quests: '<path class="sb-stone" d="M378 170 V86 Q378 70 405 70 Q432 70 432 86 V170Z"/><path class="sb-ink" d="M405 88 V150 M393 96 V140" fill="none"/><rect class="sb-near" x="360" y="166" width="90" height="10"/>',
+    achievements: '<path class="sb-stone" d="M350 172 V80 H460 V172Z"/><rect class="sb-plaque" x="364" y="92" width="82" height="20"/><path class="sb-ink" d="M372 128 H438 M372 142 H438 M372 156 H420" fill="none"/><rect class="sb-seal" x="430" y="150" width="14" height="14"/><path class="sb-flag" d="M330 172 V64 l22 8 -22 8 M480 172 V64 l-22 8 22 8"/>',
+    arena: '<path class="sb-stone" d="M290 172 L320 136 H490 L520 172Z"/><path class="sb-flag" d="M320 136 V66 l26 9 -26 9 M490 136 V66 l-26 9 26 9"/><path class="sb-ink" d="M380 128 L430 92 M430 128 L380 92" fill="none"/>'
+  };
+
+  function sceneBanner(target, id) {
+    const node = $(target);
+    if (!node || node.dataset.scene === id) return;
+    node.dataset.scene = id;
+    node.innerHTML = `<svg viewBox="0 0 800 180" preserveAspectRatio="xMidYMax slice" focusable="false"><defs><linearGradient id="${target}-sky" x1="0" y1="0" x2="0" y2="1"><stop class="sb-s1" offset="0"/><stop class="sb-s2" offset="1"/></linearGradient></defs><rect width="800" height="180" fill="url(#${target}-sky)"/><circle class="sb-sun" cx="690" cy="46" r="22"/><path class="sb-cloud" d="M60 52h120M100 40h60M560 30h90M600 42h70" fill="none"/><path class="sb-far" d="M0 150 L70 88 L130 120 L200 70 L280 128 L360 92 L460 132 L560 80 L650 118 L730 84 L800 112 V180 H0Z"/><path class="sb-mid" d="M0 162 Q90 120 170 146 T340 140 T520 150 T700 132 T800 146 V180 H0Z"/>${sceneMarks[id] || sceneMarks.world}<path class="sb-near" d="M0 172 Q120 152 260 168 T560 166 T800 160 V180 H0Z"/></svg>`;
+  }
+
+  function actionKind(action, pageId) {
+    const id = action.id || "";
+    if (action.group === "battle" || battleActionIds.has(id) || /attack|boss|dungeon|elite|arena|duel|challenge|fight|hunt|flee/.test(id) || pageId === "arena") return "combat";
+    if (pageId === "market" || /buy|sell|auction|trade|market|shop/.test(id)) return "trade";
+    if (["social", "sects"].includes(pageId) || /visit|gift|talk|friend|disciple|master|family|sect/.test(id)) return "social";
+    if (["craft", "estate"].includes(pageId) || /craft|alchemy|forge|array|talisman|estate|plant/.test(id)) return "craft";
+    if (pageId === "quests" || /quest|story|activity/.test(id)) return "quest";
+    return "cultivate";
+  }
+
+  function logItem(text) {
+    const item = element("li");
+    for (const part of String(text).split(/([+＋]\d[\d.,]*|[-－]\d[\d.,]*)/)) {
+      if (!part) continue;
+      if (/^[+＋]\d/.test(part)) item.append(element("span", "log-gain", part));
+      else if (/^[-－]\d/.test(part)) item.append(element("span", "log-loss", part));
+      else item.append(part);
+    }
+    return item;
+  }
+
+  function showToasts(entries) {
+    const layer = $("fx-layer");
+    for (const text of entries.slice(-3)) {
+      const toast = element("div", "toast", text);
+      layer.append(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+    while (layer.querySelectorAll(".toast").length > 3) layer.querySelector(".toast").remove();
+  }
+
+  function showBreakthrough(realm) {
+    if (reducedMotion()) return;
+    const layer = $("fx-layer");
+    layer.querySelector(".breakthrough")?.remove();
+    const overlay = element("div", "breakthrough");
+    overlay.append(element("span", "breakthrough-ring"), element("strong", "breakthrough-title", `突破 · ${realm}`));
+    layer.append(overlay);
+    setTimeout(() => overlay.remove(), 1400);
+  }
+
+  function floatNumbers(resources) {
+    const current = new Map(resources.map((resource) => [resource.id, Number(resource.value)]));
+    if (previousResourceValues && !reducedMotion()) {
+      for (const [id, value] of current) {
+        const before = previousResourceValues.get(id);
+        if (!Number.isFinite(before) || !Number.isFinite(value) || before === value) continue;
+        const host = [...document.querySelectorAll(".resource")].find((node) => node.dataset.id === id);
+        if (!host) continue;
+        const delta = Math.round((value - before) * 1000) / 1000;
+        const float = element("span", `float-num ${delta > 0 ? "gain" : "loss"}`, `${delta > 0 ? "+" : ""}${delta}`);
+        float.setAttribute("aria-hidden", "true");
+        host.append(float);
+        setTimeout(() => float.remove(), 1300);
+      }
+    }
+    previousResourceValues = current;
+  }
+
+  function syncHudHeight() {
+    const hud = $("hud");
+    const anchor = hud && !hud.closest("[hidden]") ? hud : document.querySelector(".masthead");
+    document.documentElement.style.setProperty("--hud-h", `${Math.round(anchor?.getBoundingClientRect().bottom || 0)}px`);
+  }
+  if (globalThis.ResizeObserver) new ResizeObserver(syncHudHeight).observe(document.documentElement);
+
+  /* ---------- 人物与敌人立绘：内联 SVG，自制 ---------- */
+  const realmOrder = ["炼气", "筑基", "结丹", "元婴", "化神", "炼虚", "合体", "大乘", "渡劫"];
+
+  function realmTier(text) {
+    let tier = 0;
+    realmOrder.forEach((name, index) => { if (String(text || "").includes(name)) tier = index; });
+    return tier;
+  }
+
+  function portrait(tier, crop = false) {
+    const crown = tier >= 1 ? '<rect class="pt-gold" x="54" y="29" width="12" height="6" rx="2"/>' : "";
+    const pin = tier >= 2 ? '<path class="pt-gold-line" d="M46 38 L76 34"/>' : "";
+    const orb = tier >= 2 ? '<circle class="pt-orb" cx="98" cy="54" r="7"/><circle class="pt-orb-core" cx="98" cy="54" r="3"/>' : "";
+    const halo = tier >= 4 ? '<ellipse class="pt-halo" cx="60" cy="24" rx="20" ry="5"/>' : "";
+    const ring = tier >= 3 ? '<circle class="pt-ring2" cx="60" cy="66" r="44"/>' : "";
+    const blade = tier >= 1 ? '<path class="pt-blade" d="M20 26 L30 96"/><path class="pt-gold-line" d="M24 84 l12 -2"/>' : "";
+    return `<svg class="portrait" data-tier="${tier}" viewBox="${crop ? "22 18 76 76" : "0 0 120 140"}" focusable="false"><circle class="pt-aura" cx="60" cy="66" r="54"/><circle class="pt-ring" cx="60" cy="66" r="50"/>${ring}${halo}${blade}<path class="pt-robe" d="M20 140 C22 102 38 86 60 86 C82 86 98 102 100 140Z"/><path class="pt-robe-shade" d="M60 86 C70 100 72 122 70 140 L50 140 C48 122 50 100 60 86Z"/><path class="pt-collar" d="M49 86 L60 106 L71 86Z"/><path class="pt-sash" d="M28 118 Q60 128 92 118 L92 125 Q60 135 28 125Z"/><rect class="pt-skin" x="55" y="74" width="10" height="12"/><circle class="pt-skin" cx="60" cy="62" r="16"/><path class="pt-hair" d="M43 62 C42 40 78 40 77 62 C72 51 50 50 43 62Z"/><circle class="pt-hair" cx="60" cy="40" r="8"/>${crown}${pin}<path class="pt-eye" d="M52 64 h5 M63 64 h5"/><path class="pt-mouth" d="M57 71 q3 2 6 0"/>${orb}</svg>`;
+  }
+
+  const enemyShapes = {
+    ape: '<ellipse class="ep-body" cx="60" cy="98" rx="34" ry="30"/><path class="ep-body" d="M28 84 Q8 110 16 136 L26 134 Q24 112 38 96Z M92 84 Q112 110 104 136 L94 134 Q96 112 82 96Z"/><circle class="ep-body" cx="60" cy="56" r="22"/><ellipse class="ep-face" cx="60" cy="62" rx="14" ry="11"/><circle class="ep-eye" cx="54" cy="56" r="3"/><circle class="ep-eye" cx="66" cy="56" r="3"/><path class="ep-dark-line" d="M54 68 q6 4 12 0"/>',
+    golem: '<rect class="ep-body" x="26" y="58" width="68" height="70" rx="10"/><rect class="ep-body2" x="38" y="22" width="44" height="38" rx="8"/><rect class="ep-eye" x="46" y="36" width="9" height="7"/><rect class="ep-eye" x="65" y="36" width="9" height="7"/><rect class="ep-body2" x="8" y="66" width="20" height="48" rx="7"/><rect class="ep-body2" x="92" y="66" width="20" height="48" rx="7"/><path class="ep-accent-line" d="M44 78 l14 16 -9 14 M74 74 l-8 12"/>',
+    shade: '<path class="ep-shade" d="M60 20 C92 20 100 52 100 82 C100 104 106 120 112 136 C98 128 92 138 82 130 C74 140 66 128 60 136 C54 128 46 140 38 130 C28 138 22 128 8 136 C14 120 20 104 20 82 C20 52 28 20 60 20Z"/><ellipse class="ep-eye" cx="48" cy="62" rx="6" ry="4"/><ellipse class="ep-eye" cx="72" cy="62" rx="6" ry="4"/><path class="ep-wisp" d="M36 92 q24 14 48 0"/>',
+    beast: '<path class="ep-body" d="M18 132 C20 98 34 82 60 82 C86 82 100 98 102 132Z"/><path class="ep-body" d="M30 68 L36 26 L52 50 L68 50 L84 26 L90 68 C90 92 76 102 60 102 C44 102 30 92 30 68Z"/><path class="ep-face" d="M48 78 L60 98 L72 78Z"/><path class="ep-eye" d="M42 62 l10 4 -10 2Z M78 62 l-10 4 10 2Z"/><circle class="ep-dark" cx="60" cy="92" r="4"/>',
+    serpent: '<path class="ep-body-line" d="M20 128 C40 140 76 136 82 116 C88 96 40 100 38 80 C36 60 74 62 80 44"/><path class="ep-body" d="M66 22 C88 16 104 30 98 46 C94 56 78 58 70 52 C62 46 56 30 66 22Z"/><circle class="ep-eye" cx="86" cy="34" r="3.5"/><path class="ep-accent-line" d="M98 46 l10 6 M98 46 l8 10"/><path class="ep-scale" d="M34 124 h8 M52 128 h8 M70 118 h8 M58 104 h8 M44 88 h8 M58 70 h8"/>',
+    fox: '<path class="ep-tail" d="M84 120 C112 112 116 80 100 66 C110 90 96 104 80 108Z M34 120 C8 112 4 82 20 68 C12 92 24 104 40 108Z"/><path class="ep-body" d="M30 136 C32 102 42 88 60 88 C78 88 88 102 90 136Z"/><path class="ep-body" d="M34 70 L38 30 L54 50 L66 50 L82 30 L86 70 C86 90 74 100 60 100 C46 100 34 90 34 70Z"/><path class="ep-face" d="M46 74 C50 92 70 92 74 74 C68 80 52 80 46 74Z"/><path class="ep-eye" d="M44 62 q6 -5 11 1 M76 62 q-6 -5 -11 1"/>',
+    human: '<path class="ep-robe" d="M20 140 C22 100 38 84 60 84 C82 84 98 100 100 140Z"/><path class="ep-dark" d="M60 84 L50 140 L70 140Z"/><path class="ep-hood" d="M38 70 C36 36 84 36 82 70 C82 84 74 92 60 92 C46 92 38 84 38 70Z"/><ellipse class="ep-face-dark" cx="60" cy="68" rx="14" ry="15"/><path class="ep-eye" d="M51 66 l7 2 M69 66 l-7 2"/><path class="ep-accent-line" d="M96 30 L84 110"/>',
+    spirit: '<path class="ep-flame" d="M60 16 C72 36 90 44 90 74 C90 100 76 116 60 116 C44 116 30 100 30 74 C30 54 44 50 48 30 C54 42 58 40 60 16Z"/><circle class="ep-core" cx="60" cy="82" r="18"/><circle class="ep-eye" cx="53" cy="80" r="3"/><circle class="ep-eye" cx="67" cy="80" r="3"/>'
+  };
+
+  function enemyPortrait(name) {
+    const text = String(name || "");
+    const kind = /猿|猴|猩/.test(text) ? "ape" : /傀|石|岩|铁|甲/.test(text) ? "golem" : /影|魂|鬼|魅|灵体|怨/.test(text) ? "shade" : /狼|犬|虎|豹|熊|兽|彘|猪/.test(text) ? "beast" : /蛟|龙|蛇|蟒|虺/.test(text) ? "serpent" : /狐|妖|魅/.test(text) ? "fox" : /修|客|弟子|长老|魔|贼|匪|人|士|师|将|使|尊|王|主/.test(text) ? "human" : "spirit";
+    const boss = /王|尊|主|守|首领|精英|劫|归墟/.test(text);
+    return `<svg class="portrait enemy-art" data-kind="${kind}" viewBox="0 0 120 140" focusable="false"><ellipse class="ep-ground" cx="60" cy="134" rx="44" ry="6"/>${boss ? '<circle class="ep-boss" cx="60" cy="70" r="56"/>' : ""}${enemyShapes[kind]}</svg>`;
+  }
+
+  function setArt(id, markup) {
+    const node = $(id);
+    if (node && node.dataset.art !== markup) {
+      node.dataset.art = markup;
+      node.innerHTML = markup;
+    }
+  }
+
+  /* ---------- 一屏翻页：内容超出区域时分页，绝不出现滚动条 ---------- */
+  const atomic = ".manual-save, .world-action, .r3-goal, .r4-story, .world-data-row, .r3-compare-row, .r3-slot, .r4-credit-strip, .tracked-quest, .action-row, li, .world-page-stats, .field-pair, .r3-battle-statuses, form, p, h3, h4, label, select, button, input, details";
+  const pagers = new Map();
+  let flipAt = 0;
+
+  function collectAtoms(node, out) {
+    for (const child of node.children) {
+      if (child.hidden || child.classList.contains("tab-off")) continue;
+      if (child.matches(atomic) || !child.matches("section, div, dl, ol, ul") || !child.children.length) out.push(child);
+      else collectAtoms(child, out);
+    }
+    return out;
+  }
+
+  function createPager(key, region, host) {
+    const control = element("div", "pager-control");
+    const prev = element("button", "pager-button");
+    const next = element("button", "pager-button");
+    const read = element("button", "reader-open", "阅全文");
+    prev.type = next.type = read.type = "button";
+    prev.setAttribute("aria-label", "上一页");
+    next.setAttribute("aria-label", "下一页");
+    prev.append(icon("prev"));
+    next.append(icon("next"));
+    const label = element("span", "pager-label", "1 / 1");
+    read.hidden = true;
+    control.append(read, prev, label, next);
+    host.append(control);
+    const pager = { key, region, control, prev, next, label, read, page: 0, pages: [[0, 0]], atoms: [], on: [], chains: [], counts: new Map(), first: new Map(), focus: null, clipped: null };
+    pagers.set(key, pager);
+    prev.addEventListener("click", () => turnPage(pager, -1));
+    next.addEventListener("click", () => turnPage(pager, 1));
+    read.addEventListener("click", () => pager.clipped && openReader(pager.clipped));
+    region.addEventListener("wheel", (event) => {
+      if (pager.pages.length < 2 || Math.abs(event.deltaY) < 4 || event.target.closest("select, .world-action[open]")) return;
+      event.preventDefault();
+      if (performance.now() - flipAt < 320) return;
+      flipAt = performance.now();
+      turnPage(pager, event.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+    region.addEventListener("keydown", (event) => {
+      if (event.key === "PageDown" || event.key === "PageUp") {
+        event.preventDefault();
+        turnPage(pager, event.key === "PageDown" ? 1 : -1);
+      }
+    });
+    let touch = null;
+    region.addEventListener("touchstart", (event) => { touch = [event.touches[0].clientX, event.touches[0].clientY]; }, { passive: true });
+    region.addEventListener("touchend", (event) => {
+      if (!touch) return;
+      const dx = event.changedTouches[0].clientX - touch[0];
+      const dy = event.changedTouches[0].clientY - touch[1];
+      touch = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) turnPage(pager, dx < 0 ? 1 : -1);
+    }, { passive: true });
+    region.addEventListener("toggle", (event) => {
+      if (event.target.matches(".world-action")) {
+        if (event.target.open) region.querySelectorAll(".world-action[open]").forEach((node) => { if (node !== event.target) node.open = false; });
+        return;
+      }
+      paginate(pager, event.target);
+    }, true);
+    if (globalThis.ResizeObserver) new ResizeObserver(() => schedulePaginate(pager)).observe(region);
+    return pager;
+  }
+
+  function schedulePaginate(pager) {
+    if (!pager || pager.scheduled) return;
+    pager.scheduled = true;
+    setTimeout(() => {
+      pager.scheduled = false;
+      paginate(pager);
+    }, 30);
+  }
+
+  function setAtom(pager, index, visible) {
+    if (pager.on[index] === visible) return;
+    pager.on[index] = visible;
+    pager.atoms[index].classList.toggle("page-off", !visible);
+    for (const group of pager.chains[index]) {
+      const count = (pager.counts.get(group) || 0) + (visible ? 1 : -1);
+      pager.counts.set(group, count);
+      group.classList.toggle("page-off", count <= 0);
+    }
+  }
+
+  function paginate(pager, focusNode) {
+    if (!pager) return;
+    const { region } = pager;
+    if (focusNode) pager.focus = focusNode;
+    const height = region.clientHeight;
+    if (!region.isConnected || !region.getClientRects().length || !height) return;
+    const opened = [...region.querySelectorAll(".world-action[open]")];
+    opened.forEach((node) => { node.open = false; });
+    region.querySelectorAll(".page-off, .clipped, .continued").forEach((node) => node.classList.remove("page-off", "clipped", "continued"));
+    region.scrollTop = 0;
+    const atoms = collectAtoms(region, []);
+    pager.atoms = atoms;
+    pager.on = atoms.map(() => true);
+    pager.counts = new Map();
+    pager.first = new Map();
+    pager.chains = atoms.map((atom, index) => {
+      const chain = [];
+      for (let node = atom.parentElement; node && node !== region; node = node.parentElement) {
+        if (!node.hasAttribute("data-page-group")) continue;
+        chain.push(node);
+        pager.counts.set(node, (pager.counts.get(node) || 0) + 1);
+        if (!pager.first.has(node)) pager.first.set(node, index);
+      }
+      return chain;
+    });
+    atoms.forEach((_, index) => setAtom(pager, index, false));
+    const pages = [];
+    let start = 0;
+    for (let index = 0; index < atoms.length; index++) {
+      setAtom(pager, index, true);
+      if (index > start && region.scrollHeight > height + 1) {
+        for (let back = start; back <= index; back++) setAtom(pager, back, false);
+        pages.push([start, index]);
+        start = index;
+        index--;
+      }
+    }
+    for (let back = start; back < atoms.length; back++) setAtom(pager, back, false);
+    pages.push([start, atoms.length]);
+    pager.pages = pages;
+    const focus = pager.focus && region.contains(pager.focus) ? pager.focus : region.contains(document.activeElement) && document.activeElement !== region ? document.activeElement : null;
+    pager.focus = null;
+    if (focus) {
+      const index = atoms.findIndex((atom) => atom.contains(focus) || focus.contains(atom));
+      if (index >= 0) pager.page = pages.findIndex(([from, to]) => index >= from && index < to);
+    }
+    pager.page = Math.max(0, Math.min(pages.length - 1, pager.page));
+    showPage(pager);
+    opened.forEach((node) => { if (!node.classList.contains("page-off")) node.open = true; });
+  }
+
+  function showPage(pager) {
+    const [from, to] = pager.pages[pager.page] || [0, 0];
+    pager.atoms.forEach((_, index) => setAtom(pager, index, index >= from && index < to));
+    for (const [group, index] of pager.first) group.classList.toggle("continued", !pager.on[index] && (pager.counts.get(group) || 0) > 0);
+    pager.clipped = null;
+    if (to - from === 1 && pager.region.scrollHeight > pager.region.clientHeight + 1) {
+      pager.clipped = pager.atoms[from];
+      pager.clipped.classList.add("clipped");
+    }
+    pager.read.hidden = !pager.clipped;
+    pager.label.textContent = `${pager.page + 1} / ${pager.pages.length}`;
+    pager.prev.disabled = pager.page === 0;
+    pager.next.disabled = pager.page >= pager.pages.length - 1;
+    pager.control.classList.toggle("single", pager.pages.length < 2 && !pager.clipped);
+  }
+
+  function turnPage(pager, delta) {
+    const target = Math.max(0, Math.min(pager.pages.length - 1, pager.page + delta));
+    if (target === pager.page) return;
+    pager.region.querySelectorAll(".world-action[open]").forEach((node) => { node.open = false; });
+    const hadFocus = pager.region.contains(document.activeElement);
+    pager.page = target;
+    showPage(pager);
+    if (hadFocus) (delta > 0 ? pager.next : pager.prev).focus({ preventScroll: true });
+  }
+
+  function guardPagers() {
+    for (const pager of pagers.values()) {
+      const region = pager.region;
+      if (!pager.scheduled && !pager.clipped && region.clientHeight && region.getClientRects().length && region.scrollHeight > region.clientHeight + 1) schedulePaginate(pager);
+    }
+  }
+  document.fonts?.ready.then(() => pagers.forEach(schedulePaginate));
+  document.fonts?.addEventListener?.("loadingdone", () => pagers.forEach(schedulePaginate));
+  setInterval(guardPagers, 500);
+
+  function pagerFor(node) {
+    return [...pagers.values()].find((pager) => pager.region.contains(node));
+  }
+
+  function openReader(source) {
+    const clone = source.cloneNode(true);
+    clone.querySelectorAll("button, input, select, form, .world-action-form").forEach((node) => node.remove());
+    for (const node of [clone, ...clone.querySelectorAll("*")]) {
+      node.removeAttribute("id");
+      node.removeAttribute("hidden");
+      node.removeAttribute("class");
+      node.removeAttribute("style");
+    }
+    const parts = [];
+    if (!clone.querySelector("p, div, dl, h3, h4, summary, section, ol, ul, li, dt, dd")) {
+      for (const sentence of clone.textContent.split(/(?<=[。；！？\n])/)) if (sentence.trim()) parts.push(element("p", "", sentence.trim()));
+    } else {
+      const box = element("div");
+      box.append(...clone.childNodes);
+      parts.push(box);
+    }
+    $("reader-title").textContent = source.querySelector("h3, h4, summary, .world-action-name")?.textContent || source.closest("[data-page-group]")?.querySelector("h3")?.textContent || "全文";
+    $("reader-body").replaceChildren(...parts);
+    $("reader").hidden = false;
+    const pager = pagers.get("reader");
+    pager.page = 0;
+    paginate(pager);
+    $("reader-close").focus({ preventScroll: true });
+  }
+
+  function closeReader() {
+    $("reader").hidden = true;
+    $("reader-body").replaceChildren();
+  }
+
+  /* ---------- 舞台页签：此间可为 / 手札 / 要务 / 卷宗 ---------- */
+  const stageTabs = new Map();
+  const narrowLayout = globalThis.matchMedia?.("(max-width: 759px)");
+  let sideTab = "quests";
+
+  function placeAside() {
+    const aside = document.querySelector(".world-aside");
+    const host = narrowLayout?.matches ? document.querySelector(".side-host") : $("world-content").parentElement;
+    if (aside.parentElement !== host) host.append(aside);
+    schedulePaginate(pagers.get("side"));
+  }
+
+  function activePanelName(key) {
+    return key.startsWith("ctx:") ? "context" : key;
+  }
+
+  function renderStageTabs(actionCount) {
+    const tabs = [["actions", "事项", actionCount]];
+    if ($("world-page-stats").children.length || $("world-page-sections").children.length) tabs.push(["notes", "手札"]);
+    [...$("r3-page-context").children].forEach((section, index) => {
+      section.dataset.tabKey ||= section.id || section.dataset.context || `ctx${index}`;
+      tabs.push([`ctx:${section.dataset.tabKey}`, section.dataset.short || section.querySelector("h3")?.textContent.slice(0, 2) || "要务"]);
+    });
+    tabs.push(["side", "卷宗"]);
+    const bar = $("stage-tabs");
+    bar.replaceChildren(...tabs.map(([key, label, count]) => {
+      const tab = element("button", `stage-tab${key === "side" ? " narrow-only" : ""}`, label);
+      tab.type = "button";
+      tab.setAttribute("role", "tab");
+      tab.dataset.stageTab = key;
+      if (count) tab.append(element("span", "tab-count", String(count)));
+      tab.addEventListener("click", () => applyStageTab(key));
+      return tab;
+    }));
+    const stored = stageTabs.get(selectedWorldPage);
+    applyStageTab(tabs.some(([key]) => key === stored) && !(stored === "side" && !narrowLayout?.matches) ? stored : "actions");
+  }
+
+  function applyStageTab(key, focusNode) {
+    stageTabs.set(selectedWorldPage, key);
+    const panelName = activePanelName(key);
+    document.querySelectorAll("[data-stage-panel]").forEach((panel) => panel.classList.toggle("tab-off", panel.dataset.stagePanel !== panelName));
+    for (const section of $("r3-page-context").children) section.classList.toggle("tab-off", `ctx:${section.dataset.tabKey}` !== key);
+    $("stage-tabs").querySelectorAll("[data-stage-tab]").forEach((tab) => {
+      tab.setAttribute("aria-selected", String(tab.dataset.stageTab === key));
+      tab.tabIndex = tab.dataset.stageTab === key ? 0 : -1;
+    });
+    for (const name of ["actions", "notes", "context"]) pagers.get(name).control.classList.toggle("tab-off", name !== panelName);
+    $("world-action-count").classList.toggle("tab-off", panelName !== "actions");
+    if (panelName === "side") applySideTab(sideTab);
+    else paginate(pagers.get(panelName), focusNode);
+  }
+
+  function applySideTab(key, focusNode) {
+    sideTab = key;
+    document.querySelectorAll("[data-side]").forEach((section) => section.classList.toggle("tab-off", section.dataset.side !== key));
+    document.querySelectorAll("[data-side-tab]").forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.sideTab === key)));
+    paginate(pagers.get("side"), focusNode);
+  }
+
+  function revealNode(node) {
+    if (!node?.isConnected) return;
+    const group = node.closest(".action-group[hidden]");
+    if (group) document.querySelector(`[data-group="${group.id.replace("group-", "")}"]`)?.click();
+    const side = node.closest("[data-side]");
+    if (side && side.dataset.side !== sideTab) applySideTab(side.dataset.side, node);
+    const panel = node.closest("[data-stage-panel]");
+    if (panel && panel.classList.contains("tab-off")) {
+      const section = node.closest("#r3-page-context > *");
+      applyStageTab(panel.dataset.stagePanel === "context" && section ? `ctx:${section.dataset.tabKey}` : panel.dataset.stagePanel, node);
+    } else if (panel?.dataset.stagePanel === "context") {
+      const section = node.closest("#r3-page-context > *");
+      if (section?.classList.contains("tab-off")) applyStageTab(`ctx:${section.dataset.tabKey}`, node);
+    }
+    const pager = pagerFor(node);
+    if (pager) paginate(pager, node);
+  }
+  document.addEventListener("guixu:reveal", (event) => revealNode(event.target));
+  document.addEventListener("scroll", (event) => {
+    const target = event.target === document ? document.scrollingElement : event.target;
+    if (!target || target.matches?.("input, textarea, select")) return;
+    if (target.scrollTop || target.scrollLeft) { target.scrollTop = 0; target.scrollLeft = 0; }
+  }, true);
+
   function notice(message, kind = "", retry = false, refresh = false) {
     $("notice").hidden = !message;
     $("notice").className = `notice ${kind}`;
@@ -70,10 +520,10 @@
   function renderResources(resources) {
     $("resources").replaceChildren();
     for (const resource of resources) {
-      const wrapper = element("div", "resource");
+      const wrapper = element("div", `resource${resource.max === null || resource.max >= 9999 ? " chip" : ""}`);
       wrapper.dataset.id = resource.id;
       const top = element("div", "resource-top");
-      top.append(element("span", "resource-label", resource.label));
+      top.append(element("span", "resource-label", resource.label.replace(/^凡界/, "")));
       const value = element("span", "resource-value", resource.value);
       if (resource.max !== null) value.append(element("small", "", `/ ${resource.max}`));
       top.append(value);
@@ -98,9 +548,10 @@
   function renderActions(actions) {
     const focusedKey = document.activeElement?.dataset?.actionKey;
     $("actions").replaceChildren();
+    $("action-tabs").replaceChildren();
     const groups = new Map();
     if (snapshot.view.phase !== "battle") {
-      const navigation = element("div", "action-navigation");
+      const navigation = $("action-tabs");
       navigation.setAttribute("aria-label", "选择行动分类");
       for (const [key, label] of [["cultivation", "修行 · 养身问道"], ["exploration", "游历 · 寻缘历练"], ["travel", "山海 · 择地而行"], ["trade", "行囊 · 以物济行"]]) {
         const group = element("section", `action-group group-${key}`);
@@ -108,7 +559,8 @@
         group.hidden = key !== selectedGroup;
         group.append(element("h3", "action-group-title", label));
         groups.set(key, group);
-        const choice = element("button", "group-button", label.split(" · ")[0]);
+        group.dataset.pageGroup = "";
+        const choice = element("button", "group-button stage-tab", label.split(" · ")[0]);
         choice.type = "button";
         choice.dataset.group = key;
         choice.setAttribute("aria-pressed", String(key === selectedGroup));
@@ -117,10 +569,13 @@
           selectedGroup = key;
           for (const [id, section] of groups) section.hidden = id !== key;
           navigation.querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.group === key)));
+          const pager = pagers.get("journey");
+          pager.page = 0;
+          paginate(pager);
+          updateJourneyCount();
         });
         navigation.append(choice);
       }
-      $("actions").append(navigation);
     }
     for (const [index, action] of actions.entries()) {
       const row = element("div", "action-row");
@@ -157,18 +612,28 @@
     for (const group of groups.values()) if (group.children.length > 1) $("actions").append(group);
     if (!actions.length) $("actions").append(element("p", "muted", "此刻暂无可执行的行动。"));
     updateControls();
+    paginate(pagers.get("journey"));
+    updateJourneyCount();
     if (focusedKey) {
       const target = [...document.querySelectorAll(".action-button")].find((button) => button.dataset.actionKey === focusedKey && !button.disabled);
       if (target) target.focus({ preventScroll: true });
     }
   }
 
+  function updateJourneyCount() {
+    const rows = [...$("actions").querySelectorAll(".action-row")].filter((row) => !row.closest("[hidden]"));
+    $("journey-count").textContent = rows.length ? `${rows.length} 项行动` : "";
+  }
+
   function renderLogs(logs) {
-    const visible = [...logs].reverse().slice(0, expanded ? logs.length : 6);
-    $("logs").replaceChildren(...visible.map((text) => element("li", "", text)));
+    const visible = [...logs].reverse().slice(0, expanded ? logs.length : 12);
+    $("logs").replaceChildren(...visible.map(logItem));
     $("empty-logs").hidden = logs.length > 0;
-    $("history-button").hidden = logs.length <= 6;
-    $("history-button").textContent = expanded ? "收起早先记事" : `展开更多记事（${logs.length - 6}）`;
+    $("history-button").hidden = logs.length <= 12;
+    $("history-button").textContent = expanded ? "收起早先记事" : `更多记事（${logs.length - 12}）`;
+    const pager = pagers.get("chronicle");
+    pager.page = 0;
+    paginate(pager);
   }
 
   function worldActionKey(page, action) {
@@ -272,8 +737,10 @@
     if (resource?.firstChild?.nodeType === Node.TEXT_NODE) resource.firstChild.textContent = growthNumber(available);
   }
 
-  function contextSection(title, intro) {
+  function contextSection(title, intro, short) {
     const section = element("section", "r3-context-section");
+    section.dataset.pageGroup = "";
+    if (short) section.dataset.short = short;
     section.append(element("h3", "", title));
     if (intro) section.append(element("p", "r3-context-intro", intro));
     return section;
@@ -289,12 +756,17 @@
     return list;
   }
 
+  function fieldPair(label, select) {
+    const pair = element("div", "field-pair");
+    pair.append(label, select);
+    return pair;
+  }
+
   function findItemActions(uid) {
-    const filter = { query: uid, limit: Infinity };
-    worldActionFilters.set(selectedWorldPage, filter);
+    worldActionFilters.set(selectedWorldPage, { query: uid });
     $("world-action-search").value = uid;
+    applyStageTab("actions");
     filterWorldActions();
-    $("world-actions-title").scrollIntoView({ block: "start" });
     $("world-actions-title").focus({ preventScroll: true });
   }
 
@@ -305,18 +777,20 @@
       notice("该目标事项已变化，请重新读取当前进度后查看。", "", false, true);
       return;
     }
-    worldActionFilters.set(pageId, { query: "", limit: Infinity });
+    worldActionFilters.set(pageId, { query: "" });
     selectWorldPage(pageId);
     const form = [...document.querySelectorAll(".world-action-form")].find((entry) => entry.dataset.actionKey === worldActionKey(pageId, action));
-    const details = form?.closest("details");
+    if (!form) return;
+    revealNode(form);
+    const details = form.closest("details");
     if (details) details.open = true;
-    form?.scrollIntoView({ block: "center" });
-    form?.querySelector(".world-submit")?.focus({ preventScroll: true });
+    form.querySelector(".world-submit")?.focus({ preventScroll: true });
   }
 
   function renderR3Context(world) {
     const root = $("r3-page-context");
     root.replaceChildren();
+    $("stage-chips").replaceChildren();
     const loot = world.loot;
     $("r4-dungeon-jump").hidden = !(selectedWorldPage === "exploration" && loot?.dungeons?.length);
     if (!loot || loot.mode !== "longline") return;
@@ -326,11 +800,12 @@
       section.append(element("strong", "r4-credits-balance", ""), element("p", "quiet-note", ""));
       section.querySelector("strong").id = "r4-credits-balance";
       section.querySelector("p:last-child").id = "r4-credits-status";
-      root.append(section);
+      section.dataset.short = "资格";
+      (selectedWorldPage === "world" ? $("stage-chips") : root).append(section);
       anchorCredits(loot.credits);
     }
     if (selectedWorldPage === "world" && world.goals?.length) {
-      const section = contextSection("今日行道 · 从真实缺口出发", "以下目标按当前装备、材料与挑战条件选择。只定位真实事项，不自动接取或提交，也不是强制打卡。 ");
+      const section = contextSection("今日行道 · 从真实缺口出发", "以下目标按当前装备、材料与挑战条件选择。只定位真实事项，不自动接取或提交，也不是强制打卡。 ", "目标");
       section.id = "r3-goals";
       const list = element("div", "r3-goal-list");
       list.id = "r3-goal-list";
@@ -354,7 +829,7 @@
       root.append(section);
     }
     if (["world", "quests"].includes(selectedWorldPage) && world.journey?.layers?.length) {
-      const section = contextSection("初涉仙途 · 七段行纪", "建议日序用于引路，不按日历锁定；前段领奖与境界条件满足后可继续，接取后计数，完成权益不过期。");
+      const section = contextSection("初涉仙途 · 七段行纪", "建议日序用于引路，不按日历锁定；前段领奖与境界条件满足后可继续，接取后计数，完成权益不过期。", "行纪");
       section.id = "r4-journey";
       let currentStoryOpened = false;
       for (const layer of world.journey.layers) {
@@ -363,7 +838,7 @@
         const heading = element("summary", "", `${layer.recommended_day === 0 ? "建议首日" : `建议第${layer.recommended_day + 1}日`} · ${layer.title} · ${layer.status}`);
         row.append(heading, element("p", "quiet-note", layer.unlock), contextRows(layer.objectives || []), element("p", "quiet-note", `奖励：${layer.rewards}`));
         const projected = world.pages?.find((page) => page.id === "quests")?.actions?.find((action) => action.id === layer.action?.id && JSON.stringify(action.params) === JSON.stringify(layer.action?.params));
-        if (projected && !currentStoryOpened) { row.open = true; currentStoryOpened = true; }
+        if (projected && !currentStoryOpened) { row.classList.add("current"); currentStoryOpened = true; }
         if (projected) {
           const button = element("button", "secondary-button", "查看此段接取 / 领奖事项 →");
           button.type = "button";
@@ -376,7 +851,7 @@
       root.append(section);
     }
     if (selectedWorldPage === "exploration" && world.journey?.elites?.length) {
-      const section = contextSection("首周精英 · 三地试炼", "独立NPC精英，不消耗副本恢复资格；具体解锁、风险与奖励以当前投影为准。");
+      const section = contextSection("首周精英 · 三地试炼", "独立NPC精英，不消耗副本恢复资格；具体解锁、风险与奖励以当前投影为准。", "精英");
       section.id = "r4-elites";
       for (const elite of world.journey.elites) {
         const row = element("details", "r4-story");
@@ -394,13 +869,16 @@
       root.append(section);
     }
     if (selectedWorldPage === "character") {
-      const section = contextSection("器物与法宝", "三器奠基，两宝定道。比较来自服务端；修炼向提高未来潜修，战力向帮助挑战更高难度。 ");
+      const section = contextSection("器物与法宝", "三器奠基，两宝定道。比较来自服务端；修炼向提高未来潜修，战力向帮助挑战更高难度。 ", "器物");
       const slots = element("div", "r3-slots");
       for (const [id, label] of [["weapon", "兵器"], ["armor", "护甲"], ["pendant", "灵佩"], ["main", "本命法宝"], ["guard", "护持法宝"]]) {
         const item = loot.items.find((entry) => entry.slot === id && entry.equipped);
         const line = element("div", "r3-slot");
         line.dataset.slot = id;
-        line.append(element("span", "section-number", label), element("strong", "", item?.name || "当前为空槽"), element("span", "quiet-note", item ? `${item.quality} · 强化 ${item.enhance} · ${displayEffectType(item.effect_type)}` : "从副本掉落或四艺保底制作取得"));
+        if (item && qualityNames.includes(item.quality)) line.dataset.q = String(qualityNames.indexOf(item.quality));
+        const note = element("span", "quiet-note", item ? ` · 强化 ${item.enhance} · ${displayEffectType(item.effect_type)}` : "从副本掉落或四艺保底制作取得");
+        if (item) note.prepend(qualityBadge(item.quality));
+        line.append(element("span", "section-number", label), element("strong", "", item?.name || "当前为空槽"), note);
         slots.append(line);
       }
       section.append(slots);
@@ -422,7 +900,9 @@
           const item = loot.items.find((entry) => entry.uid === select.value);
           if (!item) return;
           selectedLootUid = item.uid;
-          detail.replaceChildren(element("h4", "", item.name), element("p", "r3-context-intro", `${item.quality} · 章节 ${item.chapter} · 强化 ${item.enhance} · ${displayEffectType(item.effect_type)} · ${item.equipped ? "已装备" : "未装备"}`));
+          const intro = element("p", "r3-context-intro", ` · 章节 ${item.chapter} · 强化 ${item.enhance} · ${displayEffectType(item.effect_type)} · ${item.equipped ? "已装备" : "未装备"}`);
+          intro.prepend(qualityBadge(item.quality));
+          detail.replaceChildren(element("h4", "", item.name), intro);
           const compare = element("div", "r3-comparison");
           for (const row of item.comparison || []) {
             const line = element("div", "r3-compare-row");
@@ -435,21 +915,21 @@
           jump.addEventListener("click", () => findItemActions(item.uid));
           detail.append(jump);
         };
-        select.addEventListener("change", show);
-        section.append(label, select, detail);
+        select.addEventListener("change", () => { show(); paginate(pagers.get("context"), detail); });
+        section.append(fieldPair(label, select), detail);
         show();
       } else section.append(element("p", "muted", "暂无实例装备。完成有掉落资格的副本，或从四艺保底制作起步。"));
       root.append(section);
     }
     if (["exploration", "world"].includes(selectedWorldPage) && loot.boss) {
       const boss = loot.boss;
-      const section = contextSection("世界Boss · 十二回合试锋", "本地NPC模拟 · 不要求击杀。每期最多3次正式挑战，取单场最佳，不累计多场伤害；奖励只补已得权益的差额。 ");
+      const section = contextSection("世界Boss · 十二回合试锋", "本地NPC模拟 · 不要求击杀。每期最多3次正式挑战，取单场最佳，不累计多场伤害；奖励只补已得权益的差额。 ", "首领");
       section.dataset.context = "world-boss";
       section.append(contextRows([{ label: "本期", value: boss.encounter }, { label: "正式尝试", value: boss.attempts }, { label: "本次有效伤害", value: boss.current_damage }, { label: "个人单场最佳", value: boss.best }, { label: "本期参考伤害", value: boss.reference }, { label: "已领奖权益", value: boss.paid }, { label: "下一档 / 差额", value: boss.next }, { label: "结算与封顶", value: boss.status }]));
       root.append(section);
     }
     if (selectedWorldPage === "exploration" && loot.dungeons?.length) {
-      const section = contextSection("副本筹备 · 难度与战利品", "同章同难手战获胜后可快捷结算；无资格手战仍有普通材料与灵石。 ");
+      const section = contextSection("副本筹备 · 难度与战利品", "同章同难手战获胜后可快捷结算；无资格手战仍有普通材料与灵石。 ", "副本");
       section.id = "r4-dungeon-workbench";
       const label = element("label", "", "选择副本章节与难度，查看权威预览");
       label.htmlFor = "r3-dungeon-select";
@@ -487,25 +967,25 @@
           detail.append(sweep);
         }
       };
-      select.addEventListener("change", show);
-      section.append(label, select, detail);
+      select.addEventListener("change", () => { show(); paginate(pagers.get("context"), detail); });
+      section.append(fieldPair(label, select), detail);
       show();
       root.append(section);
     }
     if (["character", "craft", "exploration"].includes(selectedWorldPage) && loot.materials?.length) {
-      const section = contextSection("养成资材", "材料、法宝与装备提高后续效率或战力，不直接兑换无限修为。 ");
+      const section = contextSection("养成资材", "材料、法宝与装备提高后续效率或战力，不直接兑换无限修为。 ", "资材");
       section.append(contextRows(loot.materials));
       root.append(section);
     }
     if (["character", "exploration", "market"].includes(selectedWorldPage) && loot.pending?.length) {
-      const section = contextSection("待领战利品", "容量不足的完整奖励保留待领；实际领取仍由下方对应事项原子完成。 ");
+      const section = contextSection("待领战利品", "容量不足的完整奖励保留待领；实际领取仍由事项页对应操作原子完成。 ", "待领");
       section.append(contextRows(loot.pending.map((item) => ({ label: `${item.label} · ${item.id}`, value: item.source }))));
       root.prepend(section);
     }
     if (selectedWorldPage === "world" && $("r3-goals")) root.prepend($("r3-goals"));
     if (selectedWorldPage === "exploration" && $("r4-dungeon-workbench")) {
       root.prepend($("r4-dungeon-workbench"));
-      if ($("r4-credits")) $("r4-dungeon-workbench").insertBefore($("r4-credits"), $("r4-dungeon-workbench").querySelector(".r3-dungeon-detail"));
+      if ($("r4-credits")) $("r4-dungeon-workbench").insertBefore($("r4-credits"), $("r4-dungeon-workbench").querySelector(".field-pair"));
     }
   }
 
@@ -564,6 +1044,7 @@
       if (!block) {
         block = element("section", "world-section");
         block.dataset.sectionKey = key;
+        block.dataset.pageGroup = "";
         if (section.id) block.dataset.sectionId = section.id;
         block.append(element("h3", "", section.title));
         $("world-page-sections").append(block);
@@ -583,12 +1064,14 @@
     for (const block of blocks) if (!(page.sections || []).some((section) => (section.id || section.title) === block.dataset.sectionKey) && !block.contains(document.activeElement)) block.hidden = true;
     $("world-summary").textContent = world.summary || "观照当前进度，再择下一步修行。";
     const quests = world.pages.find((entry) => entry.id === "quests");
-    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 3);
+    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 8);
     $("world-tracked-quests").replaceChildren(...tracked.map((row) => {
       const note = element("div", "tracked-quest");
       note.append(element("h4", "", row.label), element("p", "", row.value));
       return note;
     }));
+    schedulePaginate(pagers.get("notes"));
+    schedulePaginate(pagers.get("side"));
     for (const resource of snapshot.view.resources || []) {
       const block = [...document.querySelectorAll(".resource")].find((node) => node.dataset.id === resource.id);
       const value = block?.querySelector(".resource-value");
@@ -610,6 +1093,7 @@
     const fields = action.fields || [];
     const wrapper = element(fields.length ? "details" : "div", `world-action${fields.length ? " has-fields" : ""}`);
     wrapper.dataset.worldAction = action.id;
+    wrapper.dataset.kind = actionKind(action, pageId);
     wrapper.dataset.params = JSON.stringify(action.params);
     wrapper.dataset.search = `${action.label} ${action.detail} ${action.cost} ${action.effect} ${action.reason} ${JSON.stringify(action.params)}`.toLocaleLowerCase();
     wrapper.title = action.detail || "";
@@ -748,34 +1232,31 @@
       button.dataset.worldPage = page.id;
       button.setAttribute("aria-pressed", String(page.id === selectedWorldPage));
       button.setAttribute("aria-controls", "world-content");
-      button.append(element("span", "world-nav-number", String(index + 1).padStart(2, "0")), element("span", "", page.label));
+      const token = element("span", "world-nav-token");
+      token.append(icon(sceneMarks[page.id] ? page.id : "world"));
+      button.append(token, element("span", "world-nav-number", String(index + 1).padStart(2, "0")), element("span", "world-nav-label", page.label.replace(/^NPC/, "").slice(0, 2)));
+      button.setAttribute("aria-label", page.label);
+      button.title = page.label;
       button.addEventListener("click", () => selectWorldPage(page.id));
       $("world-navigation").append(button);
     }
     const page = pages.find((entry) => entry.id === selectedWorldPage);
     if (!page) return;
     $("world-page-number").textContent = `卷 ${String(pages.indexOf(page) + 1).padStart(2, "0")} · ${page.label}`;
+    sceneBanner("world-scene", sceneMarks[page.id] ? page.id : "world");
     $("world-page-title").textContent = page.title;
     $("world-page-description").textContent = page.description;
     renderR3Context(world);
     renderWorldStats(page.stats);
     $("world-page-sections").replaceChildren();
     const pageSections = [...(page.sections || [])].sort((left, right) => Number(String(right.id || "").startsWith("r3_")) - Number(String(left.id || "").startsWith("r3_")));
-    for (const [index, section] of pageSections.entries()) {
-      const featured = String(section.id || "").startsWith("r3_");
-      const foldable = page.sections.length > 3 && !featured;
-      const block = element(foldable ? "details" : "section", foldable ? "world-section world-section-fold" : "world-section");
+    for (const section of pageSections) {
+      const block = element("section", "world-section");
       block.dataset.sectionKey = section.id || section.title;
+      block.dataset.pageGroup = "";
       if (section.id) block.dataset.sectionId = section.id;
-      if (featured) block.classList.add("r3-featured-section");
-      if (foldable) {
-        const sectionKey = `${page.id}:${section.title}`;
-        block.open = worldSectionOpen.has(sectionKey) ? worldSectionOpen.get(sectionKey) : index < 2;
-        const summary = element("summary");
-        summary.append(element("h3", "", section.title));
-        block.append(summary);
-        block.addEventListener("toggle", () => worldSectionOpen.set(sectionKey, block.open));
-      } else block.append(element("h3", "", section.title));
+      if (String(section.id || "").startsWith("r3_")) block.classList.add("r3-featured-section");
+      block.append(element("h3", "", section.title));
       if (section.body) block.append(element("p", "world-section-body", section.body));
       if (section.rows?.length) {
         const rows = element("dl", "world-rows");
@@ -797,16 +1278,25 @@
     $("world-battle-actions").hidden = !combatActions.length;
     $("world-battle-action-list").replaceChildren(...combatActions.map((action) => renderWorldAction(action, page.id)));
     $("world-page-actions").replaceChildren(...regularActions.map((action) => renderWorldAction(action, page.id)));
-    if (!regularActions.length) $("world-page-actions").append(element("p", "muted", "此页暂无其他可执行事项，条件与进度请参阅上方手札。"));
-    const filter = worldActionFilters.get(page.id) || { query: "", limit: 8 };
+    if (!regularActions.length) $("world-page-actions").append(element("p", "muted", "此页暂无其他可执行事项，条件与进度请参阅手札页。"));
+    const filter = worldActionFilters.get(page.id) || { query: "" };
     worldActionFilters.set(page.id, filter);
     $("world-action-search").value = filter.query;
-    filterWorldActions();
+    filterWorldActions(false);
     $("world-battle-banner").hidden = !world.battle;
+    document.querySelector(".world-page-heading").classList.toggle("in-battle", !!world.battle);
     if (world.battle) {
+      $("world-battle-link").hidden = world.battle.page === page.id;
+      setArt("world-hero-portrait", portrait(realmTier($("realm").textContent)));
+      setArt("world-enemy-portrait", enemyPortrait(world.battle.name));
       $("world-battle-name").textContent = world.battle.name;
       $("world-battle-intent").textContent = `敌方下一意图：${world.battle.intent}`;
       $("world-battle-health").textContent = `敌方气血 ${world.battle.hp} / ${world.battle.max_hp}`;
+      const battleMeter = $("world-battle-meter");
+      battleMeter.setAttribute("aria-valuemin", "0");
+      battleMeter.setAttribute("aria-valuemax", String(world.battle.max_hp));
+      battleMeter.setAttribute("aria-valuenow", String(world.battle.hp));
+      battleMeter.firstElementChild.style.width = `${world.battle.max_hp > 0 ? Math.max(0, Math.min(100, world.battle.hp / world.battle.max_hp * 100)) : 0}%`;
       $("world-battle-counterplay").textContent = world.battle.counterplay || "";
       $("world-battle-statuses").replaceChildren(...(world.battle.statuses || []).map((status) => {
         const line = element("div");
@@ -817,34 +1307,40 @@
     $("world-summary").textContent = world.summary || "观照当前进度，再择下一步修行。";
     $("world-tracked-quests").replaceChildren();
     const quests = pages.find((entry) => entry.id === "quests");
-    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 3);
+    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 8);
     for (const row of tracked) {
       const note = element("div", "tracked-quest");
       note.append(element("h4", "", row.label), element("p", "", row.value));
       $("world-tracked-quests").append(note);
     }
     $("world-quests-link").hidden = !quests;
-    $("world-recent-logs").replaceChildren(...[...(snapshot.view.logs || [])].reverse().slice(0, 4).map((text) => element("li", "", text)));
+    $("world-recent-logs").replaceChildren(...[...(snapshot.view.logs || [])].reverse().slice(0, 16).map(logItem));
     $("world-slot-summary").textContent = snapshot.save?.summary || "尚未留下手动存档。";
     $("world-save-semantics").textContent = savePolicy();
     $("legacy-history").hidden = !historyVisible;
     $("legacy-history-title").textContent = snapshot.view.ending?.title || "归墟序章";
     $("legacy-history-text").textContent = snapshot.view.ending?.text || "从初入山村，到平定归墟，这段经历已成为你的来路。";
+    document.querySelector(".world-page-heading").dataset.page = page.id;
+    setArt("stage-hero", page.id === "character" ? portrait(realmTier($("realm").textContent)) : "");
     updateControls();
+    renderStageTabs(combatActions.length + featuredActions.length + regularActions.length);
+    schedulePaginate(pagers.get("side"));
   }
 
-  function filterWorldActions() {
-    const filter = worldActionFilters.get(selectedWorldPage) || { query: "", limit: 8 };
+  function filterWorldActions(repaginate = true) {
+    const filter = worldActionFilters.get(selectedWorldPage) || { query: "" };
     const query = filter.query.trim().toLocaleLowerCase();
     const rows = [...$("world-page-actions").querySelectorAll(".world-action")];
     const matched = rows.filter((row) => !query || row.dataset.search.includes(query));
-    for (const row of rows) row.hidden = true;
-    for (const row of matched.slice(0, filter.limit)) row.hidden = false;
-    const shown = Math.min(filter.limit, matched.length);
-    $("world-action-count").textContent = matched.length ? `已显示 ${shown} / ${matched.length} 项${query ? "匹配事项" : "事项"}；所有条件以服务端为准。` : "未找到匹配事项，请换一个关键词。";
-    $("world-actions-show-more").hidden = shown >= matched.length;
-    $("world-actions-show-all").hidden = shown >= matched.length;
-    $("world-actions-show-all").textContent = `展开全部（${matched.length}）`;
+    for (const row of rows) row.hidden = !matched.includes(row);
+    $("world-action-count").textContent = matched.length ? `${query ? "匹配" : "共"} ${matched.length} 项事项 · 条件以服务端为准` : rows.length ? "未找到匹配事项，请换一个关键词。" : "";
+    $("world-actions-show-more").hidden = true;
+    $("world-actions-show-all").hidden = true;
+    if (repaginate) {
+      const pager = pagers.get("actions");
+      pager.page = 0;
+      paginate(pager);
+    }
   }
 
   function render(data) {
@@ -863,25 +1359,45 @@
     $("world-workbench").hidden = !worldActive;
     document.querySelector(".game-layout").hidden = worldActive;
     if (worldActive) {
-      if (view.world.battle && !previousBattle) selectedWorldPage = view.world.battle.page;
+      if (view.world.battle && !previousBattle) {
+        selectedWorldPage = view.world.battle.page;
+        stageTabs.set(selectedWorldPage, "actions");
+      }
       renderWorld(view.world);
     }
     if (view.character) {
       $("character-name").textContent = view.character.name;
       const worldStage = typeof view.world?.stage === "object" ? view.world.stage?.label : view.world?.stage;
-      $("realm").textContent = worldActive ? worldStage || "凡界修行" : view.character.realm;
+      const realmText = worldActive ? worldStage || "凡界修行" : view.character.realm;
+      $("realm").textContent = realmText;
+      setArt("hud-avatar", portrait(realmTier(realmText), true));
+      if (worldActive) {
+        setArt("stage-hero", selectedWorldPage === "character" ? portrait(realmTier(realmText)) : "");
+        if (view.world.battle) setArt("world-hero-portrait", portrait(realmTier(realmText)));
+      }
+      if (previousRealm !== null && realmText && previousRealm !== realmText) showBreakthrough(realmText);
+      previousRealm = realmText;
+      sceneBanner("journey-scene", view.phase === "battle" ? "arena" : "world");
       $("objective").textContent = view.objective;
       $("location-name").textContent = view.location?.name || "修行途中";
       $("location-description").textContent = view.location?.description || "";
       $("scene-kicker").textContent = view.phase === "battle" ? "此刻 · 狭路相逢" : "此刻 · 身之所在";
       $("actions-title").textContent = view.phase === "battle" ? "一招一式，皆有抉择" : "接下来，如何行道";
       renderResources(view.resources);
+      floatNumbers(view.resources);
+      const logs = view.logs || [];
+      if (previousLogs && logs.length > previousLogs.length) showToasts(logs.slice(previousLogs.length));
+      else if (previousLogs && logs.length && logs[logs.length - 1] !== previousLogs[previousLogs.length - 1]) showToasts(logs.slice(-1));
+      previousLogs = [...logs];
       $("profile-label").textContent = view.profile?.mode === "longline" ? "· 长线修行" : "· 自由历练";
       renderActions(view.actions);
       renderLogs(view.logs);
       $("battle").hidden = !view.battle;
+      document.querySelector(".game-layout").classList.toggle("in-battle", !!view.battle);
       if (view.battle) {
         const battle = view.battle;
+        setArt("hero-portrait", portrait(realmTier(realmText)));
+        setArt("enemy-portrait", enemyPortrait(battle.name));
         $("enemy-name").textContent = battle.name;
         $("enemy-health").textContent = `${battle.hp} / ${battle.max_hp} 气血`;
         $("enemy-intent").textContent = battle.intent;
@@ -895,11 +1411,13 @@
       if (view.ending) {
         $("ending-title").textContent = view.ending.title;
         $("ending-text").textContent = view.ending.text;
+        $("ending-text").title = view.ending.text;
       }
     }
     $("slot-summary").textContent = data.save?.summary || "尚未留下手动存档。";
     anchorGrowth(view.growth);
     updateControls();
+    syncHudHeight();
   }
 
   async function refreshGrowth() {
@@ -1101,39 +1619,75 @@
   $("history-button").addEventListener("click", () => { expanded = !expanded; renderLogs(snapshot.view.logs); });
   $("world-quests-link").addEventListener("click", () => selectWorldPage("quests"));
   $("world-action-search").addEventListener("input", () => {
-    worldActionFilters.set(selectedWorldPage, { query: $("world-action-search").value, limit: 8 });
+    worldActionFilters.set(selectedWorldPage, { query: $("world-action-search").value });
     filterWorldActions();
   });
-  $("world-actions-show-more").addEventListener("click", () => {
-    const filter = worldActionFilters.get(selectedWorldPage);
-    filter.limit += 8;
-    filterWorldActions();
-  });
-  $("world-actions-show-all").addEventListener("click", () => {
-    const filter = worldActionFilters.get(selectedWorldPage);
-    filter.limit = Infinity;
-    filterWorldActions();
-  });
+  $("world-actions-show-more").addEventListener("click", () => turnPage(pagers.get("actions"), 1));
+  $("world-actions-show-all").addEventListener("click", () => applyStageTab("actions"));
   $("r4-dungeon-jump").addEventListener("click", () => {
-    $("r4-dungeon-workbench")?.scrollIntoView({ block: "start" });
+    if (!$("r4-dungeon-workbench")) return;
+    revealNode($("r4-dungeon-workbench"));
     $("r3-dungeon-select")?.focus({ preventScroll: true });
   });
   $("world-actions-jump").addEventListener("click", () => {
-    $("world-actions-title").scrollIntoView({ block: "start" });
+    applyStageTab("actions");
     $("world-actions-title").focus({ preventScroll: true });
   });
   $("world-battle-link").addEventListener("click", () => {
     const battle = snapshot?.view.world?.battle;
     if (!battle) return;
+    stageTabs.set(battle.page, "actions");
     selectWorldPage(battle.page);
-    $("world-battle-actions").scrollIntoView({ block: "start" });
+    revealNode($("world-battle-actions").querySelector("h3"));
     $("world-battle-actions").querySelector("h3").focus({ preventScroll: true });
   });
-  $("legacy-history-button").addEventListener("click", () => {
-    historyVisible = !historyVisible;
+  function toggleLegacyHistory(open) {
+    historyVisible = open;
     $("legacy-history").hidden = !historyVisible;
     $("legacy-history-button").setAttribute("aria-expanded", String(historyVisible));
+  }
+  $("legacy-history-button").addEventListener("click", () => toggleLegacyHistory(!historyVisible));
+  $("legacy-history-close").addEventListener("click", () => { toggleLegacyHistory(false); $("legacy-history-button").focus(); });
+  $("reader-close").addEventListener("click", closeReader);
+  $("reader").addEventListener("click", (event) => { if (event.target === $("reader")) closeReader(); });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!$("reader").hidden) closeReader();
+    else if (historyVisible) toggleLegacyHistory(false);
+    else {
+      const open = document.querySelector(".world-action[open], .growth-details[open]");
+      if (open) { open.open = false; open.querySelector("summary")?.focus(); }
+    }
   });
+  document.querySelectorAll("[data-side-tab]").forEach((tab) => tab.addEventListener("click", () => applySideTab(tab.dataset.sideTab)));
+  for (const bar of [$("stage-tabs"), $("action-tabs"), $("side-tabs")]) {
+    bar.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+      const tabs = [...bar.querySelectorAll("button")].filter((tab) => tab.offsetParent);
+      const index = tabs.indexOf(document.activeElement);
+      if (index < 0) return;
+      const next = tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
+      next.focus();
+      next.click();
+    });
+  }
+  document.addEventListener("click", (event) => {
+    const growth = $("growth-details");
+    if (growth.open && !growth.contains(event.target)) growth.open = false;
+  });
+  createPager("actions", document.querySelector('[data-region="actions"]'), $("stage-pager"));
+  createPager("notes", document.querySelector('[data-region="notes"]'), $("stage-pager"));
+  createPager("context", document.querySelector('[data-region="context"]'), $("stage-pager"));
+  createPager("side", document.querySelector('[data-region="side"]'), $("side-pager"));
+  createPager("journey", $("actions"), $("journey-pager"));
+  createPager("chronicle", document.querySelector('[data-region="chronicle"]'), $("chronicle-pager"));
+  createPager("reader", $("reader-body"), $("reader-pager"));
+  narrowLayout?.addEventListener?.("change", () => {
+    placeAside();
+    if (snapshot?.view.world?.active) renderWorld(snapshot.view.world);
+  });
+  placeAside();
+  applySideTab("quests");
   $("cancel-confirm").addEventListener("click", () => $("confirm-dialog").close());
   $("confirm-dialog").addEventListener("close", () => { confirmation = null; previousFocus?.focus(); });
   $("confirm-dialog").querySelector("form").addEventListener("submit", (event) => {
