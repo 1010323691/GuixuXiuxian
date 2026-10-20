@@ -25,7 +25,7 @@
   let selectedLootUid = "";
   let selectedDungeonKey = "";
   let newRevisionObserved = false;
-  const battleActionIds = new Set(["world_attack", "world_power", "world_defend", "world_pill", "world_fire", "world_guard", "world_soul", "world_flee"]);
+  const battleActionIds = new Set(["world_auto_battle", "auto_battle"]);
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -83,7 +83,7 @@
 
   function actionKind(action, pageId) {
     const id = action.id || "";
-    if (action.group === "battle" || battleActionIds.has(id) || /attack|boss|dungeon|elite|arena|duel|challenge|fight|hunt|flee/.test(id) || pageId === "arena") return "combat";
+    if (action.group === "battle" || battleActionIds.has(id) || /attack|boss|dungeon|elite|arena|duel|challenge|fight|hunt/.test(id) || pageId === "arena") return "combat";
     if (pageId === "market" || /buy|sell|auction|trade|market|shop/.test(id)) return "trade";
     if (["social", "sects"].includes(pageId) || /visit|gift|talk|friend|disciple|master|family|sect/.test(id)) return "social";
     if (["craft", "estate"].includes(pageId) || /craft|alchemy|forge|array|talisman|estate|plant/.test(id)) return "craft";
@@ -1382,7 +1382,7 @@
       $("location-name").textContent = view.location?.name || "修行途中";
       $("location-description").textContent = view.location?.description || "";
       $("scene-kicker").textContent = view.phase === "battle" ? "此刻 · 狭路相逢" : "此刻 · 身之所在";
-      $("actions-title").textContent = view.phase === "battle" ? "一招一式，皆有抉择" : "接下来，如何行道";
+      $("actions-title").textContent = view.phase === "battle" ? "自动斗法 · 择定策略" : "接下来，如何行道";
       renderResources(view.resources);
       floatNumbers(view.resources);
       const logs = view.logs || [];
@@ -1568,7 +1568,8 @@
         submittedWorldKey = null;
         render(data);
         pending = null;
-        if (persistPending(null)) notice(data.duplicate ? "该操作已处理，已同步最新进度。" : data.events?.length ? data.events.join(" · ") : "手札已保存。", "success");
+        if (persistPending(null)) notice(data.duplicate ? "该操作已处理，已同步最新进度。" : data.battle_report ? data.events.slice(0, 2).join(" · ") : data.events?.length ? data.events.join(" · ") : "手札已保存。", "success");
+        if (data.battle_report && !data.duplicate) globalThis.BattleReplay?.open(data.battle_report);
       } else if (data.ok === false && data.error) {
         pending = null;
         submittedWorldKey = null;

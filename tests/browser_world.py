@@ -51,6 +51,13 @@ class BrowserWorldDriver:
         body = response.json()
         assert response.status == 200 and body['ok'], body
         expect(self.page.locator('#main')).to_have_attribute('aria-busy', 'false')
+        if body.get('battle_report'):
+            # The replay is a modal view of the already-settled report; close it so later clicks stay reachable.
+            expect(self.page.locator('#battle-replay')).to_be_visible()
+            self.page.locator('#replay-skip').click()
+            expect(self.page.locator('#replay-result')).to_be_visible()
+            self.page.locator('#replay-close').click()
+            expect(self.page.locator('#battle-replay')).to_be_hidden()
         return body
 
     def legacy(self, command, **params):

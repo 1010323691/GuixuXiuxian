@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from tests.r3_support import ClockHTTP
 from tests.support import baseline_route
 from tests.r3_route import R3Planner
+from game import loot
 
 
 class R3BossHTTPTests(unittest.TestCase):
@@ -24,51 +25,50 @@ class R3BossHTTPTests(unittest.TestCase):
         self.assertEqual(status,422,body)
         self.assertEqual(self.server.snapshot()['state'],before['state'])
 
-    def test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts(self):
+    def personal_damage(self,response):
+        frames=response['battle_report']['frames']
+        return sum(e['amount'] for f in frames for e in f['events']
+                   if e['type']=='damage' and e['target']=='enemy' and e['source']!='npc')
+
+    def test_twelve_round_auto_window_best_only_delta_and_three_attempts(self):
         self.p.perform('world_boss_enter')
-        for turn in range(12):
-            b=self.p.world()['battle']
-            self.assertIsNotNone(b,'fixed window ended early without defeat')
-            self.assertEqual(b['turn'],turn)
-            self.p.perform('world_defend')
+        response=self.p.perform('world_auto_battle',strategy='frugal')
+        report=response['battle_report']
+        self.assertIn(report['outcome'],('window','defeat'))
+        self.assertTrue(loot.R.BOSS['minimum_valid_commands']<=report['rounds']<=12,'auto window never exceeds twelve opportunities')
         self.assertIsNone(self.p.world()['battle'])
         period=self.p.world()['r3']['boss'][self.day]
-        self.assertEqual((period['best'],period['attempts']), (0,1))
+        damage=self.personal_damage(response)
+        self.assertGreater(damage,0,'an auto-fighting avatar must deal personal damage')
+        self.assertEqual((period['best'],period['attempts'],period['last_damage']),(damage,1,damage))
+        coins,_=loot.boss_entitlement(period)
         self.p.perform('world_boss_claim',day=self.day)
-        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],2)
+        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],coins)
         self.p.rest()
         self.p.perform('world_boss_enter')
-        self.p.perform('world_attack')
-        damage=self.p.world()['battle']['player_damage']
-        self.assertEqual(damage,40)
-        self.p.perform('world_flee')
-        self.p.perform('world_boss_claim',day=self.day)
-        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],4,
-                         'best40 entitles4 total; participation must not pay twice')
-        self.p.rest()
-        self.p.perform('world_boss_enter')
-        self.p.perform('world_defend')
-        self.p.perform('world_flee')
+        self.p.perform('world_auto_battle',strategy='frugal')
+        self.assertEqual(self.p.world()['r3']['boss'][self.day]['best'],damage,'identical build and strategy must not raise best')
         self.reject('world_boss_claim',day=self.day)
-        self.assertEqual(self.p.world()['r3']['boss'][self.day]['best'],40)
-        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],4)
+        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],coins,'participation or equal best must not pay twice')
+        self.p.rest()
+        self.p.perform('world_boss_enter')
+        self.p.perform('world_auto_battle',strategy='frugal')
+        self.assertEqual(self.p.world()['r3']['boss'][self.day]['attempts'],3)
         self.reject('world_boss_enter')
 
-    def test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor(self):
+    def test_open_boss_cursor_survives_restart_and_checkpoint_never_replays_a_finished_attempt(self):
         self.p.perform('world_boss_enter')
-        self.p.perform('world_flee')
-        self.reject('world_boss_claim',day=self.day)
-        self.p.perform('world_boss_enter')
-        self.p.perform('world_attack')
         cursor=self.p.world()['battle']
         self.server.stop();self.server.start()
         self.assertEqual(self.p.world()['battle'],cursor)
         self.server.write('/api/save')
-        self.p.perform('world_defend')
-        cursor=self.p.world()['battle']
+        self.p.perform('world_auto_battle',strategy='frugal')
+        self.assertIsNone(self.p.world()['battle'])
+        best=self.p.world()['r3']['boss'][self.day]['best']
         self.server.write('/api/load')
-        self.assertEqual(self.p.world()['battle'],cursor,'checkpoint replayed an earlier formal boss turn')
-        self.assertEqual(self.p.world()['r3']['boss'][self.day]['attempts'],2)
+        self.assertIsNone(self.p.world()['battle'],'checkpoint resurrected an already settled formal boss attempt')
+        self.assertEqual(self.p.world()['r3']['boss'][self.day]['attempts'],1)
+        self.assertEqual(self.p.world()['r3']['boss'][self.day]['best'],best)
 
     def test_companion_damage_excluded_and_midnight_keeps_period_binding(self):
         # Legal social progression unlocks an actual NPC companion.
@@ -79,19 +79,21 @@ class R3BossHTTPTests(unittest.TestCase):
         self.p.perform('world_companion',npc='healer')
         self.p.perform('world_boss_enter')
         self.server.clock.advance(86400)
-        for _ in range(12):
-            self.p.perform('world_defend')
+        response=self.p.perform('world_auto_battle',strategy='frugal')
+        frames=response['battle_report']['frames']
+        npc=sum(e['amount'] for f in frames for e in f['events'] if e['source']=='npc')
+        self.assertGreater(npc,0,'fixture must actually contain companion support damage')
         old=self.p.world()['r3']['boss'][self.day]
-        self.assertEqual(old['best'],0,'NPC support damage counted as personal damage')
-        self.assertEqual(old['last_damage'],0)
+        self.assertEqual(old['best'],self.personal_damage(response),'NPC support damage counted as personal damage')
+        self.assertEqual(old['last_damage'],old['best'])
+        coins,_=loot.boss_entitlement(old)
         self.p.perform('world_boss_claim',day=self.day)
-        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],2)
+        self.assertEqual(self.p.world()['r3']['materials']['boss_coin'],coins)
         newday=datetime.fromtimestamp(self.server.clock(),timezone.utc).date().isoformat()
         self.assertNotIn(newday,self.p.world()['r3']['boss'])
         self.p.rest()
         self.p.perform('world_boss_enter')
         self.assertEqual(self.p.world()['r3']['boss'][newday]['attempts'],1)
-
     def test_clock_rewind_to_previously_unvisited_day_cannot_create_old_period(self):
         self.server.clock.advance(2*86400)
         self.p.perform('world_gather',item='ore')

@@ -78,7 +78,7 @@ def fast_store(data, clock=None):
             while len(self._snapshot_cache) > self.CACHE_SIZE:
                 self._snapshot_cache.pop(next(iter(self._snapshot_cache)))
 
-        def _snapshot(self, revision, state, slot, events=None, duplicate=False):
+        def _snapshot(self, revision, state, slot, events=None, duplicate=False, battle_report=None):
             # events/duplicate only fill their own two fields of the result, so the projected
             # body is shared between a write's response and later reads of the same save.
             # The key keeps dict order: views list dicts (e.g. inventory) in iteration order, and a
@@ -95,6 +95,8 @@ def fast_store(data, clock=None):
             result = pickle.loads(cached)
             result['duplicate'] = duplicate
             result['events'] = json.loads(json.dumps(events or [], ensure_ascii=False))
+            if battle_report is not None:
+                result['battle_report'] = json.loads(json.dumps(battle_report, ensure_ascii=False))
             return result
 
     return FastStore(data, clock=clock)
@@ -210,6 +212,29 @@ class Server:
         return self.write('/api/action', action=action, params=params)
 
 
+def battle_round(state, action, context=None):
+    """White-box access to the internal single-round resolver (no public click action exists any more).
+
+    Mirrors world.apply_action's per-opportunity bookkeeping; returns (new_state, events, trace).
+    """
+    from game import world, journey, activities
+    from game.clone import clone
+    result = clone(state)
+    w = result['world']
+    events, trace = [], []
+    world._round(w, action, events, trace)
+    world._clamp(w)
+    w['tick'] += 1
+    result['actions_taken'] += 1
+    world._ai(w, events)
+    if 'r3' in w:
+        activities.observe(state['world'], w, action, {}, context)
+        journey.observe(state['world'], w, action, {})
+    w['journal'] = (w['journal'] + events)[-100:]
+    world.validate(result)
+    return result, events, trace
+
+
 def route_to_ending(snapshot, action):
     """Public legal actions only; no internal rules, state injection, or save edits."""
     for _ in range(12):
@@ -236,38 +261,33 @@ def route_to_ending(snapshot, action):
 
 
 def win_battle(snapshot, action):
-    for _ in range(80):
-        snap = snapshot()
-        state = snap['state']
-        if state['battle'] is None:
+    """序章自动斗法：一次提交打完整场；败退则静养后重试，直到战斗结束。"""
+    for _ in range(8):
+        if snapshot()['state']['battle'] is None:
             return
-        max_hp = [60, 80, 100, 140][state['realm']]
-        if state['pills'] and state['hp'] <= max_hp - 35:
-            action('use_pill')
-        elif state['mp'] >= 6:
-            action('power_attack')
-        else:
-            action('defend')
-    raise AssertionError('battle failed to terminate within 80 public actions')
+        action('auto_battle')
+        state = snapshot()['state']
+        if state['battle'] is None and not state['victories']:
+            action('rest')
+    assert snapshot()['state']['battle'] is None, 'auto battle did not finish'
 
 
 def baseline_route(snapshot, action):
-    """GDD's exact 53-action route, without upgrades, items, or injected state."""
-    for count, region, enemy, sequence, hp, mp in [
-        (6, 'forest', 'ape', ['power_attack', 'power_attack', 'defend', 'power_attack', 'attack', 'attack'], 46, 1),
-        (8, 'ruins', 'sentinel', ['power_attack', 'power_attack', 'defend', 'power_attack', 'attack', 'defend', 'power_attack', 'attack'], 24, 2),
-        (10, None, 'shadow', ['power_attack', 'power_attack', 'defend', 'power_attack', 'power_attack', 'defend', 'power_attack', 'attack', 'attack'], 36, 4),
-    ]:
+    """无升级/道具/注入状态的序章最短路线；战斗全部由自动斗法完成。"""
+    for count, region, enemy in [(6, 'forest', 'ape'), (8, 'ruins', 'sentinel'), (10, None, 'shadow')]:
         for _ in range(count):
             action('cultivate')
         action('breakthrough')
         if region:
             action('travel', region=region)
         action('challenge', enemy=enemy)
-        for command in sequence:
-            action(command)
-        state = snapshot()['state']
-        assert state['battle'] is None, state
-        assert (state['hp'], state['mp']) == (hp, mp), state
+        for _ in range(6):
+            if snapshot()['state']['battle'] is None:
+                break
+            action('auto_battle')
+            if snapshot()['state']['battle'] is None and enemy not in snapshot()['state']['victories']:
+                action('rest')
+                action('challenge', enemy=enemy)
+        assert enemy in snapshot()['state']['victories'], snapshot()['state']
     state = snapshot()['state']
-    assert state['completed'] and state['actions_taken'] == 53, state
+    assert state['completed'] and state['battle'] is None, state

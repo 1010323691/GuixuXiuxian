@@ -91,18 +91,22 @@ def validate_state(s):
     world.validate(s)
 
 
+MANUAL_STEPS = {'attack', 'power_attack', 'defend', 'use_pill', 'flee'}  # 序章内部单拍，不再对外开放
+AUTO_LIMIT = 60
+
+
 def check(s, action, params):
     if s is None:
         raise GameError('NO_GAME','请先创建角色。')
     if not isinstance(action,str) or not isinstance(params,dict):
         raise GameError('BAD_REQUEST','行动和参数格式不正确。',400)
-    known={'cultivate','rest','gather','alchemy','explore','upgrade','buy_pill','sell_herbs','breakthrough','challenge','travel','attack','power_attack','defend','use_pill','flee'}
+    known={'cultivate','rest','gather','alchemy','explore','upgrade','buy_pill','sell_herbs','breakthrough','challenge','travel','attack','power_attack','defend','use_pill','flee','auto_battle'}
     if action not in known:
         raise GameError('BAD_REQUEST','未知行动。',400)
     expected={'region'} if action=='travel' else {'enemy'} if action=='challenge' else set()
     if set(params)!=expected or any(not isinstance(v,str) for v in params.values()):
         raise GameError('BAD_REQUEST','行动参数不正确。',400)
-    battle_action=action in {'attack','power_attack','defend','use_pill','flee'}
+    battle_action=action in MANUAL_STEPS|{'auto_battle'}
     if bool(s['battle']) != battle_action:
         fail('战斗中无法进行此行动。' if s['battle'] else '当前不在战斗中。')
     r=s['realm']
@@ -150,6 +154,49 @@ def apply_action(state, action, params, context=None):
         return result,events
     if state and state.get('world',{}).get('active'):
         fail('已进入完整修仙界，请使用世界行动。')
+    if action in MANUAL_STEPS:
+        raise GameError('BAD_REQUEST','点击式战斗已退役，请使用自动斗法。',400)
+    if action=='auto_battle':
+        check(state,action,params)
+        return _auto_battle(state,context)
+    return _step(state,action,params)
+
+
+def _choose(s):
+    """Prelude auto-battle policy: returns one internal single-round action."""
+    b=s['battle'];e=C.ENEMIES[b['enemy']];r=s['realm']
+    atk=C.ATTACK[r]+2*s['technique'];turn=b['turn']%3;incoming=[e['attack'],0,e['heavy']][turn]
+    if atk>=b['hp']:return 'attack'
+    if s['mp']>=6 and atk*2>=b['hp']:return 'power_attack'
+    not_full=s['hp']<C.HP[r] or s['mp']<C.MP[r]
+    if s['pills']>0 and not_full and (s['hp']<=incoming or s['hp']*100<=C.HP[r]*40):return 'use_pill'
+    if turn==2 and incoming*100>=s['hp']*35:return 'defend'
+    return 'power_attack' if s['mp']>=6 else 'attack'
+
+
+def _auto_battle(state,context=None):
+    s=state;events=[];labels={'attack':'普攻','power_attack':'运功强攻','defend':'凝神防御','use_pill':'服用回春丹','flee':'撤退'}
+    enemy=C.ENEMIES[s['battle']['enemy']];r=s['realm'];intents=['常规攻击','蓄势','重击']
+    frames=[{'round':0,'player':{'hp':s['hp'],'mp':s['mp']},'enemy':{'hp':s['battle']['hp'],'barrier':0},'intent':intents[s['battle']['turn']%3],'action':'准备','events':[]}]
+    outcome='stalemate'
+    for n in range(1,AUTO_LIMIT+1):
+        if not s['battle']:break
+        action=_choose(s)
+        s,ev=_step(s,action,{})
+        events.extend('第%d拍·%s：%s'%(n,labels[action],line) for line in ev)
+        text=''.join(ev)
+        outcome='victory' if '战胜' in text else 'defeat' if '不敌' in text else outcome
+        frames.append({'round':n,'player':{'hp':s['hp'],'mp':s['mp']},'enemy':{'hp':s['battle']['hp'] if s['battle'] else 0,'barrier':0},'intent':intents[s['battle']['turn']%3] if s['battle'] else '—','action':labels[action],
+            'events':[{'type':'text','source':'player','target':'enemy','label':line} for line in ev]})
+    else:
+        s,ev=_step(s,'flee',{});events.extend(ev);outcome='stalemate'
+    if isinstance(context,dict):
+        context['battle_report']={'outcome':outcome,'rounds':frames[-1]['round'],'strategy':'balanced','strategy_label':'自动','enemy':{'name':enemy['name'],'max_hp':enemy['hp'],'kind':'prelude'},
+            'player':{'max_hp':C.HP[r],'max_mp':C.MP[r]},'treasures':{'main':None,'guard':None},'frames':frames}
+    return s,events
+
+
+def _step(state,action,params):
     check(state,action,params)
     s=clone(state)
     events=[]
@@ -228,8 +275,7 @@ def project(s,context=None):
         e=C.ENEMIES[b['enemy']];t=b['turn']%3
         intent=['常规攻击：造成%d点伤害'%e['attack'],'蓄势：本回合不造成伤害','重击：造成%d点伤害'%e['heavy']][t]
         view['battle']={'name':e['name'],'hp':b['hp'],'max_hp':e['hp'],'intent':intent}
-        atk=C.ATTACK[r]+s['technique']*2
-        for args in [('attack','普通攻击','免费','造成%d点伤害'%min(atk,b['hp'])),('power_attack','运功强攻','灵力 −6','造成%d点伤害'%min(atk*2,b['hp'])),('defend','凝神防御','免费','灵力 +3，敌方本回合伤害减半'),('use_pill','服用回春丹','回春丹 −1','气血 +45、灵力 +6'),('flee','撤退','免费','无反击，无本战奖励')]:action(*args,'battle')
+        action('auto_battle','自动斗法','按战况消耗灵力与回春丹','自动强攻、防重击、必要时服丹，直至分出胜负；败退返回青岚村','battle')
     else:
         for args in [('cultivate','吐纳修炼','免费','修为 +%d'%(6+2*r),'cultivation'),('breakthrough','突破境界','修为 −%d'%C.BREAKTHROUGH[r] if r<3 else '已筑基','突破保证成功，气血灵力恢复全满','cultivation'),('rest','静养调息','免费','气血 +30、灵力 +8','cultivation'),('gather','采集药草','免费','药草 +2','exploration'),('alchemy','炼制回春丹','药草 −3','回春丹 +1','cultivation'),('explore','探索此地','免费','灵石 +%d、药草 +%d'%(area['stones'],area['herbs']),'exploration'),('upgrade','研习归元诀','灵石 −%d'%([12,24][s['technique']] if s['technique']<2 else 0),'功法 +1级，攻击 +2','cultivation'),('buy_pill','购买回春丹','灵石 −8','回春丹 +1','trade'),('sell_herbs','出售药草','药草 −2','灵石 +3','trade')]:action(*args)
         for id,region in C.REGIONS.items():action('travel','前往'+region['name'],'免费','切换区域，不计行动','travel',{'region':id})
@@ -246,7 +292,7 @@ def project(s,context=None):
         view['ending']=None
     if s['completed'] and not s['world']['active']:
         view['ending']['text']+=' 序章告成，可进入完整修仙界，继续九州修行。'
-    preferred=['world_enter','attack','breakthrough','cultivate','explore']
+    preferred=['world_enter','auto_battle','breakthrough','cultivate','explore']
     for id in preferred:
         chosen=next((a for a in view['actions'] if a['id']==id and a['enabled']),None)
         if chosen:chosen['primary']=True;break

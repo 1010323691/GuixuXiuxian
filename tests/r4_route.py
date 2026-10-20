@@ -73,7 +73,7 @@ class R4Planner(R3Planner):
         self.advance(clock,48*3600,start)
         self.accept('venom_medicine');self.travel('xuanchao');self.rest()
         self.perform('world_elite_enter',elite='venom_keeper')
-        self.perform('world_defend');self.perform('world_pill');self.win()
+        self.perform('world_auto_battle',strategy='steady')
         assert 'venom_keeper' in self.world()['r3']['journey']['elite_wins']
         self.claim('venom_medicine','armor')
         self.accept('dangerous_proof');self.craft('pendant');self.dungeon(difficulty=2)
@@ -81,7 +81,7 @@ class R4Planner(R3Planner):
         checkpoints.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':6})
         self.advance(clock,120*3600,start)
         self.accept('astral_bridge');self.elite('astral_warden','xuanchao')
-        self.rest();self.perform('world_boss_enter');self.perform('world_attack');self.perform('world_flee')
+        self.rest();self.perform('world_boss_enter');self.perform('world_auto_battle',strategy='frugal')
         self.claim('astral_bridge','pendant')
         checkpoints.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':7})
         assert len(self.world()['r3']['journey']['elite_wins'])==3

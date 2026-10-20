@@ -307,72 +307,227 @@ def _combat_pay(w,b,cost):
         w['inventory']=real
 
 
-def _battle(w,action,params,events):
-    _params(params,[])
+MANUAL_ACTIONS={'world_attack','world_power','world_defend','world_pill','world_fire','world_guard','world_soul'}
+CONSUMABLES={'world_pill':'pill','world_fire':'fire_talisman','world_guard':'guard_talisman','world_soul':'soul_talisman'}
+ACTION_LABELS={'world_attack':'普攻','world_power':'运功强攻','world_defend':'防御','world_pill':'服回元丹','world_fire':'焚火符','world_guard':'护身符','world_soul':'镇魂符'}
+STRATEGIES={'balanced':'均衡','steady':'稳妥','aggressive':'强攻','frugal':'节制'}
+AUTO_LIMIT=120
+
+
+def _stock(w,b,item):
+    return (b['snapshot']['inventory'] if b['snapshot'] is not None else w['inventory']).get(item,0)
+
+
+def _reduction(w):
+    return (2*(w['constitution']['level']+1) if w['constitution']['id']=='sturdy' else 0)+2*w['arrays']['mountain']*w['arrays_enabled']['mountain']
+
+
+def _incoming(w,b):
+    """Enemy damage the next enemy opportunity deals if the player does not defend or skip."""
+    damage=max(0,[b['attack'],0,b['heavy']][b['turn']%3]-_reduction(w))
+    return math.floor(damage*0.75) if b['shield'] else damage
+
+
+def _choose(w,b,strategy,attrs,round_no,last_item):
+    """Deterministic rule policy: returns one internal single-round action."""
+    skill=w['skill'];level=w['skills'][skill]
+    normal=attrs['attack']+(4*level if skill=='flame' else 0)
+    power=attrs['attack']*(20+level)//10 if skill=='origin' else attrs['attack']*2
+    mp_ok=w['mp']>=C.COMBAT['power_mp']
+    turn=b['turn']%3;barrier=b.get('barrier',0);reach=barrier+b['hp']
+    full=w['hp']>=attrs['hp'] and w['mp']>=attrs['mp']
+    if normal>=reach:return 'world_attack'
+    if mp_ok and power>=reach:return 'world_power'
+    can_item=strategy!='frugal' and round_no-last_item>=3
+    def have(item):return can_item and _stock(w,b,item)>0
+    if strategy in {'balanced','steady'}:
+        pill_line=75 if strategy=='steady' else 40
+        if have('pill') and not full and (w['hp']*100<=attrs['hp']*pill_line or b.get('poison_turns',0) or (turn==1 and not mp_ok)):return 'world_pill'
+        if barrier>=normal and have('fire_talisman'):return 'world_fire'
+        if turn==2 and _incoming(w,b)>=w['hp'] and have('soul_talisman'):return 'world_soul'
+        if b.get('mechanic')=='mana_seal' and turn==0 and not mp_ok and have('soul_talisman'):return 'world_soul'
+        if turn==1 and w['hp']<=(3 if strategy=='steady' else 2)*b['heavy'] and not b['shield'] and have('guard_talisman'):return 'world_guard'
+    elif strategy=='aggressive':
+        if have('pill') and not full and w['hp']*100<=attrs['hp']*25:return 'world_pill'
+    if strategy!='aggressive':
+        if turn==2 and _incoming(w,b)*100>=w['hp']*35:return 'world_defend'
+        if b.get('mechanic')=='mana_seal' and turn==0 and not mp_ok:return 'world_defend'
+    return 'world_power' if mp_ok else 'world_attack'
+
+
+ROLLOUT_STEPS=60
+ROLLOUT_BUDGET=30000
+
+
+def _candidates(w,b,strategy,attrs,round_no,last_item,preferred):
+    """Legal single-round moves this strategy may consider; the rule policy's move is tried first."""
+    moves=[]
+    if w['mp']>=C.COMBAT['power_mp']:moves.append('world_power')
+    moves.append('world_attack')
+    if strategy!='aggressive':moves.append('world_defend')
+    if strategy!='frugal' and round_no-last_item>=3:
+        full=w['hp']>=attrs['hp'] and w['mp']>=attrs['mp']
+        if _stock(w,b,'pill')>0 and not full and (strategy!='aggressive' or w['hp']*100<=attrs['hp']*25):moves.append('world_pill')
+        if strategy in {'balanced','steady'}:
+            if b.get('barrier',0) and _stock(w,b,'fire_talisman')>0:moves.append('world_fire')
+            if not b['shield'] and _stock(w,b,'guard_talisman')>0:moves.append('world_guard')
+            if _stock(w,b,'soul_talisman')>0:moves.append('world_soul')
+    if preferred in moves:moves.remove(preferred);moves.insert(0,preferred)
+    return moves
+
+
+def _rollout(w0,first,strategy,attrs,round_no,last_item,budget):
+    """Play `first` then the rule policy to the end on a private copy; returns a score tuple or None."""
+    w=pickle.loads(pickle.dumps(w0,protocol=pickle.HIGHEST_PROTOCOL));b=w['battle'];boss_window=b['kind']=='world_boss'
+    action=first;n=round_no;used=0;outcome=None
+    for _ in range(ROLLOUT_STEPS):
+        trace=[]
+        try:_round(w,action,[],trace)
+        except Exception:return None
+        budget[0]-=1
+        if action in CONSUMABLES:used+=1;last_item=n
+        n+=1
+        end=next((t['type'] for t in trace if t['type'] in {'victory','defeat','window'}),None)
+        if end:outcome=end
+        if w['battle'] is None:break
+        action=_choose(w,w['battle'],strategy,attrs,n,last_item)
+    won=outcome=='victory'
+    if boss_window:return (b['player_damage'],-used,w['hp'])
+    left=0 if won else b['hp']+b.get('barrier',0)
+    if strategy=='aggressive':return (won,-left,-(n-round_no),-used,w['hp'])
+    if strategy in {'frugal','steady'}:return (won,-left,w['hp'],-(n-round_no))
+    return (won,-left,-used,w['hp'],-(n-round_no))
+
+
+def _decide(w,b,strategy,attrs,round_no,last_item,budget):
+    """Rule policy proposes; look-ahead rollouts may overrule it with a better-scoring legal move."""
+    preferred=_choose(w,b,strategy,attrs,round_no,last_item)
+    if budget[0]<=0 or strategy=='steady' and preferred in CONSUMABLES:return preferred  # 稳妥：命中保命规则即直接执行
+    best=None;best_move=preferred
+    for move in _candidates(w,b,strategy,attrs,round_no,last_item,preferred):
+        score=_rollout(w,move,strategy,attrs,round_no,last_item,budget)
+        if score is not None and (best is None or score>best):best=score;best_move=move
+    return best_move
+
+
+def _auto_battle(w,p,events,context=None):
     b=w['battle']
     if not b:_error('当前不在世界战斗中。')
-    if action=='world_flee':
-        if b['kind']=='world_boss':loot.finish_boss(w,b,events);events.append('世界Boss提前退出，空开退出无参与奖。');return
+    strategy=p['strategy']
+    if strategy not in STRATEGIES:_bad('未知自动斗法策略。')
+    boss=b['kind'] in {'guard','world_boss','elite'} or b['kind']=='dungeon' and w['dungeon']['round']==2
+    attrs=attributes(w,boss)
+    treasures={slot:loot.combat_treasure(w,slot) for slot in R.TREASURE_SLOTS}
+    intents=['常规攻击','蓄势','重击']
+    frames=[{'round':0,'player':{'hp':w['hp'],'mp':w['mp']},'enemy':{'hp':b['hp'],'barrier':b.get('barrier',0)},'intent':intents[b['turn']%3],'action':'准备','events':[]}]
+    outcome='stalemate';last_item=-9;rounds=0;finished=False;budget=[ROLLOUT_BUDGET];used={};tail=[]
+    for n in range(1,AUTO_LIMIT+1):
+        action=_decide(w,b,strategy,attrs,n,last_item,budget)
+        if action in CONSUMABLES:last_item=n;used[ACTION_LABELS[action]]=used.get(ACTION_LABELS[action],0)+1
+        sub=[];trace=[]
+        _round(w,action,sub,trace)
+        rounds=n
+        frames.append({'round':n,'player':{'hp':w['hp'],'mp':w['mp']},'enemy':{'hp':b['hp'],'barrier':b.get('barrier',0)},'intent':intents[b['turn']%3],'action':ACTION_LABELS[action],'events':trace})
+        tail=sub
+        end=next((t['type'] for t in trace if t['type'] in {'victory','defeat','window'}),None)
+        if end:outcome=end
+        if w['battle'] is None:finished=True;break
+    events.append('自动斗法（%s）：共%d拍，%s%s。逐拍过程见战报回放。'%(STRATEGIES[strategy],rounds,{'victory':'胜利','defeat':'败退','window':'十二拍窗口结束'}.get(outcome,'未分胜负'),'；用去'+'、'.join('%s×%d'%kv for kv in used.items()) if used else ''))
+    events.extend(tail)
+    if not finished:
         if b['snapshot']:w.update(hp=b['snapshot']['hp'],mp=b['snapshot']['mp'])
         w['battle']=None
         if b['kind']=='secret':w['exploration']=None
         if b['kind']=='dungeon':loot.release_run(w);w['dungeon']=None
-        events.append('撤离战斗，无反击，保留永久成长。');return
-    if action not in {'world_attack','world_power','world_defend','world_pill','world_fire','world_guard','world_soul'}:_error('战斗中只能使用战斗行动。')
+        events.append('斗法达到%d拍上限仍未分胜负，自动撤离，无反击也无本战奖励。'%AUTO_LIMIT)
+    if isinstance(context,dict):
+        context['battle_report']={'outcome':outcome,'rounds':rounds,'strategy':strategy,'strategy_label':STRATEGIES[strategy],'enemy':{'name':b['name'],'max_hp':b['max_hp'],'kind':b['kind']},
+            'player':{'max_hp':attrs['hp'],'max_mp':attrs['mp']},
+            'treasures':{slot:({'name':loot.item_name(item['template_id']),'quality':R.QUALITIES[item['quality']]['name']} if item else None) for slot,item in treasures.items()},
+            'frames':frames}
+    return rounds  # 每拍仍是一次世界行动：世界时钟与行动计数按拍推进，与旧点击战斗等价
+
+
+def _battle(w,action,params,events,context=None):
+    if not w['battle']:_error('当前不在世界战斗中。')
+    if action!='world_auto_battle':_error('交锋未止：请先选择一种自动斗法策略完成本战。')
+    return _auto_battle(w,params,events,context)
+
+
+def _round(w,action,events,trace):
+    """One internal player opportunity; only the auto resolver calls it."""
+    if action not in MANUAL_ACTIONS:_error('战斗中只能使用战斗行动。')
+    b=w['battle']
+    def note(kind,source,target,label,amount=None):
+        item={'type':kind,'source':source,'target':target,'label':label}
+        if amount is not None:item['amount']=amount
+        trace.append(item)
     boss=b['kind'] in {'guard','world_boss','elite'} or b['kind']=='dungeon' and w['dungeon']['round']==2
     a=attributes(w,boss);skill=w['skill'];level=w['skills'][skill];damage=0;skip=False;old_poison=b.get('poison_turns',0)
     if action=='world_attack':damage=a['attack']+(4*level if skill=='flame' else 0)
     elif action=='world_power':
         if w['mp']<C.COMBAT['power_mp']:_error('强攻需要%d点灵力，可防御回灵。'%C.COMBAT['power_mp'])
         w['mp']-=C.COMBAT['power_mp'];damage=a['attack']*(20+level)//10 if skill=='origin' else a['attack']*2
-    elif action=='world_defend':w['mp']=min(a['mp'],w['mp']+6);events.append('防御回灵 +6，本回合伤害减半。')
+    elif action=='world_defend':w['mp']=min(a['mp'],w['mp']+6);events.append('防御回灵 +6，本回合伤害减半。');note('defend','player','player','防御回灵',6)
     elif action=='world_pill':
         if w['hp']==a['hp'] and w['mp']==a['mp']:_error('气血灵力均已充盈。')
         _combat_pay(w,b,{'pill':1})
         if b.get('mechanic')=='venom':b['poison_turns']=0;old_poison=0;events.append('回元丹清除旧毒，本回合免疫重挂。')
-        w['hp']=min(a['hp'],w['hp']+80);w['mp']=min(a['mp'],w['mp']+20);events.append('回元丹恢复气血最多80、灵力最多20。')
+        healed=min(80,a['hp']-w['hp']);w['hp']=min(a['hp'],w['hp']+80);w['mp']=min(a['mp'],w['mp']+20);events.append('回元丹恢复气血最多80、灵力最多20。');note('heal','player','player','服回元丹',healed)
     elif action=='world_fire':_combat_pay(w,b,{'fire_talisman':1});damage=math.floor(a['attack']*1.5)
-    elif action=='world_guard':_combat_pay(w,b,{'guard_talisman':1});b['shield']=2;events.append('护身符生效，本回合和下一回合减伤25%。')
-    elif action=='world_soul':_combat_pay(w,b,{'soul_talisman':1});skip=True;events.append('镇魂符使敌人本回合无法行动。')
-    if b.get('barrier',0) and damage:
-        if action=='world_fire':
-            absorbed=min(b['barrier'],G.DUNGEON_MECHANICS['forge']['fire_shield_num']*a['attack']//G.DUNGEON_MECHANICS['forge']['fire_shield_den']);b['barrier']-=absorbed;damage=0;events.append('焚火符专破护盾%d，本次不溢出本体。'%absorbed)
-        else:
-            absorbed=min(b['barrier'],damage);b['barrier']-=absorbed;damage-=absorbed;events.append('护盾吸收%d点伤害，剩余%d。'%(absorbed,b['barrier']))
-    if b['kind']=='world_boss':
-        b['commands']+=1
-        b['player_damage']+=min(b['hp'],damage)
+    elif action=='world_guard':_combat_pay(w,b,{'guard_talisman':1});b['shield']=2;events.append('护身符生效，本回合和下一回合减伤25%。');note('buff','player','player','护身符减伤25%',2)
+    elif action=='world_soul':_combat_pay(w,b,{'soul_talisman':1});skip=True;events.append('镇魂符使敌人本回合无法行动。');note('control','player','enemy','镇魂符')
+    def strike(source,label,amount,fire=False):
+        """One hit through any hostile barrier; only what reaches the body counts as damage."""
+        if b.get('barrier',0) and amount:
+            absorbed=min(b['barrier'],G.DUNGEON_MECHANICS['forge']['fire_shield_num']*a['attack']//G.DUNGEON_MECHANICS['forge']['fire_shield_den'] if fire else amount);b['barrier']-=absorbed
+            events.append(('焚火符专破护盾%d，本次不溢出本体。'%absorbed) if fire else '护盾吸收%d点伤害，剩余%d。'%(absorbed,b['barrier']));note('shield',source,'enemy','破盾：'+label,absorbed)
+            amount=0 if fire else amount-absorbed
+        if amount>0:
+            actual=min(b['hp'],amount)
+            if b['kind']=='world_boss':b['player_damage']+=actual
+            b['hp']-=actual;events.append('%s对%s造成%d伤害。'%(label,b['name'],actual));note('damage',source,'enemy',label,actual)
+    if b['kind']=='world_boss':b['commands']+=1
     if 'r3' in w:
         if action=='world_pill':loot.mark_use(w,'alchemy')
         if action in {'world_fire','world_guard','world_soul'}:loot.mark_use(w,'talismans')
-    if damage:b['hp']=max(0,b['hp']-damage);events.append('对%s造成%d伤害。'%(b['name'],damage))
+    if damage:strike('player',ACTION_LABELS[action],damage,fire=action=='world_fire')
+    main=loot.combat_treasure(w,'main')
+    if b['hp']>0 and main and b['turn']%2==0:
+        strike('main','本命法宝出击',max(1,a['attack']*R.TREASURE_COMBAT['main']['attack_pct'][main['quality']]//100))
     if b['hp']>0 and w['companion'] and (b['turn']+1)%3==0:
         support=10
         if b.get('barrier',0):absorbed=min(b['barrier'],support);b['barrier']-=absorbed;support-=absorbed
-        b['hp']=max(0,b['hp']-support);events.append('同行NPC支援，本体伤害%d；世界Boss评分不计同行。'%support)
+        b['hp']=max(0,b['hp']-support);events.append('同行NPC支援，本体伤害%d；世界Boss评分不计同行。'%support);note('damage','npc','enemy','同行支援',support)
     if b['hp']==0:
+        note('victory','player','enemy','战斗胜利')
         if b['kind']=='world_boss':loot.finish_boss(w,b,events)
         else:_victory(w,b,events)
         return
     enemy_damage=[b['attack'],0,b['heavy']][b['turn']%3]
     if skip:enemy_damage=0
     else:
-        reduction=(2*(w['constitution']['level']+1) if w['constitution']['id']=='sturdy' else 0)+2*w['arrays']['mountain']*w['arrays_enabled']['mountain']
+        reduction=_reduction(w)
         if action=='world_defend' and skill=='mountain':reduction+=2*level
         enemy_damage=max(0,enemy_damage-reduction)
         if action=='world_defend':enemy_damage=math.floor(enemy_damage*0.5)
         if b['shield']:enemy_damage=math.floor(enemy_damage*0.75)
-    w['hp']=max(0,w['hp']-enemy_damage);events.append('%s本回合造成%d伤害。'%(b['name'],enemy_damage))
+    guard=loot.combat_treasure(w,'guard')
+    if guard and enemy_damage>0 and b['turn']%3==2:
+        absorbed=min(enemy_damage,a['hp']*R.TREASURE_COMBAT['guard']['absorb_hp_pct'][guard['quality']]//100)
+        if absorbed>0:enemy_damage-=absorbed;events.append('护持法宝回护，实际拦截%d点伤害。'%absorbed);note('shield_absorb','guard','player','护持法宝实际拦截',absorbed)
+    w['hp']=max(0,w['hp']-enemy_damage);events.append('%s本回合造成%d伤害。'%(b['name'],enemy_damage));note('damage','enemy','player','敌方'+['常击','蓄势','重击'][b['turn']%3],enemy_damage)
     if b.get('mechanic')=='venom':
         if old_poison>0 and action!='world_pill' and w['hp']>0:
-            w['hp']=max(0,w['hp']-b['poison_damage']);b['poison_turns']=max(0,old_poison-1);events.append('旧毒发作，固定气血 −%d，剩%d次。'%(b['poison_damage'],b['poison_turns']))
+            w['hp']=max(0,w['hp']-b['poison_damage']);b['poison_turns']=max(0,old_poison-1);events.append('旧毒发作，固定气血 −%d，剩%d次。'%(b['poison_damage'],b['poison_turns']));note('poison','enemy','player','旧毒结算',b['poison_damage'])
         if b['turn']%3==2 and not skip and action not in {'world_defend','world_pill'} and w['hp']>0:
-            b['poison_turns']=G.DUNGEON_MECHANICS['den']['poison_turns'];events.append('重击挂毒：随后两次敌方结算机会固定毒伤；防重击/丹/魂可反制。')
+            b['poison_turns']=G.DUNGEON_MECHANICS['den']['poison_turns'];events.append('重击挂毒：随后两次敌方结算机会固定毒伤；防重击/丹/魂可反制。');note('status','enemy','player','新毒：随后两机会',b['poison_turns'])
     if b.get('mechanic')=='mana_seal' and b['turn']%3==0 and not skip and action!='world_defend':
-        drained=min(G.DUNGEON_MECHANICS['tower']['mp_drain'],w['mp']);w['mp']-=drained;events.append('沉星汲灵，灵力 −%d；防常击或镇魂可免。'%drained)
+        drained=min(G.DUNGEON_MECHANICS['tower']['mp_drain'],w['mp']);w['mp']-=drained;events.append('沉星汲灵，灵力 −%d；防常击或镇魂可免。'%drained);note('mana','enemy','player','常击汲灵',-drained)
     b['turn']+=1;b['shield']=max(0,b['shield']-1)
     if b['kind'] in {'arena','regional'} and b['target']=='alchemist' and b['turn']%3==0 and b['heals']<2:b['hp']=min(b['max_hp'],b['hp']+30);b['heals']+=1;events.append('NPC丹师回复30气血（最多两次）。')
     if w['hp']==0:
+        note('defeat','enemy','player','本方气血归零')
         if b['kind']=='world_boss':
             w['hp']=1;loot.finish_boss(w,b,events);events.append('世界Boss挑战败退，已造成的有效伤害保留。');return
         if b['kind']=='regional':
@@ -381,7 +536,8 @@ def _battle(w,action,params,events):
         else:w['hp']=1
         loot.release_run(w)
         w['battle']=None;w['region']='qinglan';w['exploration']=None;w['dungeon']=None;events.append('本战败退，返回青岚安全地，可免费静养。')
-    elif b['kind']=='world_boss' and b['commands']>=R.BOSS['rounds']:loot.finish_boss(w,b,events)
+    elif b['kind']=='world_boss' and b['commands']>=R.BOSS['rounds']:
+        note('window','player','enemy','十二拍结束');loot.finish_boss(w,b,events)
 
 
 def _victory(w,b,events):
@@ -864,12 +1020,14 @@ def apply_action(state,action,params,context=None):
     result=clone(state);w=result['world'];events=[]
     if action=='world_enter' and not state['completed']:_error('需先完成序章，平息归墟之影。')
     if not w['active'] and action!='world_enter':_error('请先完成序章并进入修仙界。')
-    _execute(w,action,params,events,context=context)
+    steps=_execute(w,action,params,events,context=context)
+    steps=steps if type(steps) is int else 1
     _clamp(w)
     advances=action not in {'world_travel','world_enter'}
     if action=='world_enter':result['actions_taken']+=1
     if advances:
-        w['tick']+=1;result['actions_taken']+=1;_ai(w,events)
+        for _ in range(steps):
+            w['tick']+=1;result['actions_taken']+=1;_ai(w,events)
     if 'r3' in w:
         activities.observe(state['world'],w,action,params,context)
         journey.observe(state['world'],w,action,params)
@@ -960,7 +1118,7 @@ SCHEMAS={
  'world_hunt':{},'world_boss':{},'world_secret_enter':{'secret':'str'},'world_secret_step':{'choice':'str'},'world_secret_leave':{},'world_dungeon_enter':{'dungeon':'str','difficulty':'difficulty'},'world_dungeon_next':{},'world_dungeon_sweep':{'dungeon':'str','difficulty':'difficulty','chapter':'chapter'},'world_dungeon_leave':{},'world_encounter':{'choice':'str'},
  'world_buy':{'item':'str','quantity':'qty'},'world_sell':{'item':'str','quantity':'qty'},'world_auction_list':{'item':'str','quantity':'qty','price':'price'},'world_auction_bid':{'auction':'str','price':'bid'},'world_auction_cancel':{'auction':'str'},'world_delivery':{'auction':'str'},
  'world_quest_accept':{'quest':'str'},'world_quest_claim':{'quest':'str'},'world_achievement':{'kind':'str','tier':'tier'},'world_title':{'title':'str'},'world_arena':{'opponent':'str','mode':'str'},'world_season_join':{},'world_season_fight':{},'world_season_claim':{},'world_wait':{},
- **{k:{} for k in ['world_attack','world_power','world_defend','world_pill','world_fire','world_guard','world_soul','world_flee']}}
+ 'world_auto_battle':{'strategy':'str'}}
 
 
 def _normalize(action,params):
@@ -997,7 +1155,8 @@ def _execute(w,action,p,events,context=None):
             events.append('章节固定副本开始；掉落序号、品质、配置和恢复型挑战资格预约已绑定本次run。');return
         if journey.handle(w,action,p,events):return
         if loot.handle(w,action,p,events,context):return
-    if w['battle']:_battle(w,action,p,events)
+    if w['battle']:return _battle(w,action,p,events,context)
+    elif action=='world_auto_battle':_error('当前不在世界战斗中。')
     elif not any(handler(w,action,p,events) for handler in [_growth,_craft,_social,_explore,_economy,_quests,_misc]):_bad('未知世界行动。')
 
 
@@ -1119,7 +1278,9 @@ def project(state,context=None):
         params=params or {};fields=fields or [];reason=''
         try:
             if not w['active']:_error('需完成序章并进入修仙界。')
-            normalized=_normalize(id,{**params,**(probe or {})});_execute(pickle.loads(frozen),id,normalized,[],context=context)
+            normalized=_normalize(id,{**params,**(probe or {})})
+            # 自动斗法会整场演算；投影只校验参数，战斗存在性已由本页是否进入战斗保证。
+            if id!='world_auto_battle':_execute(pickle.loads(frozen),id,normalized,[],context=context)
         except Exception as exc:
             from .rules import GameError
             if not isinstance(exc,GameError):raise
@@ -1247,10 +1408,7 @@ def project(state,context=None):
         for page in pages:
             page['actions']=[a for a in page['actions'] if a['id'].startswith('world_')]
         section('exploration','当前战斗：'+battle['name'],[('敌方气血','%d / %d'%(battle['hp'],battle['max_hp'])),('下一意图',intent),('战斗回合',battle['turn']+1)])
-        attack_value=attributes(w,battle['kind'] in {'guard','world_boss','elite'} or battle['kind']=='dungeon' and w['dungeon']['round']==2)['attack']
-        normal_damage=attack_value+(4*w['skills'][w['skill']] if w['skill']=='flame' else 0)
-        power_damage=attack_value*(20+w['skills'][w['skill']])//10 if w['skill']=='origin' else attack_value*2
-        for id,label,cost,effect in [('world_attack','普攻','免费','造成%d伤害（最多敌方当前气血）'%normal_damage),('world_power','运功强攻','灵力%d'%C.COMBAT['power_mp'],'造成%d伤害（最多敌方当前气血）'%power_damage),('world_defend','防御','免费','回灵6，固定减伤后伤害减半'),('world_pill','服回元丹','回元丹1','气血最多80、灵力最多20，随后敌方行动'),('world_fire','用焚火符','焚火符1','造成%d伤害（最多敌方当前气血）'%math.floor(attack_value*1.5)),('world_guard','用护身符','护身符1','本回合及下回合敌伤再减25%'),('world_soul','用镇魂符','镇魂符1','跳过本次敌行动，意图仍前进'),('world_flee','撤退','免费','无反击，无本战奖励；模拟演武恢复真实资源')]:add('arena' if battle['kind'] in {'arena','regional'} else 'exploration',id,label,cost,effect)
+        for strategy,label,cost,effect in [('balanced','自动斗法·均衡','按战况自动出招；必要时才用回元丹与三符','自动攻守、回灵与回血；战力型法宝按各自冷却独立出击或回护，直到本战分出结果'),('steady','自动斗法·稳妥','气血≤75%即服丹，符箓提前备用','优先保住气血，愿意多用丹符；战力型法宝同样出手'),('aggressive','自动斗法·强攻','只在气血≤25%时服丹，不用三符','优先输出，防御与符箓不自动使用；战力型法宝同样出手'),('frugal','自动斗法·节制','不消耗任何丹药与符箓','只用普攻、强攻与防御；战力型法宝同样出手')]:add('arena' if battle['kind'] in {'arena','regional'} else 'exploration','world_auto_battle',label,cost,effect,{'strategy':strategy})
         if battle['kind'] in {'arena','regional'}:section('arena','当前演武',[(battle['name'],'气血%d / %d；下一招%s'%(battle['hp'],battle['max_hp'],intent))])
     for page in pages:
         enabled=next((a for a in page['actions'] if a['enabled']),None)

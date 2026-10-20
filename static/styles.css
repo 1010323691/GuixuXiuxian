@@ -819,6 +819,61 @@ dialog h2 { font-family: var(--kai); font-weight: 400; font-size: var(--fs-xl); 
   .creation-form .field-help, .creation-form .quiet-note, .creation-form .section-number { display: none; }
 }
 
+/* ========== 13. 自动斗法战报回放（云海御空） ========== */
+.battle-replay { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; padding: 12px; background: var(--backdrop); }
+.battle-replay[hidden] { display: none; }
+.replay-card { width: min(860px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 8px; padding: 12px 14px 14px; background: var(--ivory); border-radius: var(--r-lg); box-shadow: var(--frame), 0 24px 60px var(--shadow-c-strong); animation: pop-dialog var(--dur) var(--ease); }
+.replay-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; border-bottom: 2px solid var(--frame-line); padding-bottom: 6px; }
+.replay-head h2 { font-family: var(--kai); font-weight: 400; font-size: var(--fs-xl); color: var(--plaque); }
+.replay-stage { border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--frame-line); background: var(--sky-top); }
+.replay-svg { display: block; width: 100%; height: auto; }
+.replay-svg .sky { fill: var(--sky-top); }
+.replay-svg .peaks { fill: var(--jade-soft); stroke: var(--jade-line); stroke-width: 1.5; }
+.replay-svg .cloud { fill: var(--white); opacity: .85; }
+.replay-svg .actor .body { fill: var(--ivory); stroke: var(--plaque); stroke-width: 3; }
+.replay-svg .actor.player .body { fill: var(--jade-soft); stroke: var(--jade-deep); }
+.replay-svg .actor.player .glyph { font: 30px var(--kai); fill: var(--jade-deep); }
+.replay-svg .actor.player .ward { fill: none; stroke: var(--azure); stroke-width: 4; }
+.replay-svg .actor.main .body { fill: var(--gold-light); stroke: var(--gold-deep); }
+.replay-svg .actor.guard .body { fill: var(--azure-soft); stroke: var(--azure-deep); }
+.replay-svg .actor.enemy .body { fill: var(--enemy-shade); stroke: var(--enemy-robe); }
+.replay-svg .actor.enemy .barrier { fill: none; stroke: var(--gold); stroke-width: 4; stroke-dasharray: 8 6; }
+.replay-svg .actor.npc .body { fill: var(--jade-soft); stroke: var(--jade-line); }
+.replay-svg .actor.down .body { opacity: .3; }
+.replay-svg .caption { font: 14px var(--sans); fill: var(--plaque-deep); }
+.replay-svg .source-active .body { filter: drop-shadow(0 0 6px var(--gold)); }
+.replay-svg .actor.main, .replay-svg .actor.guard { animation: replay-bob 3.2s ease-in-out infinite; }
+.replay-svg .actor.guard { animation-delay: -1.4s; }
+.replay-svg .trace { fill: none; stroke-width: 4; stroke-linecap: round; opacity: .75; }
+.replay-svg .trace.player { stroke: var(--jade); }
+.replay-svg .trace.main { stroke: var(--gold); }
+.replay-svg .trace.enemy { stroke: var(--cinnabar); }
+.replay-svg .trace.npc { stroke: var(--jade-line); }
+.replay-svg .trace.shield { stroke-dasharray: 10 8; }
+.replay-svg .bolt.player { fill: var(--jade-bright); }
+.replay-svg .bolt.main { fill: var(--gold); }
+.replay-svg .floater { font: 700 22px var(--sans); paint-order: stroke; stroke: var(--white); stroke-width: 4px; }
+.replay-svg .floater.hit { fill: var(--cinnabar); }
+.replay-svg .floater.hurt { fill: var(--cinnabar-deep); }
+.replay-svg .floater.heal { fill: var(--jade-deep); }
+.replay-svg .floater.guard { fill: var(--azure-deep); }
+.replay-svg .floater.note { fill: var(--plaque); font-size: 16px; }
+.replay-meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.replay-meter { display: grid; gap: 2px; font-size: var(--fs-sm); color: var(--ink-2); }
+.replay-meter .meter { height: 10px; }
+.replay-now { min-height: 2.6em; font-size: var(--fs-base); color: var(--ink); overflow-wrap: anywhere; }
+.replay-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.replay-controls input[type=range] { flex: 1 1 140px; min-width: 120px; }
+.replay-result { padding: 8px 10px; border-radius: var(--r-md); background: var(--gold-soft); border: 1px solid var(--gold); }
+.replay-result h3 { font-family: var(--kai); font-weight: 400; color: var(--gold-deep); }
+.replay-log { max-height: 140px; overflow: auto; font-size: var(--fs-sm); }
+body.replay-open { overflow: hidden; }
+@keyframes replay-bob { 0%, 100% { transform-box: fill-box; translate: 0 0; } 50% { translate: 0 -5px; } }
+@media (max-width: 759px) {
+  .replay-meters { grid-template-columns: minmax(0, 1fr); }
+  .replay-svg .actor.down .body { opacity: .3; }
+.replay-svg .caption { font-size: 18px; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }

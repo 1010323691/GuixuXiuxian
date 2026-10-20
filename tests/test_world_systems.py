@@ -7,7 +7,7 @@ import copy
 import unittest
 import uuid
 
-from tests.support import Server, baseline_route
+from tests.support import Server, baseline_route, battle_round
 
 
 class WorldPlanner:
@@ -123,36 +123,15 @@ class WorldPlanner:
         raise AssertionError('free rest never reached full hp/mp')
 
     def win(self):
-        for _ in range(120):
-            world = self.world()
-            if world['battle'] is None:
-                assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
-                return
-            battle = world['battle']
-            base = 40 + 15 * world['stage']
-            if world['root']['id'] == 'fire':
-                base += 4 * (world['root']['level'] + 1)
-            if world['equipment']['weapon'] == 'blade':
-                base += 8 * world['gear']['blade']
-            if world['title'] == 'veteran':
-                base += 3
-            if (battle['kind'] == 'guard' or battle['kind'] == 'dungeon' and world['dungeon']['round'] == 2) and world.get('arrays_enabled', {}).get('seal', True):
-                base += 6 * world['arrays']['seal']
-            ordinary_damage = base + (4 * world['skills'][world['skill']] if world['skill'] == 'flame' else 0)
-            # A free lethal basic attack takes priority over recovery. Repeated
-            # defense against an almost-dead foe is a planner error, not a bug.
-            if battle['hp'] <= ordinary_damage:
-                self.perform('world_attack')
-            elif world['hp'] < 100 and self.inventory('pill') and battle['turn'] % 3 != 2:
-                self.perform('world_pill')
-            elif world['mp'] >= 24:
-                self.perform('world_power')
-            elif battle['turn'] % 3 != 2:
-                self.perform('world_attack')
-            else:
-                self.perform('world_defend')
-        raise AssertionError(('battle did not terminate', self.world()['battle']))
-
+        """One public auto-battle submission resolves the whole fight; defeat resets hp to 1."""
+        world = self.world()
+        if world['battle'] is None:
+            assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
+            return
+        self.perform('world_auto_battle', strategy='balanced')
+        world = self.world()
+        assert world['battle'] is None, ('auto battle left the fight open', world['battle'])
+        assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
     def prepare(self):
         self.perform('world_root', choice='fire')
         self.perform('world_constitution', choice='sturdy')
@@ -317,25 +296,26 @@ class WorldSystemInvariantTests(unittest.TestCase):
         self.assertEqual(p.world()['xp'] - before_xp, 19, '12 base + wood3 + spirit4')
         p.rest()
         p.perform('world_hunt')
-        p.perform('world_guard')
-        self.assertEqual(p.inventory('guard_talisman'), 0)
-        hp = p.world()['hp']
-        p.perform('world_soul')
-        self.assertEqual(p.inventory('soul_talisman'), 0)
-        self.assertEqual(p.world()['hp'], hp, 'soul talisman must suppress the enemy turn')
-        p.perform('world_pill')
-        self.assertEqual(p.inventory('pill'), 0)
-        before_hp = p.world()['battle']['hp']
-        p.perform('world_fire')
-        self.assertEqual(p.inventory('fire_talisman'), 0)
-        self.assertEqual(p.world()['battle']['hp'], before_hp - 72, 'floor((base40+blade8)*1.5)')
+        # 点击出招已退役：用内部单拍 resolver 在快照副本上验证每件消耗品的真实规则效果。
+        state = battle_round(p.snapshot()['state'], 'world_guard')[0]
+        self.assertEqual(state['world']['inventory'].get('guard_talisman', 0), 0)
+        hp = state['world']['hp']
+        state = battle_round(state, 'world_soul')[0]
+        self.assertEqual(state['world']['inventory'].get('soul_talisman', 0), 0)
+        self.assertEqual(state['world']['hp'], hp, 'soul talisman must suppress the enemy turn')
+        state = battle_round(state, 'world_pill')[0]
+        self.assertEqual(state['world']['inventory'].get('pill', 0), 0)
+        before_hp = state['world']['battle']['hp']
+        state = battle_round(state, 'world_fire')[0]
+        self.assertEqual(state['world']['inventory'].get('fire_talisman', 0), 0)
+        self.assertEqual(state['world']['battle']['hp'], before_hp - 72, 'floor((base40+blade8)*1.5)')
         p.win()
         p.rest()
         p.perform('world_boss')
         # Seal array adds 6 boss-only attack; blade adds8: floor54*2.1=113.
         enemy_hp = p.world()['battle']['hp']
-        p.perform('world_power')
-        self.assertEqual(p.world()['battle']['hp'], enemy_hp - 113)
+        state = battle_round(p.snapshot()['state'], 'world_power')[0]
+        self.assertEqual(state['world']['battle']['hp'], enemy_hp - 113)
         p.win()
         p.repeat_until(lambda: p.world()['xp'] >= 100, lambda: p.perform('world_cultivate'))
         p.perform('world_advance')

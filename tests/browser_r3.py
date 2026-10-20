@@ -74,20 +74,21 @@ def main():
             assert server.snapshot()['state']['world']['r3']['activities']['entries'][key]['claimed']
             report['checks'].append('daily choice -> actual commission and NPC chat -> one material reward')
             driver.action('world_boss_enter')
-            for _ in range(12):
-                driver.action('world_defend')
+            driver.action('world_auto_battle',strategy='frugal')
             boss=server.snapshot()['state']['world']['r3']['boss']
             day=next(iter(boss))
-            assert boss[day]['best']==0 and boss[day]['attempts']==1
+            assert boss[day]['best']>0 and boss[day]['attempts']==1
             driver.action('world_boss_claim',day=day)
-            assert server.snapshot()['state']['world']['r3']['materials']['boss_coin']==2
-            report['checks'].append('real twelve-round world Boss with zero personal damage -> two participation coins')
+            first_coin=server.snapshot()['state']['world']['r3']['materials']['boss_coin']
+            first_best=boss[day]['best']
+            assert first_coin>=2
+            report['checks'].append('real auto-battle world Boss window with personal damage -> participation and score coins')
             while server.snapshot()['state']['world']['hp']<200:
                 driver.action('world_rest')
             driver.action('world_boss_enter')
-            driver.action('world_power')
-            driver.action('world_flee')
-            driver.action('world_boss_claim',day=day)
+            driver.action('world_auto_battle',strategy='aggressive')
+            if server.snapshot()['state']['world']['r3']['boss'][day]['best']>first_best:
+                driver.action('world_boss_claim',day=day)
             for _ in range(4):
                 driver.action('world_loot_exchange',item='dust')
             driver.action('world_gather',item='herb')
@@ -116,8 +117,7 @@ def main():
                     driver.action('world_gather',item=resource)
             driver.action('world_craft',recipe='spirit_array',quantity=1)
             driver.action('world_boss_enter')
-            driver.action('world_defend')
-            driver.action('world_flee')
+            driver.action('world_auto_battle',strategy='frugal')
             driver.action('world_activity_claim',key=weekly)
             assert server.snapshot()['state']['world']['r3']['activities']['entries'][weekly]['claimed']
             report['checks'].append('real weekly project -> actual formation use and formal Boss -> material claim')

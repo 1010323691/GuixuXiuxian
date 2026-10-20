@@ -41,6 +41,15 @@ def main():
                 reveal_node(target.locator(selector))
                 expect(target.locator(selector)).to_be_visible()
 
+            def close_replay(target, battle_report):
+                # Auto battle is settled server-side; the page only replays the returned report.
+                expect(target.locator('#battle-replay')).to_be_visible()
+                target.locator('#replay-skip').click()
+                expect(target.locator('#replay-result')).to_be_visible()
+                assert len(battle_report['frames']) == battle_report['rounds'] + 1
+                target.locator('#replay-close').click()
+                expect(target.locator('#battle-replay')).to_be_hidden()
+
             def click_write(selector, endpoint, target=page):
                 reveal(selector, target)
                 with target.expect_response(lambda response: response.url == server.url + endpoint and response.request.method == 'POST') as received:
@@ -49,6 +58,8 @@ def main():
                 body = response.json()
                 assert response.status == 200, body
                 expect(target.locator('#main')).to_have_attribute('aria-busy', 'false')
+                if body.get('battle_report'):
+                    close_replay(target, body['battle_report'])
                 return body
 
             click_write('#create-button', '/api/new-game')
@@ -68,7 +79,7 @@ def main():
             expect(page.locator('#ending')).to_be_visible()
             expect(page.locator('#ending-text')).to_contain_text('归墟')
             page.screenshot(path=str(artifacts / 'desktop-ending.png'), full_page=True)
-            report['checks'].append('real-page exact 53-action no-upgrade completion')
+            report['checks'].append('real-page no-upgrade completion with click-free auto-battle replay')
 
             saved = click_write('#save-button', '/api/save')['state']
             action('gather')

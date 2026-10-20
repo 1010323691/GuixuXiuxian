@@ -174,7 +174,7 @@ class Store:
             now=max(now,account.get('last_settled') or now)
         return {'now':now,'day':datetime.fromtimestamp(now,timezone.utc).date().isoformat(),'raw_now':raw_now}
 
-    def _snapshot(self,revision,state,slot,events=None,duplicate=False):
+    def _snapshot(self,revision,state,slot,events=None,duplicate=False,battle_report=None):
         summary=None if slot is None else '%s · %s · 第%d行'%(slot['name'],C.REALMS[slot['realm']],slot['actions_taken'])
         now=self._now()
         projected,growth_view=growth.preview(state,now)
@@ -183,7 +183,10 @@ class Store:
         longline=growth.is_longline(state)
         view['profile']={'mode':'longline' if longline else 'free','load_policy':'仅恢复安全位置，保留当前剧情战斗、成长与全部资产经济及奖励资格；未入世序章仍完整恢复。' if longline else '完整恢复手动检查点。'}
         if growth_view is not None:view['growth']=growth_view
-        return dict(ok=True,duplicate=duplicate,revision=revision,state=state,view=view,save={'exists':slot is not None,'summary':summary},events=events or [])
+        result=dict(ok=True,duplicate=duplicate,revision=revision,state=state,view=view,save={'exists':slot is not None,'summary':summary},events=events or [])
+        # 自动斗法回放仅随本次响应返回，不入存档；重复请求/刷新后只留日志。
+        if battle_report is not None:result['battle_report']=battle_report
+        return result
 
     def snapshot(self):
         db=self.connect()
@@ -243,7 +246,7 @@ class Store:
             current+=1
             db.execute('UPDATE current SET revision=?,state=?,slot=? WHERE id=1',(current,encode(state),encode(slot)))
             db.execute('INSERT INTO requests VALUES(?,?)',(request_id,canonical))
-            result=self._snapshot(current,state,slot,events)
+            result=self._snapshot(current,state,slot,events,battle_report=context.get('battle_report') if endpoint=='action' else None)
             db.commit()
             return result
         except Exception:

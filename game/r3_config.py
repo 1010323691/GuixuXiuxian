@@ -68,6 +68,11 @@ TREASURES = {
                        'cost': {'dust': 4, 'herb': 4, 'ore': 4, 'wood': 4},
                        'max_enhance': 0},
 }
+# 战力型法宝在自动斗法中独立出手/回护；按品质（凡/下/中/上/极）取值。
+TREASURE_COMBAT = {
+    'main': {'cd': 2, 'attack_pct': [30, 34, 38, 42, 46]},
+    'guard': {'cd': 3, 'absorb_hp_pct': [6, 8, 10, 12, 14]},
+}
 TREASURE_PATHS = {
     'unselected': '尚未定向（不可装备）',
     'cultivation': '修炼型：只提高未来持续修炼速率',

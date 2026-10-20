@@ -13,7 +13,7 @@ from game import config, rules
 from game.storage import Store
 
 STATIC=Path(__file__).resolve().parent/'static'
-FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8')}
+FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8')}
 JSON_TYPE='application/json; charset=utf-8'
 
 

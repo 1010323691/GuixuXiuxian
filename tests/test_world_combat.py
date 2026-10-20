@@ -3,10 +3,12 @@ import copy
 import unittest
 
 from game import rules
-from tests.support import baseline_route
+from tests.support import baseline_route, battle_round
 
 
 class WorldCombatTests(unittest.TestCase):
+    """单拍规则经内部 resolver 校验；对外只有「自动斗法」入口。"""
+
     def setUp(self):
         self.state = rules.new_game('战斗规则QA')
         baseline_route(lambda: {'state': self.state}, self.act)
@@ -16,15 +18,19 @@ class WorldCombatTests(unittest.TestCase):
         self.state, _ = rules.apply_action(self.state, command, params)
         return {'state': self.state}
 
+    def rnd(self, command):
+        self.state, events, trace = battle_round(self.state, command)
+        return events, trace
+
     def world(self):
         return self.state['world']
 
     def test_power_cost_24_and_free_killing_blow_has_no_retaliation(self):
         self.act('world_hunt')
-        self.act('world_power')
+        self.rnd('world_power')
         self.assertEqual((self.world()['mp'], self.world()['hp'], self.world()['battle']['hp']), (36, 180, 26))
         hp = self.world()['hp']
-        self.act('world_attack')
+        self.rnd('world_attack')
         self.assertIsNone(self.world()['battle'])
         self.assertEqual(self.world()['hp'], hp)
 
@@ -34,7 +40,7 @@ class WorldCombatTests(unittest.TestCase):
         self.act('world_skill_equip', skill='mountain')
         self.act('world_craft', recipe='mountain_array', quantity=1)
         self.act('world_hunt')
-        self.act('world_defend')
+        self.rnd('world_defend')
         self.assertEqual(self.world()['hp'], 193, 'floor((20-sturdy2-array2-skill2)*0.5)=7')
         self.assertEqual(self.world()['mp'], 60, 'defense recovery clamps to max')
 
@@ -43,13 +49,13 @@ class WorldCombatTests(unittest.TestCase):
         self.world()['inventory'].update(guard_talisman=1, soul_talisman=1)
         rules.validate_state(self.state)
         self.act('world_hunt')
-        self.act('world_guard')
+        self.rnd('world_guard')
         self.assertEqual(self.world()['hp'], 185, 'guard floor20*0.75=15')
-        self.act('world_soul')
+        self.rnd('world_soul')
         self.assertEqual(self.world()['hp'], 185)
         self.assertEqual(self.world()['battle']['turn'], 2)
         self.assertEqual(self.world()['battle']['shield'], 0)
-        self.act('world_defend')
+        self.rnd('world_defend')
         self.assertEqual(self.world()['hp'], 168, 'guard expired, heavy floor35*0.5=17')
 
     def test_insufficient_mp_rejects_whole_battle_state(self):
@@ -57,10 +63,66 @@ class WorldCombatTests(unittest.TestCase):
         self.world()['mp'] = 23
         before = copy.deepcopy(self.state)
         with self.assertRaises(rules.GameError):
-            rules.apply_action(self.state, 'world_power', {})
+            battle_round(self.state, 'world_power')
         self.assertEqual(self.state, before)
 
-    def test_real_auction_delivery_during_simulated_combat_survives_flee(self):
+    def test_manual_click_actions_are_retired_and_do_not_mutate(self):
+        self.act('world_hunt')
+        before = copy.deepcopy(self.state)
+        for command in ['world_attack', 'world_power', 'world_defend', 'world_pill', 'world_fire',
+                        'world_guard', 'world_soul', 'world_flee']:
+            with self.subTest(command=command):
+                with self.assertRaises(rules.GameError) as caught:
+                    rules.apply_action(self.state, command, {})
+                self.assertEqual(caught.exception.status, 400)
+                self.assertEqual(self.state, before)
+
+    def test_auto_battle_requires_a_battle_and_a_known_strategy(self):
+        with self.assertRaises(rules.GameError):
+            rules.apply_action(self.state, 'world_auto_battle', {'strategy': 'balanced'})
+        self.act('world_hunt')
+        before = copy.deepcopy(self.state)
+        for params in [{'strategy': 'berserk'}, {}, {'strategy': 'balanced', 'extra': 1}]:
+            with self.subTest(params=params):
+                with self.assertRaises(rules.GameError):
+                    rules.apply_action(self.state, 'world_auto_battle', params)
+                self.assertEqual(self.state, before)
+
+    def test_auto_battle_resolves_whole_fight_in_one_request_with_replay_frames(self):
+        self.act('world_hunt')
+        tick, taken = self.world()['tick'], self.state['actions_taken']
+        context = {}
+        self.state, events = rules.apply_action(self.state, 'world_auto_battle', {'strategy': 'balanced'}, context=context)
+        report = context['battle_report']
+        self.assertIsNone(self.world()['battle'])
+        self.assertEqual(report['outcome'], 'victory')
+        self.assertEqual(len(report['frames']), report['rounds'] + 1)
+        self.assertEqual(self.world()['tick'], tick + report['rounds'], '每拍仍推进一次世界时钟')
+        self.assertEqual(self.state['actions_taken'], taken + report['rounds'])
+        self.assertEqual(report['frames'][-1]['enemy']['hp'], 0)
+
+    def test_auto_battle_is_deterministic_for_identical_state(self):
+        self.act('world_hunt')
+        outcomes = []
+        for _ in range(2):
+            context = {}
+            result, events = rules.apply_action(copy.deepcopy(self.state), 'world_auto_battle', {'strategy': 'balanced'}, context=context)
+            outcomes.append((result['world']['hp'], result['world']['mp'], events, context['battle_report']))
+        self.assertEqual(outcomes[0], outcomes[1])
+
+    def test_frugal_strategy_never_spends_consumables_and_aggressive_skips_talismans(self):
+        self.world()['inventory'].update(pill=3, fire_talisman=3, guard_talisman=3, soul_talisman=3)
+        self.world()['hp'] = 40
+        rules.validate_state(self.state)
+        self.act('world_hunt')
+        frugal, _ = rules.apply_action(copy.deepcopy(self.state), 'world_auto_battle', {'strategy': 'frugal'})
+        for item in ['pill', 'fire_talisman', 'guard_talisman', 'soul_talisman']:
+            self.assertEqual(frugal['world']['inventory'].get(item, 0), 3, item)
+        aggressive, _ = rules.apply_action(copy.deepcopy(self.state), 'world_auto_battle', {'strategy': 'aggressive'})
+        for item in ['fire_talisman', 'guard_talisman', 'soul_talisman']:
+            self.assertEqual(aggressive['world']['inventory'].get(item, 0), 3, item)
+
+    def test_real_auction_delivery_during_simulated_combat_survives_battle_end(self):
         order = next(order for order in self.world()['auctions'] if order['seller'] != 'player')
         order_id, item, amount = order['id'], order['item'], order['quantity']
         self.act('world_auction_bid', auction=order_id, price=order['base'] + 4)
@@ -71,10 +133,11 @@ class WorldCombatTests(unittest.TestCase):
             target = next(order for order in self.world()['auctions'] if order['id'] == order_id)
             if target['settled']:
                 break
-            self.act('world_defend')
+            self.rnd('world_defend')
         self.assertTrue(target['settled'])
         self.assertEqual(self.world()['inventory'].get(item, 0), before_item + amount)
-        self.act('world_flee')
+        self.act('world_auto_battle', strategy='frugal')
+        self.assertIsNone(self.world()['battle'])
         self.assertEqual((self.world()['hp'], self.world()['mp']), hp_mp)
         self.assertEqual(self.world()['inventory'].get(item, 0), before_item + amount,
                          'restoring simulated inventory erased a real auction delivery')
@@ -95,7 +158,7 @@ class WorldCombatTests(unittest.TestCase):
         self.assertEqual(self.world()['equipment']['weapon'], 'blade')
         self.assertEqual(self.world()['gear']['blade'], 1)
         self.act('world_hunt')
-        self.act('world_attack')
+        self.rnd('world_attack')
         self.assertEqual(self.world()['battle']['hp'], 62, 'remaining equipped blade still adds8 attack')
 
 

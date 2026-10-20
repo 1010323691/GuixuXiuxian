@@ -17,31 +17,15 @@ class R3Planner(WorldPlanner):
         return next(s['value'] for s in page['stats'] if s['label']==label)
 
     def win(self):
-        for _ in range(100):
-            w = self.world()
-            if w['battle'] is None:
-                assert w['hp'] > 1, ('defeated, not a completed victory', self.trace[-15:])
-                return
-            b = w['battle']
-            attack = int(self.character_stat('攻击'))
-            if b['kind']=='guard' or b['kind']=='dungeon' and w['dungeon']['round']==2:
-                attack += 6*w['arrays']['seal']*w['arrays_enabled']['seal']
-            ordinary = attack + (4*w['skills']['flame'] if w['skill']=='flame' else 0)
-            strong = attack*(20+w['skills']['origin'])//10 if w['skill']=='origin' else attack*2
-            if b['hp'] <= ordinary:
-                self.perform('world_attack')
-            elif w['mp'] >= 24 and b['hp'] <= strong:
-                self.perform('world_power')
-            elif b['turn']%3==1 and self.inventory('pill') and (w['hp']<150 or w['mp']<24):
-                self.perform('world_pill')
-            elif w['mp'] >= 24:
-                self.perform('world_power')
-            elif b['turn']%3==2 and w['hp'] < b['heavy']*2:
-                self.perform('world_defend')
-            else:
-                self.perform('world_attack')
-        raise AssertionError(('combat did not finish', self.world()['battle']))
-
+        """One public auto-battle submission resolves the whole fight; defeat resets hp to 1."""
+        world = self.world()
+        if world['battle'] is None:
+            assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
+            return
+        self.perform('world_auto_battle', strategy='balanced')
+        world = self.world()
+        assert world['battle'] is None, ('auto battle left the fight open', world['battle'])
+        assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
     def prepare(self):
         self.perform('world_root', choice='fire')
         self.perform('world_constitution', choice='sturdy')

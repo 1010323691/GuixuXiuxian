@@ -21,7 +21,9 @@
 验证入口：`python -m tests.parallel`（并行白盒全量，约30–45秒；可加子串只跑部分）或串行 `python -m unittest discover -s tests -v`、`python -m tests.browser_smoke`、`python -m tests.browser_world`。后两者为可选开发依赖Playwright/系统Chromium；游戏运行无第三方包。测试使用独立临时数据，不对玩家data注入故障。完成状态仅按最新代码和当轮实际证据，不沿用历史通过证明新改动。
 
 ## 本轮交付状态
-当前新增 R5 独立空中斗法评审与实验，统一结论 `docs/iterations/R5_DECISIONS.md`、最新独立验收 `R5_LAB_TESTING.md`、代码 `prototypes/r5-combat/`。PM 维护统一结论/任务/打包；策划维护 R5_DESIGN_PROPOSAL；架构维护 R5_ARCHITECTURE_PROPOSAL；开发维护实验 engine/server/README；视觉维护实验 static 与 R5_UI_PROPOSAL；QA 维护实验 tests、验收证据及 R5_LAB_TESTING。正式 game/static/data 与 v1.2 发行包不能因实验被改写；本轮实验不代表正式自动战斗、持久化迁移和经济重平衡已完成。
+R5自动斗法已接入正式游戏并退役点击式战斗（序章 `auto_battle`、世界 `world_auto_battle`；战力型法宝独立出击/回护；响应带不入存档的 `battle_report` 回放）。规则/接口/限制见 `docs/iterations/R5_INTEGRATION.md`；白盒全量196项通过，真实浏览器套件需Playwright/Chromium、本轮未运行，战力型法宝经济重平衡与存档级战报未做。下文R5为其前序独立实验记录。
+
+此前新增 R5 独立空中斗法评审与实验，统一结论 `docs/iterations/R5_DECISIONS.md`、最新独立验收 `R5_LAB_TESTING.md`、代码 `prototypes/r5-combat/`。PM 维护统一结论/任务/打包；策划维护 R5_DESIGN_PROPOSAL；架构维护 R5_ARCHITECTURE_PROPOSAL；开发维护实验 engine/server/README；视觉维护实验 static 与 R5_UI_PROPOSAL；QA 维护实验 tests、验收证据及 R5_LAB_TESTING。正式 game/static/data 与 v1.2 发行包不能因实验被改写；本轮实验不代表正式自动战斗、持久化迁移和经济重平衡已完成。
 
 R4首周节奏迭代v1.2.0已完成181项全量（790.929s、无失败/跳过）和四套真实浏览器验收，同源源码归档独立解包与CRC/逐文件SHA/运行源一致性亦已通过。当前有效规则见docs/iterations/R4_DESIGN.md、R4_API.md、R4_IMPLEMENTATION.md和docs/R4_PLAYING.md：curve_v2保45基础日但首段0.5/1.5/3日；cadence恢复资格初始3/8h1/容量3；journey七段故事/三精英/手战证明；同章同难一次手胜后正式资格快捷结算。旧schema2长线先唯一备份再一次内容升级，free/schema1不静默切换。不能再以R3每日3次或旧144450总成本作为当前规则。五岗当前归属：策划r3/gameplay_config与设计路线，架构growth/cadence/storage/activities与架构测试，开发world/loot/journey，视觉static，QA其余R4/回归/浏览器，PM文档/版本/打包。最终通过数和源码hash以R4_TESTING实际记录为准。
 

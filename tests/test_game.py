@@ -69,48 +69,31 @@ class GameHTTPTests(unittest.TestCase):
         self.assertEqual((state['technique'], state['stones']), (2, 0))
         self.rejected('upgrade')
 
-    def test_combat_order_cost_defense_and_free_recovery(self):
+    def test_prelude_auto_battle_replaces_click_combat_and_keeps_free_recovery(self):
         self.new()
         self.server.action('challenge', enemy='wolf')
         self.rejected('cultivate')
-        state = self.server.action('power_attack')['state']
-        self.assertEqual((state['mp'], state['hp'], state['battle']['hp']), (6, 52, 20))
-        state = self.server.action('power_attack')['state']
-        self.assertEqual((state['mp'], state['hp'], state['battle']['hp']), (0, 52, 4))
-        self.rejected('power_attack')
-        state = self.server.action('defend')['state']
-        self.assertEqual((state['mp'], state['hp']), (3, 45))
-        state = self.server.action('attack')['state']
+        for retired in ['attack', 'power_attack', 'defend', 'use_pill', 'flee']:
+            self.rejected(retired)
+        snapshot = self.server.snapshot()
+        self.assertEqual([a['id'] for a in snapshot['view']['actions'] if a['group'] == 'battle'], ['auto_battle'])
+        revision = snapshot['revision']
+        result = self.server.action('auto_battle')
+        state = result['state']
+        self.assertGreater(result['revision'], revision)
         self.assertIsNone(state['battle'])
-        self.assertEqual((state['hp'], state['stones'], state['cultivation']), (45, 6, 4))
         self.assertIn('wolf', state['victories'])
+        self.assertEqual((state['stones'], state['cultivation']), (6, 4))
+        report = result['battle_report']
+        self.assertEqual(report['outcome'], 'victory')
+        self.assertEqual(len(report['frames']), report['rounds'] + 1)
+        self.assertNotIn('battle_report', self.server.snapshot(), '回放只随本次响应返回，不入存档')
+        self.rejected('auto_battle')
         self.server.action('rest')
         self.server.action('rest')
-        self.server.action('challenge', enemy='wolf')
-        for _ in range(15):
-            if self.server.snapshot()['state']['battle'] is None:
-                break
-            self.server.action('defend')
-        # Extend without attacks to exercise actual defeat, then free recovery.
-        for _ in range(40):
-            if self.server.snapshot()['state']['battle'] is None:
-                break
-            self.server.action('defend')
-        state = self.server.snapshot()['state']
-        self.assertIsNone(state['battle'])
-        self.assertEqual((state['hp'], state['region']), (1, 'village'))
-        self.assertEqual(state['stones'], 6)
-        state = self.server.action('rest')['state']
-        self.assertEqual(state['hp'], 31)
-        self.server.action('gather')
-        self.server.action('cultivate')
-        self.server.action('challenge', enemy='wolf')
-        before = self.server.snapshot()['state']
-        after = self.server.action('flee')['state']
-        self.assertEqual(after['hp'], before['hp'])
-        self.assertEqual(after['stones'], before['stones'])
-        self.assertIsNone(after['battle'])
-
+        state = self.server.action('challenge', enemy='wolf')['state']
+        self.assertIsNotNone(state['battle'])
+        self.assertIsNone(self.server.action('auto_battle')['state']['battle'])
     def test_complete_legal_route_and_post_ending(self):
         self.new()
         route_to_ending(self.server.snapshot, self.server.action)
@@ -132,11 +115,10 @@ class GameHTTPTests(unittest.TestCase):
 
     def test_slot_restart_and_monotonic_revision(self):
         self.new()
-        self.server.action('challenge', enemy='wolf')
-        saved = self.server.action('attack')['state']
+        saved = self.server.action('challenge', enemy='wolf')['state']
         checkpoint = self.server.write('/api/save')
         self.assertTrue(checkpoint['save']['exists'])
-        changed = self.server.action('defend')
+        changed = self.server.action('auto_battle')
         self.server.stop()
         self.server.start()
         self.assertEqual(self.server.snapshot()['state'], changed['state'])

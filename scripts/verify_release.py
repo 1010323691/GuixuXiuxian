@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix='guixu-release-verify-') as temp:
     try:
         start()
         assert b'longline' in get('/') and b'growth-panel' in get('/')
-        assert len(get('/app.js'))>1000 and len(get('/styles.css'))>1000
+        assert len(get('/app.js'))>1000 and len(get('/styles.css'))>1000 and len(get('/battle_replay.js'))>1000
         created=write('new-game',name='归档验收')
         assert created['view']['profile']['mode']=='longline'
         sys.path.insert(0,str(root))
@@ -86,8 +86,7 @@ with tempfile.TemporaryDirectory(prefix='guixu-release-verify-') as temp:
         blade=next(uid for uid,item in crafted['state']['world']['r3']['instances'].items() if item['template_id']=='blade')
         action('world_loot_equip',uid=blade)
         action('world_boss_enter')
-        action('world_attack');action('world_attack')
-        finished=action('world_flee')
+        finished=action('world_auto_battle',strategy='frugal')
         period=next(iter(finished['state']['world']['r3']['boss']))
         claimed=action('world_boss_claim',day=period)
         assert claimed['state']['world']['r3']['materials']['boss_coin']>=8

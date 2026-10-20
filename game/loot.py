@@ -84,6 +84,14 @@ def instance_effect(item):
     return {{'blade':'attack','armor':'hp','pendant':'mp'}[template]:amount}
 
 
+def combat_treasure(w,slot):
+    """Equipped combat-path treasure for an auto-battle slot ('main' or 'guard'), else None."""
+    r=w.get('r3')
+    if not r:return None
+    item=r['instances'].get(r['equipped'].get(slot))
+    return item if item and item['effect_type']=='combat' else None
+
+
 def attributes(w,base):
     r=w['r3'];result=dict(base)
     for slot in ['weapon','armor','pendant']:
@@ -486,7 +494,7 @@ def project(state,view,context=None):
                     title=a['params']['title'];a['effect']=('攻击+3，' if title=='veteran' else '静养气血+10，' if title=='companion' else '')+'佩戴称号持续修炼+0.5%，受总15%上限约束'
             if a['id']=='world_advance':a['cost']='修为%d及阶段条件'%required
             if a['id']=='world_finish':a['cost']='渡劫修为51840、守关与三秘境及主线备阵'
-            if a['id'] in {'world_attack','world_power','world_defend','world_pill','world_fire','world_guard','world_soul','world_flee'}:a['group']='battle'
+            if a['id']=='world_auto_battle':a['group']='battle'
         if page['id']=='quests':
             for s in page['sections']:
                 for row in s['rows']:
@@ -612,7 +620,7 @@ def project(state,view,context=None):
                 goals.append({'id':'goal:'+str(len(goals)+1),'title':title,'reason':reason or action['reason'] or action['effect'],'page':page['id'],'target_page':page['id'],'action':{'id':action['id'],'params':dict(action['params'])},'_identity':identity})
                 return
     if w['battle']:
-        goal('world_attack','先完成当前交锋','观察敌方意图与机制，战斗指令置顶。',enabled_only=True)
+        goal('world_auto_battle','先完成当前交锋','选一种自动斗法策略，法宝会随真实冷却自动出击与回护。',{'strategy':'balanced'},enabled_only=True)
     goal('world_story_claim','领取已经完成的首周故事','领取这一段的实物或自选器物后，可开启下一段。',enabled_only=True)
     goal('world_activity_claim','领取已经完成的双目标项目','这些非XP材料可投入法宝/强化，完成权益可跨周期保留。',enabled_only=True)
     if not w['ending']:
@@ -635,7 +643,7 @@ def project(state,view,context=None):
     goal('world_gather','安全补齐材料缺口','基础材料可再生，免费采集不发额外修为。',{'item':'ore'},enabled_only=True)
     view['goals']=[{k:v for k,v in g.items() if k!='_identity'} for g in goals[:3]]
     if view.get('battle'):
-        battle=w['battle'];statuses=[];counterplay='根据常击→蓄势→重击安排行动；击杀不受反击。'
+        battle=w['battle'];statuses=[];counterplay='敌方按常击→蓄势→重击循环；自动斗法会在重击前防御、必要时补给，法宝按冷却独立出击。'
         if battle.get('mechanic'):
             definition=G.ELITES[battle['target']] if battle['kind']=='elite' else G.DUNGEON_MECHANICS[battle['target']]
             statuses.append({'label':'独特机制','value':definition['name']});counterplay=definition['description']

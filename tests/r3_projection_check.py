@@ -65,7 +65,7 @@ def main():
         server.action('world_sect_daily',item='herb')
         server.action('world_chat',npc='healer')
         collect('completed two-objective daily')
-        server.action('world_boss_enter');server.action('world_defend');server.action('world_flee')
+        server.action('world_boss_enter');server.action('world_auto_battle',strategy='frugal')
         collect('valid low-damage world Boss period')
         missing=sorted(EXPECTED-set(report['coverage']))
         assert not missing,('no real projected entry for new actions',missing)

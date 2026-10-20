@@ -40,41 +40,16 @@ class Designer(R3Planner):
 
     def win(self):
         initial = self.world()['battle']
-        used = []
-        for _ in range(120):
-            w = self.world(); b = w['battle']
-            if b is None:
-                assert w['hp'] > 1, ('defeat is not victory', initial, used)
-                if initial['kind'] == 'elite':
-                    assert initial['target'] in w['r3']['journey']['elite_wins']
-                self.combats.append({'initial': initial, 'moves': used,
-                                     'final_hp': w['hp'], 'final_mp': w['mp']})
-                return
-            attack = int(self.character_stat('攻击'))
-            ordinary = attack + (4*w['skills']['flame'] if w['skill']=='flame' else 0)
-            power = attack*(20+w['skills']['origin'])//10 if w['skill']=='origin' else attack*2
-            turn = b['turn'] % 3
-            if b['hp'] <= ordinary and not b.get('barrier', 0):
-                cmd = 'world_attack'
-            elif getattr(self,'challenge_epilogue',False) and w['mp']>=24 and b['hp']<=power and not b.get('barrier',0):
-                cmd = 'world_power'  # lethal before defensive/healing reflex
-            elif b.get('barrier',0) > attack and self.inventory('fire_talisman'):
-                cmd = 'world_fire'
-            elif b.get('poison_turns',0) and self.inventory('pill'):
-                cmd = 'world_pill'
-            elif b.get('mechanic') == 'mana_seal' and turn == 0:
-                cmd = 'world_defend'
-            elif (w['hp'] < 140 or w['mp'] < 24 and turn == 1) and self.inventory('pill'):
-                cmd = 'world_pill'
-            elif b.get('mechanic') == 'venom' and turn == 2:
-                cmd = 'world_defend'
-            elif w['mp'] >= 24:
-                cmd = 'world_power'
-            else:
-                cmd = 'world_attack'
-            self.perform(cmd); used.append(cmd)
-        raise AssertionError(('combat budget', initial, used))
-
+        for _ in range(3):
+            if self.world()['battle'] is None:
+                break
+            self.perform('world_auto_battle', strategy='balanced')
+        w = self.world()
+        assert w['battle'] is None and w['hp'] > 1, ('defeat is not victory', initial)
+        if initial['kind'] == 'elite':
+            assert initial['target'] in w['r3']['journey']['elite_wins']
+        self.combats.append({'initial': initial, 'moves': ['world_auto_battle'],
+                             'final_hp': w['hp'], 'final_mp': w['mp']})
     def point(self, story, item=None):
         before = set(self.world()['r3']['instances'])
         self.perform('world_story_claim', story=story, **({'item':item} if item else {}))
@@ -106,13 +81,12 @@ class Designer(R3Planner):
 
 def prologue(server):
     server.create(name='R4策划独立路线')
-    for n,region,enemy,sequence in [(6,'forest','ape','PPDPAA'),
-            (8,'ruins','sentinel','PPDPADPA'),(10,None,'shadow','PPDPPDPAA')]:
+    for n,region,enemy in [(6,'forest','ape'),(8,'ruins','sentinel'),(10,None,'shadow')]:
         for _ in range(n):server.action('cultivate')
         server.action('breakthrough')
         if region:server.action('travel',region=region)
         server.action('challenge',enemy=enemy)
-        for symbol in sequence:server.action({'P':'power_attack','A':'attack','D':'defend'}[symbol])
+        server.action('auto_battle')
     assert server.snapshot()['state']['completed']
     server.action('world_enter')
 
@@ -151,14 +125,14 @@ def run(output, challenge_epilogue=False):
         p.advance_at(48)
         p.perform('world_story_accept',story='venom_medicine')
         p.travel('xuanchao');p.rest();p.perform('world_elite_enter',elite='venom_keeper')
-        p.perform('world_attack');p.perform('world_pill');p.win()
+        p.win()
         p.point('venom_medicine','armor')
         p.perform('world_story_accept',story='dangerous_proof')
         p.craft('blade');p.dungeon(difficulty=2);p.point('dangerous_proof')
         p.advance_at(120)
         p.perform('world_story_accept',story='astral_bridge')
         p.travel('xuanchao');p.rest();p.perform('world_elite_enter',elite='astral_warden');p.win()
-        p.rest();p.perform('world_boss_enter');p.perform('world_attack');p.perform('world_flee')
+        p.rest();p.perform('world_boss_enter');p.perform('world_auto_battle',strategy='frugal')
         p.point('astral_bridge','pendant')
         if challenge_epilogue:
             p.challenge_epilogue=True

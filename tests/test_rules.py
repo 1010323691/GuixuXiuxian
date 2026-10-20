@@ -2,7 +2,7 @@
 import copy
 import unittest
 
-from game.rules import GameError, apply_action, new_game, validate_state
+from game.rules import GameError, _step, apply_action, new_game, validate_state
 
 
 class RuleBoundaryTests(unittest.TestCase):
@@ -51,15 +51,45 @@ class RuleBoundaryTests(unittest.TestCase):
         state = self.apply(state, 'cultivate')
         self.assertEqual((state['herbs'], state['cultivation'], state['stones']), (2, 6, 0))
 
+    def step(self, state, action):
+        """序章单拍内部 resolver（对外不再开放点击）。"""
+        original = copy.deepcopy(state)
+        result, events = _step(state, action, {})
+        self.assertEqual(state, original)
+        validate_state(result)
+        return result
+
     def test_pill_effect_precedes_enemy_and_clamps_independently(self):
         state = new_game('丹药道友')
         state.update(hp=50, mp=0, pills=1, battle={'enemy': 'wolf', 'hp': 36, 'turn': 0})
-        result = self.apply(state, 'use_pill')
+        result = self.step(state, 'use_pill')
         self.assertEqual((result['hp'], result['mp'], result['pills']), (52, 6, 0))
         self.assertEqual(result['battle']['turn'], 1)
-        self.reject(result, 'use_pill')
+        with self.assertRaises(GameError):
+            _step(result, 'use_pill', {})
         state.update(hp=60, mp=12)
-        self.reject(state, 'use_pill')
+        with self.assertRaises(GameError):
+            _step(state, 'use_pill', {})
+
+    def test_manual_prelude_click_actions_are_retired(self):
+        state = new_game('旧招道友')
+        state.update(battle={'enemy': 'wolf', 'hp': 36, 'turn': 0})
+        for action in ['attack', 'power_attack', 'defend', 'use_pill', 'flee']:
+            with self.subTest(action=action):
+                self.reject(state, action)
+
+    def test_prelude_auto_battle_runs_to_a_result_and_reports_frames(self):
+        state = new_game('自动道友')
+        state.update(battle={'enemy': 'wolf', 'hp': 36, 'turn': 0})
+        context = {}
+        result, events = apply_action(state, 'auto_battle', {}, context=context)
+        report = context['battle_report']
+        self.assertIsNone(result['battle'])
+        self.assertEqual(report['outcome'], 'victory')
+        self.assertEqual(len(report['frames']), report['rounds'] + 1)
+        self.assertTrue(events)
+        self.reject(result, 'auto_battle')
+        self.reject(state, 'auto_battle', {'extra': 'x'})
 
     def test_invalid_values_and_extra_parameters(self):
         state = new_game('边界道友')
