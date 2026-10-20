@@ -1,0 +1,31 @@
+test_all_projected_actions_reject_extra_state_overrides_without_mutation (tests.test_world_systems.WorldSystemInvariantTests.test_all_projected_actions_reject_extra_state_overrides_without_mutation) ... ok
+test_all_three_secrets_and_three_dungeons_have_real_completion (tests.test_world_systems.WorldSystemInvariantTests.test_all_three_secrets_and_three_dungeons_have_real_completion) ... FAIL
+test_all_twelve_recipes_outputs_are_consumed_equipped_or_affect_rules (tests.test_world_systems.WorldSystemInvariantTests.test_all_twelve_recipes_outputs_are_consumed_equipped_or_affect_rules) ... ok
+test_craft_achievement_title_changes_growth_and_cannot_duplicate (tests.test_world_systems.WorldSystemInvariantTests.test_craft_achievement_title_changes_growth_and_cannot_duplicate) ... ok
+test_full_mortal_world_progress_with_legal_free_resources (tests.test_world_systems.WorldSystemInvariantTests.test_full_mortal_world_progress_with_legal_free_resources) ... ok
+test_home_production_collect_and_array_effect_can_be_toggled (tests.test_world_systems.WorldSystemInvariantTests.test_home_production_collect_and_array_effect_can_be_toggled) ... ok
+test_market_fields_reject_bad_quantity_and_buy_sell_are_real (tests.test_world_systems.WorldSystemInvariantTests.test_market_fields_reject_bad_quantity_and_buy_sell_are_real) ... ok
+test_player_auction_return_is_once_and_bid_inventory_is_escrowed (tests.test_world_systems.WorldSystemInvariantTests.test_player_auction_return_is_once_and_bid_inventory_is_escrowed) ... ok
+test_repeated_rewards_social_permissions_and_dispatched_progress (tests.test_world_systems.WorldSystemInvariantTests.test_repeated_rewards_social_permissions_and_dispatched_progress) ... ok
+test_three_domain_npc_season_and_claim_once (tests.test_world_systems.WorldSystemInvariantTests.test_three_domain_npc_season_and_claim_once) ... ok
+test_three_npc_relationships_teacher_and_family_variants (tests.test_world_systems.WorldSystemInvariantTests.test_three_npc_relationships_teacher_and_family_variants) ... ok
+test_three_roots_bodies_and_skills_have_actual_effect_and_caps (tests.test_world_systems.WorldSystemInvariantTests.test_three_roots_bodies_and_skills_have_actual_effect_and_caps) ... ok
+test_world_read_only_navigation_projection_never_advances_ai (tests.test_world_systems.WorldSystemInvariantTests.test_world_read_only_navigation_projection_never_advances_ai) ... ok
+
+======================================================================
+FAIL: test_all_three_secrets_and_three_dungeons_have_real_completion (tests.test_world_systems.WorldSystemInvariantTests.test_all_three_secrets_and_three_dungeons_have_real_completion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 372, in test_all_three_secrets_and_three_dungeons_have_real_completion
+    p.dungeon(dungeon, region, difficulty)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 192, in dungeon
+    self.win()
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 129, in win
+    assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
+           ^^^^^^^^^^^^^^^
+AssertionError: ('unexpected defeat in public route', [{'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_rest', 'params': {}}, {'id': 'world_rest', 'params': {}}, {'id': 'world_rest', 'params': {}}, {'id': 'world_dungeon_next', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_power', 'params': {}}, {'id': 'world_pill', 'params': {}}, {'id': 'world_pill', 'params': {}}, {'id': 'world_pill', 'params': {}}])
+
+----------------------------------------------------------------------
+Ran 13 tests in 212.595s
+
+FAILED (failures=1)

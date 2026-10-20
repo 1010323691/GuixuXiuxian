@@ -1,0 +1,9 @@
+test_final_dungeon_hit_retains_item_and_both_full_material_rewards_at_pending_boundary (tests.test_r3_items.R3ItemTests.test_final_dungeon_hit_retains_item_and_both_full_material_rewards_at_pending_boundary) ... ok
+test_leaving_unfinished_run_releases_only_its_pending_slot_reservation (tests.test_r3_items.R3ItemTests.test_leaving_unfinished_run_releases_only_its_pending_slot_reservation) ... ok
+test_accepting_before_last_upgrade_still_finishes_after_crafting_to_cap (tests.test_r3_milestones.R3MilestoneTests.test_accepting_before_last_upgrade_still_finishes_after_crafting_to_cap) ... ok
+test_fully_upgraded_arrays_remove_impossible_craft_branch_and_backend_rejects_it (tests.test_r3_milestones.R3MilestoneTests.test_fully_upgraded_arrays_remove_impossible_craft_branch_and_backend_rejects_it) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.087s
+
+OK

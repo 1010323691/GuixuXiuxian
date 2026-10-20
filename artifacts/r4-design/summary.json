@@ -1,0 +1,151 @@
+{
+  "source": "route.json",
+  "sha256": "aa5bdeb367a519e580e09de471dfeb4bd4a9193852feae8271a72bd241003e85",
+  "ok": true,
+  "public_world_operations": 258,
+  "world_tick": 253,
+  "global_actions_taken": 307,
+  "elapsed_injected_hours": 120,
+  "state_or_resource_injected": false,
+  "story_checkpoints": [
+    {
+      "story": "first_forge",
+      "hours": 0.0,
+      "stage": 0,
+      "public_world_operations": 130,
+      "choice": null,
+      "new_items": []
+    },
+    {
+      "story": "allied_roads",
+      "hours": 0.0,
+      "stage": 0,
+      "public_world_operations": 137,
+      "choice": null,
+      "new_items": []
+    },
+    {
+      "story": "caravan_rescue",
+      "hours": 12.0,
+      "stage": 1,
+      "public_world_operations": 171,
+      "choice": "blade",
+      "new_items": [
+        {
+          "chapter": 1,
+          "effect_type": "combat",
+          "enhance": 0,
+          "quality": 1,
+          "source_receipt": "8088b0bf-f492-400f-951e-b77c030e1e1c:8:story:8088b0bf-f492-400f-951e-b77c030e1e1c:caravan_rescue",
+          "template_id": "blade",
+          "uid": "item:8088b0bf-f492-400f-951e-b77c030e1e1c:8:story:8088b0bf-f492-400f-951e-b77c030e1e1c:caravan_rescue"
+        }
+      ]
+    },
+    {
+      "story": "arts_in_concert",
+      "hours": 12.0,
+      "stage": 1,
+      "public_world_operations": 183,
+      "choice": null,
+      "new_items": []
+    },
+    {
+      "story": "venom_medicine",
+      "hours": 48.0,
+      "stage": 2,
+      "public_world_operations": 209,
+      "choice": "armor",
+      "new_items": [
+        {
+          "chapter": 2,
+          "effect_type": "combat",
+          "enhance": 0,
+          "quality": 2,
+          "source_receipt": "8088b0bf-f492-400f-951e-b77c030e1e1c:10:story:8088b0bf-f492-400f-951e-b77c030e1e1c:venom_medicine",
+          "template_id": "armor",
+          "uid": "item:8088b0bf-f492-400f-951e-b77c030e1e1c:10:story:8088b0bf-f492-400f-951e-b77c030e1e1c:venom_medicine"
+        }
+      ]
+    },
+    {
+      "story": "dangerous_proof",
+      "hours": 48.0,
+      "stage": 2,
+      "public_world_operations": 229,
+      "choice": null,
+      "new_items": []
+    },
+    {
+      "story": "astral_bridge",
+      "hours": 120.0,
+      "stage": 3,
+      "public_world_operations": 257,
+      "choice": "pendant",
+      "new_items": [
+        {
+          "chapter": 3,
+          "effect_type": "combat",
+          "enhance": 0,
+          "quality": 3,
+          "source_receipt": "8088b0bf-f492-400f-951e-b77c030e1e1c:13:story:8088b0bf-f492-400f-951e-b77c030e1e1c:astral_bridge",
+          "template_id": "pendant",
+          "uid": "item:8088b0bf-f492-400f-951e-b77c030e1e1c:13:story:8088b0bf-f492-400f-951e-b77c030e1e1c:astral_bridge"
+        }
+      ]
+    }
+  ],
+  "elite_moves": {
+    "caravan_guard": [
+      "world_fire",
+      "world_power",
+      "world_power",
+      "world_power"
+    ],
+    "venom_keeper": [
+      "world_attack",
+      "world_pill",
+      "world_defend",
+      "world_power",
+      "world_power",
+      "world_defend",
+      "world_power",
+      "world_attack"
+    ],
+    "astral_warden": [
+      "world_defend",
+      "world_power",
+      "world_power",
+      "world_defend",
+      "world_power",
+      "world_power",
+      "world_defend",
+      "world_pill",
+      "world_power"
+    ]
+  },
+  "recovered_sweeps": [
+    {
+      "hours": 0.0,
+      "available_after": 1
+    },
+    {
+      "hours": 0.0,
+      "available_after": 0
+    },
+    {
+      "hours": 8.0,
+      "available_after": 0
+    },
+    {
+      "hours": 16.0,
+      "available_after": 0
+    }
+  ],
+  "limitations": [
+    "Injected server UTC; not real-player elapsed experience",
+    "Prepared all three ordinary items +3; not a minimum-click route",
+    "Did not finish all eight realms or current-chapter high difficulty",
+    "Poison was prevented by defending; no refresh-boundary claim"
+  ]
+}

@@ -1,0 +1,6 @@
+test_real_seven_story_three_elite_early_gates_then_month_finale (tests.test_r4_progression.R4ProgressionTests.test_real_seven_story_three_elite_early_gates_then_month_finale) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 147.721s
+
+OK

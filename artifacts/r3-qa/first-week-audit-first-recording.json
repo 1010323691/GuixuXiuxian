@@ -1,0 +1,341 @@
+{
+  "kind": "read-only product audit with isolated temporary Store and injected UTC; not human playtime",
+  "logins": [
+    {
+      "label": "day0 login1",
+      "elapsed_hours": 0.0,
+      "stage": 0,
+      "realm": "筑基",
+      "chapter_max": 0,
+      "regions_unlocked": [
+        "qinglan"
+      ],
+      "xp_settled": 0,
+      "xp_available": 0.0,
+      "rate_per_day": 545.4000000000001,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 1,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 266
+    },
+    {
+      "label": "day0 login2",
+      "elapsed_hours": 8.0,
+      "stage": 0,
+      "realm": "筑基",
+      "chapter_max": 0,
+      "regions_unlocked": [
+        "qinglan"
+      ],
+      "xp_settled": 181,
+      "xp_available": 181.8,
+      "rate_per_day": 545.4000000000001,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 2,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 272
+    },
+    {
+      "label": "day0 login3",
+      "elapsed_hours": 16.0,
+      "stage": 0,
+      "realm": "筑基",
+      "chapter_max": 0,
+      "regions_unlocked": [
+        "qinglan"
+      ],
+      "xp_settled": 363,
+      "xp_available": 363.6,
+      "rate_per_day": 545.4000000000001,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 3,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 278
+    },
+    {
+      "label": "day1 before optional play",
+      "elapsed_hours": 24.0,
+      "stage": 0,
+      "realm": "筑基",
+      "chapter_max": 0,
+      "regions_unlocked": [
+        "qinglan"
+      ],
+      "xp_settled": 545,
+      "xp_available": 545.4,
+      "rate_per_day": 545.4000000000001,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 3,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 280
+    },
+    {
+      "label": "day3 after manual eligible gates",
+      "elapsed_hours": 72.0,
+      "stage": 1,
+      "realm": "结丹",
+      "chapter_max": 1,
+      "regions_unlocked": [
+        "qinglan",
+        "chisha"
+      ],
+      "xp_settled": 16,
+      "xp_available": 16.2,
+      "rate_per_day": 818.1,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [
+        "0"
+      ],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 3,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 286
+    },
+    {
+      "label": "day7 after manual eligible gates",
+      "elapsed_hours": 168.0,
+      "stage": 2,
+      "realm": "元婴",
+      "chapter_max": 2,
+      "regions_unlocked": [
+        "qinglan",
+        "chisha",
+        "xuanchao"
+      ],
+      "xp_settled": 48,
+      "xp_available": 48.6,
+      "rate_per_day": 1199.88,
+      "dungeon_drop_receipts": 6,
+      "daily_successes": {
+        "2026-10-19": 3
+      },
+      "pity": {
+        "1": 1,
+        "2": 1,
+        "3": 1
+      },
+      "owned_instances": 6,
+      "activities_claimed": [
+        "d:2026-10-19"
+      ],
+      "guard_first_wins": [
+        "0",
+        "1"
+      ],
+      "dungeon_first_wins": [
+        "den:0:1",
+        "den:0:2",
+        "den:0:3"
+      ],
+      "boss": {
+        "2026-10-19": {
+          "attempts": 3,
+          "best": 0,
+          "paid_coin": 2,
+          "paid_dust": 0
+        }
+      },
+      "materials": {
+        "boss_coin": 2,
+        "dust": 10,
+        "enhance_material": 14
+      },
+      "world_tick": 291
+    }
+  ],
+  "attempts": [
+    {
+      "elapsed_hours": 0,
+      "boss_claim": "paid"
+    },
+    {
+      "elapsed_hours": 0,
+      "old_daily_claim": "already_claimed_rejected"
+    },
+    {
+      "elapsed_hours": 8,
+      "run_eligible": false
+    },
+    {
+      "elapsed_hours": 8,
+      "boss_claim": "no_new_entitlement: ('operation not uniquely reachable in UI', 'world_boss_claim', {'day': '2026-10-19'}, [])"
+    },
+    {
+      "elapsed_hours": 8,
+      "old_daily_claim": "already_claimed_rejected"
+    },
+    {
+      "elapsed_hours": 16,
+      "run_eligible": false
+    },
+    {
+      "elapsed_hours": 16,
+      "boss_claim": "no_new_entitlement: ('operation not uniquely reachable in UI', 'world_boss_claim', {'day': '2026-10-19'}, [])"
+    },
+    {
+      "elapsed_hours": 16,
+      "old_daily_claim": "already_claimed_rejected"
+    },
+    {
+      "elapsed_hours": 24,
+      "run_eligible": true
+    }
+  ],
+  "public_world_actions": 291,
+  "source_sha256": {
+    "game/world.py": "46757b5cafbef78955c720a5bdc1a24cc8ccd78560f9b1d8832c9f15d0fbc8f1",
+    "game/r3_config.py": "6f8e2e0950a620c602c90fc5996fc27ec72a78db2f3f99a89067799d1b9a337c",
+    "game/growth.py": "b1c507075a04b89f8fa9c5371370051f4ec710d62be44611d73d2494f46fb2d4",
+    "game/activities.py": "ab3152388170ede25e6a7a0d40f5a36e29923961bf899d184a8be74518e2ac3c",
+    "game/__init__.py": "f42e2b8ef841e23ab81e3f95ca640180d26c0515b4b62487eef780d1b14d4724",
+    "game/world_config.py": "744d8ab1742352794a76ba618aedfcb3b0b5af3793701a62220da909ff7e37da",
+    "game/storage.py": "deaf40271c3b0b220a4bd832da51b20323150718d71307d9ea068e93f335b1d9",
+    "game/gameplay_config.py": "9da3576c5562ed784799eae36e375a857d8de25227e74b5b599a70da9fb7ba4d",
+    "game/rules.py": "e739799d411b12ff444c7f56bec65df8970a7334d04548af28f9da2208c6f5a8",
+    "game/loot.py": "46beee060a419ba1b22d764facf577ddc3c554b06a17cb8502e6016890de84fd",
+    "game/config.py": "360453d7be4b87114157272b67c6cda7f5985418946e5ff491240da1a3177ef1"
+  }
+}

@@ -1,0 +1,633 @@
+test_explicit_free_retains_original_immediate_growth (tests.test_r3_profiles.R3ProfileHTTPTests.test_explicit_free_retains_original_immediate_growth) ... ok
+test_http_default_and_explicit_longline_create_independent_profile_ids (tests.test_r3_profiles.R3ProfileHTTPTests.test_http_default_and_explicit_longline_create_independent_profile_ids) ... FAIL
+test_unknown_modes_are_rejected_without_creating_or_overwriting (tests.test_r3_profiles.R3ProfileHTTPTests.test_unknown_modes_are_rejected_without_creating_or_overwriting) ... ok
+test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles (tests.test_r3_growth.R3GrowthHTTPTests.test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_before_world_entry_no_whole_day_pack_or_offline_world_progress (tests.test_r3_growth.R3GrowthHTTPTests.test_before_world_entry_no_whole_day_pack_or_offline_world_progress) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database (tests.test_r3_growth.R3GrowthHTTPTests.test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_failure_after_state_update_rolls_back_time_and_resources_and_request (tests.test_r3_growth.R3GrowthHTTPTests.test_failure_after_state_update_rolls_back_time_and_resources_and_request) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_fractional_time_survives_many_posts_instead_of_flooring_each_second (tests.test_r3_growth.R3GrowthHTTPTests.test_fractional_time_survives_many_posts_instead_of_flooring_each_second) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_material_actions_and_manual_cultivation_do_not_add_direct_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_material_actions_and_manual_cultivation_do_not_add_direct_xp) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_repeated_request_after_elapsed_time_never_double_action_or_settle (tests.test_r3_growth.R3GrowthHTTPTests.test_repeated_request_after_elapsed_time_never_double_action_or_settle) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_two_distinct_requests_from_same_revision_only_one_commits (tests.test_r3_growth.R3GrowthHTTPTests.test_two_distinct_requests_from_same_revision_only_one_commits) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 192, in write
+    rules.validate_state(state);rules.validate_state(slot)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 91, in validate_state
+    world.validate(s)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+FAIL
+test_dismantle_is_single_consumption_and_equipped_item_is_protected (tests.test_r3_items.R3ItemTests.test_dismantle_is_single_consumption_and_equipped_item_is_protected) ... ERROR
+test_enhancing_one_same_template_instance_does_not_change_another (tests.test_r3_items.R3ItemTests.test_enhancing_one_same_template_instance_does_not_change_another) ... ERROR
+test_equipment_quality_and_enhancement_are_additive_with_floor (tests.test_r3_items.R3ItemTests.test_equipment_quality_and_enhancement_are_additive_with_floor) ... ERROR
+test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent (tests.test_r3_items.R3ItemTests.test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent) ... ERROR
+test_unselected_treasure_must_choose_once_and_cannot_have_both_effects (tests.test_r3_items.R3ItemTests.test_unselected_treasure_must_choose_once_and_cannot_have_both_effects) ... ERROR
+test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency (tests.test_r3_rewards.R3RewardTests.test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency) ... ERROR
+test_completed_run_cannot_settle_twice_even_with_new_client_request (tests.test_r3_rewards.R3RewardTests.test_completed_run_cannot_settle_twice_even_with_new_client_request) ... ERROR
+test_deterministic_template_cycle_and_normal_difficulty_tenth_pity (tests.test_r3_rewards.R3RewardTests.test_deterministic_template_cycle_and_normal_difficulty_tenth_pity) ... ERROR
+test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time (tests.test_r3_rewards.R3RewardTests.test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time) ... ERROR
+
+======================================================================
+ERROR: test_dismantle_is_single_consumption_and_equipped_item_is_protected (tests.test_r3_items.R3ItemTests.test_dismantle_is_single_consumption_and_equipped_item_is_protected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_items.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_enhancing_one_same_template_instance_does_not_change_another (tests.test_r3_items.R3ItemTests.test_enhancing_one_same_template_instance_does_not_change_another)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_items.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_equipment_quality_and_enhancement_are_additive_with_floor (tests.test_r3_items.R3ItemTests.test_equipment_quality_and_enhancement_are_additive_with_floor)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_items.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent (tests.test_r3_items.R3ItemTests.test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_items.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_unselected_treasure_must_choose_once_and_cannot_have_both_effects (tests.test_r3_items.R3ItemTests.test_unselected_treasure_must_choose_once_and_cannot_have_both_effects)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_items.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency (tests.test_r3_rewards.R3RewardTests.test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_rewards.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_completed_run_cannot_settle_twice_even_with_new_client_request (tests.test_r3_rewards.R3RewardTests.test_completed_run_cannot_settle_twice_even_with_new_client_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_rewards.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_deterministic_template_cycle_and_normal_difficulty_tenth_pity (tests.test_r3_rewards.R3RewardTests.test_deterministic_template_cycle_and_normal_difficulty_tenth_pity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_rewards.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+ERROR: test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time (tests.test_r3_rewards.R3RewardTests.test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/game/world.py", line 1159, in validate
+    _validate_state(state)
+  File "/workspace/GuixuXiuxian/game/world.py", line 95, in _validate_state
+    if 'r3' in w:loot.validate({'world':w})
+                 ^^^^^^^^^^^^^
+AttributeError: module 'game.loot' has no attribute 'validate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_rewards.py", line 16, in setUp
+    self.state, _ = rules.apply_action(self.state, 'world_enter', {}, context={'now': 1800000000, 'day': '2027-01-15'})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/rules.py", line 148, in apply_action
+    result,events=world.apply_action(state,action,params,context=context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/world.py", line 813, in apply_action
+    validate(result)
+  File "/workspace/GuixuXiuxian/game/world.py", line 1161, in validate
+    raise ValueError('世界嵌套存档结构无效') from exc
+ValueError: 世界嵌套存档结构无效
+
+======================================================================
+FAIL: test_http_default_and_explicit_longline_create_independent_profile_ids (tests.test_r3_profiles.R3ProfileHTTPTests.test_http_default_and_explicit_longline_create_independent_profile_ids)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_profiles.py", line 39, in test_http_default_and_explicit_longline_create_independent_profile_ids
+    self.assertEqual(status, 200, created)
+AssertionError: 503 != 200 : {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles (tests.test_r3_growth.R3GrowthHTTPTests.test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 35, in test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles
+    entered = self.enter()
+              ^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_before_world_entry_no_whole_day_pack_or_offline_world_progress (tests.test_r3_growth.R3GrowthHTTPTests.test_before_world_entry_no_whole_day_pack_or_offline_world_progress)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 27, in test_before_world_entry_no_whole_day_pack_or_offline_world_progress
+    initial = self.server.create()
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database (tests.test_r3_growth.R3GrowthHTTPTests.test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 151, in test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database
+    self.enter()
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_failure_after_state_update_rolls_back_time_and_resources_and_request (tests.test_r3_growth.R3GrowthHTTPTests.test_failure_after_state_update_rolls_back_time_and_resources_and_request)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 117, in test_failure_after_state_update_rolls_back_time_and_resources_and_request
+    entered = self.enter()
+              ^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_fractional_time_survives_many_posts_instead_of_flooring_each_second (tests.test_r3_growth.R3GrowthHTTPTests.test_fractional_time_survives_many_posts_instead_of_flooring_each_second)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 110, in test_fractional_time_survives_many_posts_instead_of_flooring_each_second
+    self.enter()
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 51, in test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp
+    entered = self.enter()
+              ^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_material_actions_and_manual_cultivation_do_not_add_direct_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_material_actions_and_manual_cultivation_do_not_add_direct_xp)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 96, in test_material_actions_and_manual_cultivation_do_not_add_direct_xp
+    self.enter()
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_repeated_request_after_elapsed_time_never_double_action_or_settle (tests.test_r3_growth.R3GrowthHTTPTests.test_repeated_request_after_elapsed_time_never_double_action_or_settle)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 62, in test_repeated_request_after_elapsed_time_never_double_action_or_settle
+    entered = self.enter()
+              ^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 82, in test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp
+    self.enter()
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+======================================================================
+FAIL: test_two_distinct_requests_from_same_revision_only_one_commits (tests.test_r3_growth.R3GrowthHTTPTests.test_two_distinct_requests_from_same_revision_only_one_commits)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 136, in test_two_distinct_requests_from_same_revision_only_one_commits
+    entered = self.enter()
+              ^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 18, in enter
+    self.server.create(mode)
+  File "/workspace/GuixuXiuxian/tests/r3_support.py", line 62, in create
+    assert status == 200, body
+           ^^^^^^^^^^^^^
+AssertionError: {'ok': False, 'error': {'code': 'SAVE_FAILED', 'message': '操作未能保存，请检查磁盘与服务日志。'}}
+
+----------------------------------------------------------------------
+Ran 22 tests in 5.272s
+
+FAILED (failures=11, errors=9)

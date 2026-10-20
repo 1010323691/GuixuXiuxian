@@ -1,0 +1,15 @@
+{
+  "archive": "dist/guixu-r5-combat-lab.zip",
+  "sha256": "785468d60d86ff5efd42fa673a425a61ca6685f686b7a810a4e2e40cab520bb1",
+  "bytes": 7787575,
+  "files": 71,
+  "checks": [
+    "ZIP CRC and all packaged files match current source SHA256",
+    "No production database or player data packaged",
+    "Extracted standard-library engine and HTTP test suite passes",
+    "Extracted server starts; config and all static resources served",
+    "Real HTTP three-node burst win in 18 ticks; Boss 12 ticks / personal2080 / NPC40",
+    "All 17 formal runtime files and v1.2 archive unchanged"
+  ],
+  "passed": true
+}

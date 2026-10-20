@@ -1,0 +1,16 @@
+test_crafting_instance_cannot_also_sell_or_list_a_legacy_template_copy (tests.test_r3_items.R3ItemTests.test_crafting_instance_cannot_also_sell_or_list_a_legacy_template_copy) ... ok
+test_dismantle_is_single_consumption_and_equipped_item_is_protected (tests.test_r3_items.R3ItemTests.test_dismantle_is_single_consumption_and_equipped_item_is_protected) ... ok
+test_enhancing_one_same_template_instance_does_not_change_another (tests.test_r3_items.R3ItemTests.test_enhancing_one_same_template_instance_does_not_change_another) ... ok
+test_equipment_quality_and_enhancement_are_additive_with_floor (tests.test_r3_items.R3ItemTests.test_equipment_quality_and_enhancement_are_additive_with_floor) ... ok
+test_full_instance_bag_retains_original_uid_pending_and_claims_exactly_once (tests.test_r3_items.R3ItemTests.test_full_instance_bag_retains_original_uid_pending_and_claims_exactly_once) ... ok
+test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent (tests.test_r3_items.R3ItemTests.test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent) ... ok
+test_unselected_treasure_must_choose_once_and_cannot_have_both_effects (tests.test_r3_items.R3ItemTests.test_unselected_treasure_must_choose_once_and_cannot_have_both_effects) ... ok
+test_clock_rewind_to_previously_unvisited_day_cannot_create_old_period (tests.test_r3_boss.R3BossHTTPTests.test_clock_rewind_to_previously_unvisited_day_cannot_create_old_period) ... ok
+test_companion_damage_excluded_and_midnight_keeps_period_binding (tests.test_r3_boss.R3BossHTTPTests.test_companion_damage_excluded_and_midnight_keeps_period_binding) ... ok
+test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor (tests.test_r3_boss.R3BossHTTPTests.test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor) ... ok
+test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts (tests.test_r3_boss.R3BossHTTPTests.test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 9.219s
+
+OK

@@ -1,0 +1,20 @@
+test_delayed_story_reward_stays_frozen_chapter_quality_and_unique (tests.test_r4_journey.R4JourneyTests.test_delayed_story_reward_stays_frozen_chapter_quality_and_unique) ... ok
+test_history_before_accept_is_not_replayed_into_first_story (tests.test_r4_journey.R4JourneyTests.test_history_before_accept_is_not_replayed_into_first_story) ... ok
+test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions (tests.test_r4_journey.R4JourneyTests.test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions) ... FAIL
+test_sweep_counts_ordinary_dungeon_but_not_manual_story_proof (tests.test_r4_journey.R4JourneyTests.test_sweep_counts_ordinary_dungeon_but_not_manual_story_proof) ... ok
+test_zero_damage_boss_counts_old_activity_but_not_story_then_positive_counts (tests.test_r4_journey.R4JourneyTests.test_zero_damage_boss_counts_old_activity_but_not_story_then_positive_counts) ... ok
+
+======================================================================
+FAIL: test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions (tests.test_r4_journey.R4JourneyTests.test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r4_journey.py", line 79, in test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions
+    check('world_story_accept')
+  File "/workspace/GuixuXiuxian/tests/test_r4_journey.py", line 78, in check
+    self.assertTrue(matches[0]['enabled'],g)
+AssertionError: False is not true : {'id': 'goal:2', 'title': '先做一件可用器物', 'reason': '安全采集→四艺凡品→装备实例→低难/强化，提高挑战能力。', 'page': 'craft', 'target_page': 'craft', 'action': {'id': 'world_craft', 'params': {'recipe': 'blade'}}}
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.013s
+
+FAILED (failures=1)

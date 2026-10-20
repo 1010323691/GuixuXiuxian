@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "real goal chain navigation/target focus no write",
+    "real daily 2objectives/claim+weekly period/rewards accessible",
+    "same revision GET patches summary/text/snapshot; input DOM/focus/value retained",
+    "switch page retains latest target; duplicate integer XP removed",
+    "all11pages final320px no overflow"
+  ],
+  "errors": []
+}

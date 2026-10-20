@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "scope": "isolated R5 air-combat experiment; not production release",
+  "suite": {
+    "tests": 14,
+    "seconds": 0.236,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "final-air-suite.txt"
+  },
+  "browser": {
+    "passed": true,
+    "checks": 7,
+    "simulate_posts": 2,
+    "report": "air-browser-report.json",
+    "log": "final-air-browser.txt",
+    "first_flight_samples": 13,
+    "final_flight_samples": 42,
+    "canonical_report": "browser-report.json"
+  },
+  "formal_runtime": {
+    "files": 17,
+    "changed": [],
+    "before": "formal-runtime-before.json",
+    "after": "formal-runtime-after.json"
+  },
+  "tested_hashes": "lab-tested-hashes.json",
+  "open_blockers": [],
+  "limits": [
+    "not production migration or all battle types",
+    "mixed experimental three-node route, not production dungeon layout",
+    "candidate deterministic metrics are not human playtesting",
+    "no persistent state or actual item rewards"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "1.2.0",
+  "archive": "guixu-mortal-v1.2.0.zip",
+  "files": 268,
+  "bytes": 33029779,
+  "sha256": "e60f3864048d4c4084d55b5931ae1acebcbf7e31009bcc3dedac66e0ff5f05ff",
+  "passed": true,
+  "crc_valid": true,
+  "all_packaged_files_match_source": true,
+  "runtime_matches_final_independent_qa": true,
+  "normal_clock_smoke_passed": true,
+  "smoke_checks": 6,
+  "excluded_player_data": true
+}

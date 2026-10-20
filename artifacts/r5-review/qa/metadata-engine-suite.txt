@@ -1,0 +1,18 @@
+test_boss_twelve_opportunities_cd_arithmetic_and_npc_exclusion (test_lab_engine.LabEngineTests.test_boss_twelve_opportunities_cd_arithmetic_and_npc_exclusion) ... ok
+test_burst_first_delay_and_retrigger_do_not_carry_thirteenth_hit (test_lab_engine.LabEngineTests.test_burst_first_delay_and_retrigger_do_not_carry_thirteenth_hit) ... ok
+test_frames_events_reconcile_damage_metrics_identity_and_budget_bounds (test_lab_engine.LabEngineTests.test_frames_events_reconcile_damage_metrics_identity_and_budget_bounds) ... ok
+test_furnace_fire_breaks_two_hundred_shield_without_body_overflow (test_lab_engine.LabEngineTests.test_furnace_fire_breaks_two_hundred_shield_without_body_overflow) ... ok
+test_poison_defense_counterplay_and_pill_clear_are_real (test_lab_engine.LabEngineTests.test_poison_defense_counterplay_and_pill_clear_are_real) ... ok
+test_three_nodes_actual_order_no_reset_budget_and_early_loss_cannot_complete_later_nodes (test_lab_engine.LabEngineTests.test_three_nodes_actual_order_no_reset_budget_and_early_loss_cannot_complete_later_nodes) ... ok
+test_tower_zero_mp_drain_is_capped_at_actual_mana_without_hp_conversion (test_lab_engine.LabEngineTests.test_tower_zero_mp_drain_is_capped_at_actual_mana_without_hp_conversion) ... ok
+test_zero_mp_has_free_fallback_and_later_legal_skill_without_negative_resources (test_lab_engine.LabEngineTests.test_zero_mp_has_free_fallback_and_later_legal_skill_without_negative_resources) ... ok
+test_all_scenarios_builds_strategies_are_deterministic_and_do_not_mutate_inputs (test_lab_http.LabHTTPTests.test_all_scenarios_builds_strategies_are_deterministic_and_do_not_mutate_inputs) ... ok
+test_health_config_are_readonly_and_production_routes_absent (test_lab_http.LabHTTPTests.test_health_config_are_readonly_and_production_routes_absent) ... ok
+test_malformed_nonfinite_duplicate_keys_and_size_limit_rejected (test_lab_http.LabHTTPTests.test_malformed_nonfinite_duplicate_keys_and_size_limit_rejected) ... ok
+test_unknown_missing_enums_and_exact_budget_types_rejected (test_lab_http.LabHTTPTests.test_unknown_missing_enums_and_exact_budget_types_rejected) ... ok
+test_zero_defaults_match_explicit_zero_and_budget_edges_are_accepted (test_lab_http.LabHTTPTests.test_zero_defaults_match_explicit_zero_and_budget_edges_are_accepted) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.188s
+
+OK

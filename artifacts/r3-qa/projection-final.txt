@@ -1,0 +1,1 @@
+{"passed": true, "covered": 16, "contexts": ["owned-equipped-unselected-pending + 25percent", "accepted optional milestone", "completed two-objective daily", "valid low-damage world Boss period"]}

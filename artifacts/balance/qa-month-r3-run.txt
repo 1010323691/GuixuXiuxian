@@ -1,0 +1,202 @@
+[
+  {
+    "scenario": "no_treasure_no_other_bonus",
+    "policy": "asap_manual",
+    "days": 45
+  },
+  {
+    "scenario": "no_treasure_no_other_bonus",
+    "policy": "scheduled",
+    "days": 45
+  },
+  {
+    "scenario": "no_treasure_no_other_bonus",
+    "policy": "late_cycle",
+    "days": 49
+  },
+  {
+    "scenario": "single_training_treasure_progressive",
+    "policy": "asap_manual",
+    "days": 43.682692308
+  },
+  {
+    "scenario": "single_training_treasure_progressive",
+    "policy": "scheduled",
+    "days": 45
+  },
+  {
+    "scenario": "single_training_treasure_progressive",
+    "policy": "late_cycle",
+    "days": 48
+  },
+  {
+    "scenario": "dual_training_treasures_progressive",
+    "policy": "asap_manual",
+    "days": 42.462962963
+  },
+  {
+    "scenario": "dual_training_treasures_progressive",
+    "policy": "scheduled",
+    "days": 44
+  },
+  {
+    "scenario": "dual_training_treasures_progressive",
+    "policy": "late_cycle",
+    "days": 47
+  },
+  {
+    "scenario": "single_training_plus_other_progressive",
+    "policy": "asap_manual",
+    "days": 42.412844037
+  },
+  {
+    "scenario": "single_training_plus_other_progressive",
+    "policy": "scheduled",
+    "days": 43
+  },
+  {
+    "scenario": "single_training_plus_other_progressive",
+    "policy": "late_cycle",
+    "days": 47
+  },
+  {
+    "scenario": "dual_training_plus_other_progressive",
+    "policy": "asap_manual",
+    "days": 41.292035398
+  },
+  {
+    "scenario": "dual_training_plus_other_progressive",
+    "policy": "scheduled",
+    "days": 42
+  },
+  {
+    "scenario": "dual_training_plus_other_progressive",
+    "policy": "late_cycle",
+    "days": 46
+  },
+  {
+    "scenario": "late_single_treasure",
+    "policy": "asap_manual",
+    "days": 44.466019417
+  },
+  {
+    "scenario": "late_single_treasure",
+    "policy": "scheduled",
+    "days": 45
+  },
+  {
+    "scenario": "late_single_treasure",
+    "policy": "late_cycle",
+    "days": 49
+  },
+  {
+    "scenario": "extreme_day0_full15",
+    "policy": "asap_manual",
+    "days": 39.130434783
+  },
+  {
+    "scenario": "extreme_day0_full15",
+    "policy": "scheduled",
+    "days": 40
+  },
+  {
+    "scenario": "extreme_day0_full15",
+    "policy": "late_cycle",
+    "days": 44
+  },
+  {
+    "scenario": "day20_only_full15",
+    "policy": "asap_manual",
+    "days": 41.739130435
+  },
+  {
+    "scenario": "day20_only_full15",
+    "policy": "scheduled",
+    "days": 42
+  },
+  {
+    "scenario": "day20_only_full15",
+    "policy": "late_cycle",
+    "days": 46
+  },
+  {
+    "scenario": "strict_48h_no_treasure",
+    "policy": "scheduled",
+    "days": 48
+  },
+  {
+    "scenario": "strict_48h_no_treasure",
+    "policy": "late_cycle",
+    "days": 54
+  },
+  {
+    "scenario": "strict_48h_dual_progressive",
+    "policy": "scheduled",
+    "days": 44
+  },
+  {
+    "scenario": "strict_48h_dual_progressive",
+    "policy": "late_cycle",
+    "days": 50
+  },
+  {
+    "scenario": "strict_72h_no_treasure",
+    "policy": "scheduled",
+    "days": 51
+  },
+  {
+    "scenario": "strict_72h_no_treasure",
+    "policy": "late_cycle",
+    "days": 57
+  },
+  {
+    "scenario": "miss_seven_logins_no_treasure",
+    "policy": "scheduled",
+    "days": 47
+  },
+  {
+    "scenario": "miss_seven_logins_no_treasure",
+    "policy": "late_cycle",
+    "days": 51
+  },
+  {
+    "scenario": "miss_thirty_logins_no_treasure",
+    "policy": "scheduled",
+    "days": 61
+  },
+  {
+    "scenario": "miss_thirty_logins_no_treasure",
+    "policy": "late_cycle",
+    "days": 65
+  },
+  {
+    "scenario": "extreme15_utc2350",
+    "policy": "asap_manual",
+    "days": 39.130434783
+  },
+  {
+    "scenario": "extreme15_utc2350",
+    "policy": "scheduled",
+    "days": 40
+  },
+  {
+    "scenario": "extreme15_utc2350",
+    "policy": "late_cycle",
+    "days": 44
+  },
+  {
+    "scenario": "error_twenty_drops_stack100percent",
+    "policy": "asap_manual",
+    "days": 22.5
+  },
+  {
+    "scenario": "error_twenty_drops_stack100percent",
+    "policy": "scheduled",
+    "days": 24
+  },
+  {
+    "scenario": "error_twenty_drops_stack100percent",
+    "policy": "late_cycle",
+    "days": 27
+  }
+]

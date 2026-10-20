@@ -1,0 +1,7 @@
+test_eight_stage_full_growth_and_final_spending_through_real_http (tests.test_r3_progression.R3PublicProgressionTests.test_eight_stage_full_growth_and_final_spending_through_real_http) ... ok
+test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties (tests.test_r3_progression.R3PublicProgressionTests.test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 156.578s
+
+OK

@@ -1,0 +1,10 @@
+test_delayed_story_reward_stays_frozen_chapter_quality_and_unique (tests.test_r4_journey.R4JourneyTests.test_delayed_story_reward_stays_frozen_chapter_quality_and_unique) ... ok
+test_history_before_accept_is_not_replayed_into_first_story (tests.test_r4_journey.R4JourneyTests.test_history_before_accept_is_not_replayed_into_first_story) ... ok
+test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions (tests.test_r4_journey.R4JourneyTests.test_story_claim_accept_and_elite_goals_reference_unique_enabled_real_actions) ... ok
+test_sweep_counts_ordinary_dungeon_but_not_manual_story_proof (tests.test_r4_journey.R4JourneyTests.test_sweep_counts_ordinary_dungeon_but_not_manual_story_proof) ... ok
+test_zero_damage_boss_counts_old_activity_but_not_story_then_positive_counts (tests.test_r4_journey.R4JourneyTests.test_zero_damage_boss_counts_old_activity_but_not_story_then_positive_counts) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.057s
+
+OK

@@ -1,0 +1,11 @@
+{
+  "prototypes/r5-combat/engine.py": "43aa7cdc1b9663f8b8a44bea4a41e05dcae01bbd849dc0a5136d116c5533f2ca",
+  "prototypes/r5-combat/server.py": "0cddbb0c57bd36c1cfbfdc1bc0f25db06ecea5cbfb1aa6f41b63678c976fe61e",
+  "prototypes/r5-combat/static/styles.css": "bda71f9f0f2fb33a581fd62f2f0a6fac921859c5d9a9545cb938e5ea344ed383",
+  "prototypes/r5-combat/static/app.js": "1e8dfbca97c6cd1b92377599c19dd92a2b8e9fb4a7f9be57e01d9228eaab5631",
+  "prototypes/r5-combat/static/index.html": "a3f68bdec51ca148ef56965df76c52b750846233bc77fef7b02ab1f23066cebf",
+  "prototypes/r5-combat/tests/browser_lab.py": "9f4e5b0470f20d53b621fff8943ddb1e4fe0f5f0961c969c34c475bb9562dee7",
+  "prototypes/r5-combat/tests/test_lab_http.py": "68482d120ac36e0cddeb7bc93be8842f98b356c3f69687f02a928e798a2a5e2a",
+  "prototypes/r5-combat/tests/lab_support.py": "1b1e66e715731c5bc5b1e6f98ac1e6f4f045299e7d00b810172aceed06dd1acf",
+  "prototypes/r5-combat/tests/test_lab_engine.py": "846333300dd6c20c5015d62ec3d193f371aee582534398010eb12eb0ce1294b8"
+}

@@ -1,0 +1,212 @@
+{
+  "ok": true,
+  "source": "route-epilogue.json",
+  "sha256": "c7b951016a5f16761cb1279248c144d2983dc3a129d948b3712566ce5c1cbeb9",
+  "public_world_operations": 363,
+  "world_tick": 357,
+  "stage": 3,
+  "injected_hours": 120,
+  "state_injected": false,
+  "epilogue": [
+    {
+      "step": "enhance_story_rewards",
+      "before": {
+        "boss_coin": 0,
+        "dust": 13,
+        "enhance_material": 27
+      },
+      "after": {
+        "boss_coin": 0,
+        "dust": 13,
+        "enhance_material": 9
+      },
+      "equipment": {
+        "armor": {
+          "chapter": 2,
+          "effect_type": "combat",
+          "enhance": 3,
+          "quality": 2,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:10:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:venom_medicine",
+          "template_id": "armor",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:10:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:venom_medicine"
+        },
+        "pendant": {
+          "chapter": 3,
+          "effect_type": "combat",
+          "enhance": 3,
+          "quality": 3,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:13:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:astral_bridge",
+          "template_id": "pendant",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:13:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:astral_bridge"
+        },
+        "weapon": {
+          "chapter": 1,
+          "effect_type": "combat",
+          "enhance": 3,
+          "quality": 1,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:caravan_rescue",
+          "template_id": "blade",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8:story:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:caravan_rescue"
+        }
+      }
+    },
+    {
+      "step": "current_chapter_clear",
+      "chapter": 3,
+      "difficulty": 1,
+      "entry_score": 30,
+      "hp": 398,
+      "mp": 18,
+      "materials_before": {
+        "boss_coin": 0,
+        "dust": 13,
+        "enhance_material": 9
+      },
+      "materials_after": {
+        "boss_coin": 0,
+        "dust": 15,
+        "enhance_material": 11
+      },
+      "pill_before": 20,
+      "pill_after": 20,
+      "new_items": [
+        {
+          "chapter": 3,
+          "effect_type": "combat",
+          "enhance": 0,
+          "quality": 0,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:14:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:7",
+          "template_id": "armor",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:14:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:7"
+        }
+      ],
+      "cadence_after": {
+        "available": 2,
+        "banked_seconds": 0,
+        "last_recovered": 1800432000,
+        "reservations": {
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:1": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:2": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:3": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:4": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:5": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:6": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:7": "spent"
+        },
+        "version": 1
+      }
+    },
+    {
+      "step": "current_chapter_clear",
+      "chapter": 3,
+      "difficulty": 2,
+      "entry_score": 30,
+      "hp": 343,
+      "mp": 0,
+      "materials_before": {
+        "boss_coin": 0,
+        "dust": 15,
+        "enhance_material": 11
+      },
+      "materials_after": {
+        "boss_coin": 0,
+        "dust": 18,
+        "enhance_material": 15
+      },
+      "pill_before": 20,
+      "pill_after": 20,
+      "new_items": [
+        {
+          "chapter": 3,
+          "effect_type": "combat",
+          "enhance": 0,
+          "quality": 1,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:15:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8",
+          "template_id": "pendant",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:15:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8"
+        }
+      ],
+      "cadence_after": {
+        "available": 1,
+        "banked_seconds": 0,
+        "last_recovered": 1800432000,
+        "reservations": {
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:1": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:2": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:3": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:4": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:5": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:6": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:7": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8": "spent"
+        },
+        "version": 1
+      }
+    },
+    {
+      "step": "current_chapter_clear",
+      "chapter": 3,
+      "difficulty": 3,
+      "entry_score": 30,
+      "hp": 197,
+      "mp": 2,
+      "materials_before": {
+        "boss_coin": 0,
+        "dust": 18,
+        "enhance_material": 15
+      },
+      "materials_after": {
+        "boss_coin": 0,
+        "dust": 22,
+        "enhance_material": 21
+      },
+      "pill_before": 20,
+      "pill_after": 19,
+      "new_items": [
+        {
+          "chapter": 3,
+          "effect_type": "unselected",
+          "enhance": 0,
+          "quality": 2,
+          "source_receipt": "f167ba76-5e89-4986-bbd8-80cf1cdb0c75:16:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:9",
+          "template_id": "main_treasure",
+          "uid": "item:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:16:run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:9"
+        }
+      ],
+      "cadence_after": {
+        "available": 0,
+        "banked_seconds": 0,
+        "last_recovered": 1800432000,
+        "reservations": {
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:1": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:2": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:3": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:4": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:5": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:6": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:7": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:8": "spent",
+          "run:f167ba76-5e89-4986-bbd8-80cf1cdb0c75:9": "spent"
+        },
+        "version": 1
+      }
+    }
+  ],
+  "last_boss_commands": [
+    "world_power",
+    "world_power",
+    "world_defend",
+    "world_power",
+    "world_power",
+    "world_defend",
+    "world_power",
+    "world_pill",
+    "world_power"
+  ],
+  "failure_source": "route-epilogue-strategy-failure.json",
+  "limits": [
+    "One current-chapter dungeon, all three difficulties; not all nine current-chapter variants",
+    "New received treasure was not equipped/retested",
+    "Injected time is not a real-player five-day observation"
+  ]
+}

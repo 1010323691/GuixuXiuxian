@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "checks": [
+    "runtime-only archive extracts and starts without dependencies",
+    "all three static entry resources 200",
+    "53 legal prologue actions through HTTP",
+    "world enter and 11 pages",
+    "root/family/real crafting/equipment",
+    "checkpoint and stop/restart recovery",
+    "load complete world state with monotonic revision"
+  ],
+  "runtime_hashes": {
+    "server.py": "e99a7509495282f5dcf0290a16f2e8762c30b1abb2186cae39a877c379834f6c",
+    "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+    "README.md": "c1af05b66d8112f9e83c374747b0063f785198ddcd54d099d69c581576f0250e",
+    "game/world.py": "d41cca700095f02790c8db83b37ca48d3d4d5e7f0a7fadee262ed8fcae9fefa9",
+    "game/__init__.py": "f42e2b8ef841e23ab81e3f95ca640180d26c0515b4b62487eef780d1b14d4724",
+    "game/world_config.py": "744d8ab1742352794a76ba618aedfcb3b0b5af3793701a62220da909ff7e37da",
+    "game/storage.py": "f855a2a193aedb51b56cbaf00a5e269a30514713001d005c45304f1b2ee4eb19",
+    "game/rules.py": "0c8f703f52599c8642f750ce69478c7ffffc8383eaf2dec45dda4250a3b8fc40",
+    "game/config.py": "360453d7be4b87114157272b67c6cda7f5985418946e5ff491240da1a3177ef1",
+    "static/styles.css": "1575d322c266cfe7370d39f6c9ce9f17d3db8cf0d8e53b0c2f81de8b8e86ae82",
+    "static/app.js": "87efb425be82e5c1f4e6734f114e41874af07486357ace4e86aab4d6da751cb0",
+    "static/index.html": "5b996ce6553af1ac73af1778bea30b69d1f5f3173582acf8413a82a5be98f22c"
+  }
+}

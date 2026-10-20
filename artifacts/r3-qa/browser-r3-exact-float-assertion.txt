@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/GuixuXiuxian/tests/browser_r3.py", line 157, in <module>
+    main()
+  File "/workspace/GuixuXiuxian/tests/browser_r3.py", line 98, in main
+    assert server.snapshot()['view']['growth']['rate']['per_day']==545.4
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

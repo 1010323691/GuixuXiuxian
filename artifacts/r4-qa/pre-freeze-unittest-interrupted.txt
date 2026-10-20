@@ -1,0 +1,136 @@
+test_completed_old_day_claim_survives_new_period_and_no_reroll (test_activities.ActivityTests.test_completed_old_day_claim_survives_new_period_and_no_reroll) ... ok
+test_daily_two_targets_no_retroactive_progress (test_activities.ActivityTests.test_daily_two_targets_no_retroactive_progress) ... ok
+test_expired_unfinished_does_not_lock_new_day_or_gain_progress (test_activities.ActivityTests.test_expired_unfinished_does_not_lock_new_day_or_gain_progress) ... ok
+test_nested_corruption_rejected_and_not_mutated (test_activities.ActivityTests.test_nested_corruption_rejected_and_not_mutated) ... ok
+test_social_and_any_use_count_only_valid_successful_events (test_activities.ActivityTests.test_social_and_any_use_count_only_valid_successful_events) ... ok
+test_week_is_monday_anchored_and_only_once (test_activities.ActivityTests.test_week_is_monday_anchored_and_only_once) ... ok
+test_alchemy_trade_and_techniques (test_game.GameHTTPTests.test_alchemy_trade_and_techniques) ... ok
+test_combat_order_cost_defense_and_free_recovery (test_game.GameHTTPTests.test_combat_order_cost_defense_and_free_recovery) ... ok
+test_complete_legal_route_and_post_ending (test_game.GameHTTPTests.test_complete_legal_route_and_post_ending) ... ok
+test_corrupt_database_refused_without_overwrite (test_game.GameHTTPTests.test_corrupt_database_refused_without_overwrite) ... ok
+test_database_lock_rollback (test_game.GameHTTPTests.test_database_lock_rollback) ... ok
+test_default_name_empty_slot_and_long_name (test_game.GameHTTPTests.test_default_name_empty_slot_and_long_name) ... ok
+test_exact_gdd_53_action_route_without_optional_resources (test_game.GameHTTPTests.test_exact_gdd_53_action_route_without_optional_resources) ... ok
+test_idempotency_latest_snapshot_conflicts_and_restart (test_game.GameHTTPTests.test_idempotency_latest_snapshot_conflicts_and_restart) ... ok
+test_initial_projection_and_growth (test_game.GameHTTPTests.test_initial_projection_and_growth) ... ok
+test_invalid_inputs_and_origin_do_not_mutate (test_game.GameHTTPTests.test_invalid_inputs_and_origin_do_not_mutate) ... ok
+test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load (test_game.GameHTTPTests.test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load) ... ok
+test_nonfinite_json_is_bad_request_not_storage_failure (test_game.GameHTTPTests.test_nonfinite_json_is_bad_request_not_storage_failure) ... ok
+test_parallel_stale_writes_commit_only_once (test_game.GameHTTPTests.test_parallel_stale_writes_commit_only_once) ... ok
+test_slot_restart_and_monotonic_revision (test_game.GameHTTPTests.test_slot_restart_and_monotonic_revision) ... ok
+test_write_failure_after_state_update_rolls_back_entire_transaction (test_game.GameHTTPTests.test_write_failure_after_state_update_rolls_back_entire_transaction) ... ok
+test_backward_clock_does_not_regrant (test_growth.GrowthTests.test_backward_clock_does_not_regrant) ... ok
+test_exact_day_and_split_remainders (test_growth.GrowthTests.test_exact_day_and_split_remainders) ... ok
+test_load_preserves_consumption_assets_and_progression (test_growth.GrowthTests.test_load_preserves_consumption_assets_and_progression) ... ok
+test_no_action_xp_bypass (test_growth.GrowthTests.test_no_action_xp_bypass) ... ok
+test_no_cap_and_waiting_for_breakthrough (test_growth.GrowthTests.test_no_cap_and_waiting_for_breakthrough) ... ok
+test_old_rate_then_new_stage_and_spending (test_growth.GrowthTests.test_old_rate_then_new_stage_and_spending) ... ok
+test_pre_world_has_no_growth (test_growth.GrowthTests.test_pre_world_has_no_growth) ... ok
+test_preview_no_mutation_and_160_seconds (test_growth.GrowthTests.test_preview_no_mutation_and_160_seconds) ... ok
+test_stored_balance_and_rate_corruption_rejected (test_growth.GrowthTests.test_stored_balance_and_rate_corruption_rejected) ... ok
+test_active_battles_in_current_and_checkpoint_preserved_exactly (test_migration.MigrationTests.test_active_battles_in_current_and_checkpoint_preserved_exactly) ... ok
+test_backup_failure_never_updates_source (test_migration.MigrationTests.test_backup_failure_never_updates_source) ... ok
+test_cli_explicit_migration_starts_schema2_service (test_migration.MigrationTests.test_cli_explicit_migration_starts_schema2_service) ... ok
+test_corrupt_database_is_not_replaced (test_migration.MigrationTests.test_corrupt_database_is_not_replaced) ... ok
+test_corrupt_or_invalid_slot_refused_without_backup_or_overwrite (test_migration.MigrationTests.test_corrupt_or_invalid_slot_refused_without_backup_or_overwrite) ... ok
+test_empty_state_and_slot_stay_null_and_repeat_is_noop (test_migration.MigrationTests.test_empty_state_and_slot_stay_null_and_repeat_is_noop) ... ok
+test_failure_after_backup_rolls_back_and_keeps_recoverable_original (test_migration.MigrationTests.test_failure_after_backup_rolls_back_and_keeps_recoverable_original) ... ok
+test_migrates_current_and_slot_preserves_revision_ledger_and_backup (test_migration.MigrationTests.test_migrates_current_and_slot_preserves_revision_ledger_and_backup) ... ok
+test_migrator_may_not_change_legacy_fields (test_migration.MigrationTests.test_migrator_may_not_change_legacy_fields) ... ok
+test_parallel_explicit_startups_migrate_once (test_migration.MigrationTests.test_parallel_explicit_startups_migrate_once) ... ok
+test_requires_explicit_flag_and_preserves_source_bytes (test_migration.MigrationTests.test_requires_explicit_flag_and_preserves_source_bytes) ... ok
+test_unknown_newer_schema_refused_without_byte_changes (test_migration.MigrationTests.test_unknown_newer_schema_refused_without_byte_changes) ... ok
+test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_restart_load (test_r3_activities_http.R3ActivityHTTPTests.test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_restart_load) ... ok
+test_formal_sect_commission_counts_social_project_without_material_daily_substitute (test_r3_activities_http.R3ActivityHTTPTests.test_formal_sect_commission_counts_social_project_without_material_daily_substitute) ... ok
+test_weekly_stars_needs_actual_array_and_valid_boss_then_claims_after_next_week (test_r3_activities_http.R3ActivityHTTPTests.test_weekly_stars_needs_actual_array_and_valid_boss_then_claims_after_next_week) ... ok
+test_clock_rewind_to_previously_unvisited_day_cannot_create_old_period (test_r3_boss.R3BossHTTPTests.test_clock_rewind_to_previously_unvisited_day_cannot_create_old_period) ... ok
+test_companion_damage_excluded_and_midnight_keeps_period_binding (test_r3_boss.R3BossHTTPTests.test_companion_damage_excluded_and_midnight_keeps_period_binding) ... ok
+test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor (test_r3_boss.R3BossHTTPTests.test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor) ... ok
+test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts (test_r3_boss.R3BossHTTPTests.test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts) ... ok
+test_load_retains_materials_growth_ai_tick_and_full_ownership_state (test_r3_checkpoint.R3CheckpointHTTPTests.test_load_retains_materials_growth_ai_tick_and_full_ownership_state) ... ok
+test_loading_pre_entry_slot_cannot_return_world_character_to_prologue (test_r3_checkpoint.R3CheckpointHTTPTests.test_loading_pre_entry_slot_cannot_return_world_character_to_prologue) ... ok
+test_old_checkpoint_neither_swallows_new_equipment_nor_revives_dismantled_item (test_r3_checkpoint.R3CheckpointHTTPTests.test_old_checkpoint_neither_swallows_new_equipment_nor_revives_dismantled_item) ... ok
+test_profile_mismatch_rejected_by_checkpoint_merge_without_mutating_inputs (test_r3_checkpoint.R3CheckpointHTTPTests.test_profile_mismatch_rejected_by_checkpoint_merge_without_mutating_inputs) ... ok
+test_schema2_free_large_stack_and_shared_enhancement_do_not_expand_or_switch_mode (test_r3_compatibility.R3CompatibilityTests.test_schema2_free_large_stack_and_shared_enhancement_do_not_expand_or_switch_mode) ... ok
+test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles (test_r3_growth.R3GrowthHTTPTests.test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles) ... ok
+test_before_world_entry_no_whole_day_pack_or_offline_world_progress (test_r3_growth.R3GrowthHTTPTests.test_before_world_entry_no_whole_day_pack_or_offline_world_progress) ... ok
+test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database (test_r3_growth.R3GrowthHTTPTests.test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database) ... Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/__main__.py", line 18, in <module>
+    main(module=None)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/main.py", line 105, in __init__
+    self.runTests()
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/main.py", line 281, in runTests
+    self.result = testRunner.run(self.test)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/runner.py", line 240, in run
+    test(result)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 84, in __call__
+    return self.run(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 122, in run
+    test(result)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 84, in __call__
+    return self.run(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 122, in run
+    test(result)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 84, in __call__
+    return self.run(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/suite.py", line 122, in run
+    test(result)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/case.py", line 690, in __call__
+    return self.run(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/case.py", line 634, in run
+    self._callTestMethod(testMethod)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/case.py", line 589, in _callTestMethod
+    if method() is not None:
+       ^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 151, in test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database
+    self.enter()
+  File "/workspace/GuixuXiuxian/tests/test_r3_growth.py", line 19, in enter
+    baseline_route(self.server.snapshot, self.server.action)
+  File "/workspace/GuixuXiuxian/tests/support.py", line 144, in baseline_route
+    action('challenge', enemy=enemy)
+  File "/workspace/GuixuXiuxian/tests/support.py", line 88, in action
+    return self.write('/api/action', action=action, params=params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/support.py", line 83, in write
+    status, body = self.request('POST', endpoint, payload)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/support.py", line 66, in request
+    response = urllib.request.urlopen(request, timeout=12)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 515, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 532, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 1373, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/urllib/request.py", line 1348, in do_open
+    r = h.getresponse()
+        ^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/http/client.py", line 1478, in getresponse
+    response.begin()
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/http/client.py", line 304, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

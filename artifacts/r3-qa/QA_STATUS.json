@@ -1,0 +1,59 @@
+{
+  "utc": "2026-10-20T07:30:43.861337+00:00",
+  "full_run": {
+    "cases": 136,
+    "seconds": 583.877,
+    "passed": true,
+    "log": "artifacts/r3-qa/unittest-final.txt"
+  },
+  "postfix_r3": {
+    "cases": 50,
+    "seconds": 286.512,
+    "passed": true,
+    "log": "artifacts/r3-qa/r3-postfreeze-final.txt"
+  },
+  "postfix_architecture": {
+    "cases": 15,
+    "seconds": 0.497,
+    "passed": true,
+    "log": "artifacts/r3-qa/architecture-postfreeze-final.txt"
+  },
+  "current_case_inventory": 141,
+  "source_hashes_unchanged": true,
+  "source_manifest": "artifacts/r3-qa/final-source-hashes.json",
+  "browsers": {
+    "smoke": {
+      "passed": true,
+      "report": "artifacts/qa/browser-report.json"
+    },
+    "world": {
+      "passed": true,
+      "report": "artifacts/world-qa/browser-world-report.json"
+    },
+    "r3": {
+      "passed": true,
+      "report": "artifacts/r3-qa/browser-r3-report.json"
+    }
+  },
+  "new_projected_actions": 16,
+  "dungeon_previews": 9,
+  "open_blockers": [],
+  "boundary": "136 full cases on initial hash; 50 R3 + 15 architecture on final hash, not a single final-hash141-case run.",
+  "final_package": {
+    "archive": "guixu-mortal-v1.1.0.zip",
+    "files": 196,
+    "bytes": 29014992,
+    "sha256": "59a2d0321ac5a3be81d884e2351795938cb5b6a37a95e42a07e7791c02c3964a",
+    "crc_passed": true,
+    "all_selected_files_match": true,
+    "runtime_matches_tested_candidate": true,
+    "passed": true,
+    "smoke_checks": 5,
+    "smoke_report": "artifacts/r3-qa/package-smoke.json",
+    "manifest": "artifacts/r3-qa/package-manifest.json"
+  },
+  "external_post_archive_note": {
+    "utc": "2026-10-20T07:35:46.991721+00:00",
+    "scope": "Workspace R3_TESTING and QA_STATUS appended after final zip; archive retains candidate evidence. Final SHA and smoke acceptance are external records; no repack."
+  }
+}

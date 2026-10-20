@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "unittest": {
+    "tests": 181,
+    "seconds": 790.929,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "final-unittest.txt"
+  },
+  "browsers": {
+    "browser-smoke-report": true,
+    "browser-world-report": true,
+    "browser-r3-report": true,
+    "browser-r4-report": true
+  },
+  "runtime_hashes": "final-runtime-hashes.json",
+  "delivery_hashes": "final-delivery-runtime-hashes.json",
+  "late_overlay": "only static/app.js migration explanatory text; node and real old fixture migration browser checked by art, R4_UI.md",
+  "open_blockers": [],
+  "package": {
+    "version": "1.2.0",
+    "archive": "dist/guixu-mortal-v1.2.0.zip",
+    "first_formal_package_passed": true,
+    "checks": 6,
+    "archive_files": 268,
+    "crc_and_file_hashes_verified": true,
+    "runtime_matches_final_delivery": true,
+    "smoke_evidence": "artifacts/r4-qa/package-smoke.json",
+    "build_evidence": "artifacts/r4-qa/package-build.json",
+    "final_manifest_evidence": "artifacts/r4-qa/package-manifest.json",
+    "final_document_repack": "PM to repeat same independent verification; final external smoke/manifest authoritative"
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "kind": "production HTTP, stage0 isolation, injected UTC; not human play duration",
+  "passed": true,
+  "routes": {
+    "once_daily": {
+      "logins": [
+        {
+          "hour": 0,
+          "available_before": 2,
+          "drop_seq": 3,
+          "stage": 0,
+          "xp": 0
+        },
+        {
+          "hour": 24,
+          "available_before": 3,
+          "drop_seq": 6,
+          "stage": 0,
+          "xp": 540
+        },
+        {
+          "hour": 48,
+          "available_before": 3,
+          "drop_seq": 9,
+          "stage": 0,
+          "xp": 1080
+        },
+        {
+          "hour": 72,
+          "available_before": 3,
+          "drop_seq": 12,
+          "stage": 0,
+          "xp": 1620
+        },
+        {
+          "hour": 96,
+          "available_before": 3,
+          "drop_seq": 15,
+          "stage": 0,
+          "xp": 2160
+        },
+        {
+          "hour": 120,
+          "available_before": 3,
+          "drop_seq": 18,
+          "stage": 0,
+          "xp": 2700
+        },
+        {
+          "hour": 144,
+          "available_before": 3,
+          "drop_seq": 21,
+          "stage": 0,
+          "xp": 3240
+        }
+      ],
+      "drops": 21,
+      "stage": 0,
+      "xp": 3240
+    },
+    "three_daily": {
+      "logins": [
+        {
+          "hour": 0,
+          "available_before": 2,
+          "drop_seq": 3,
+          "stage": 0,
+          "xp": 0
+        },
+        {
+          "hour": 8,
+          "available_before": 1,
+          "drop_seq": 4,
+          "stage": 0,
+          "xp": 180
+        },
+        {
+          "hour": 16,
+          "available_before": 1,
+          "drop_seq": 5,
+          "stage": 0,
+          "xp": 360
+        },
+        {
+          "hour": 24,
+          "available_before": 1,
+          "drop_seq": 6,
+          "stage": 0,
+          "xp": 540
+        },
+        {
+          "hour": 32,
+          "available_before": 1,
+          "drop_seq": 7,
+          "stage": 0,
+          "xp": 720
+        },
+        {
+          "hour": 40,
+          "available_before": 1,
+          "drop_seq": 8,
+          "stage": 0,
+          "xp": 900
+        },
+        {
+          "hour": 48,
+          "available_before": 1,
+          "drop_seq": 9,
+          "stage": 0,
+          "xp": 1080
+        },
+        {
+          "hour": 56,
+          "available_before": 1,
+          "drop_seq": 10,
+          "stage": 0,
+          "xp": 1260
+        },
+        {
+          "hour": 64,
+          "available_before": 1,
+          "drop_seq": 11,
+          "stage": 0,
+          "xp": 1440
+        },
+        {
+          "hour": 72,
+          "available_before": 1,
+          "drop_seq": 12,
+          "stage": 0,
+          "xp": 1620
+        },
+        {
+          "hour": 80,
+          "available_before": 1,
+          "drop_seq": 13,
+          "stage": 0,
+          "xp": 1800
+        },
+        {
+          "hour": 88,
+          "available_before": 1,
+          "drop_seq": 14,
+          "stage": 0,
+          "xp": 1980
+        },
+        {
+          "hour": 96,
+          "available_before": 1,
+          "drop_seq": 15,
+          "stage": 0,
+          "xp": 2160
+        },
+        {
+          "hour": 104,
+          "available_before": 1,
+          "drop_seq": 16,
+          "stage": 0,
+          "xp": 2340
+        },
+        {
+          "hour": 112,
+          "available_before": 1,
+          "drop_seq": 17,
+          "stage": 0,
+          "xp": 2520
+        },
+        {
+          "hour": 120,
+          "available_before": 1,
+          "drop_seq": 18,
+          "stage": 0,
+          "xp": 2700
+        },
+        {
+          "hour": 128,
+          "available_before": 1,
+          "drop_seq": 19,
+          "stage": 0,
+          "xp": 2880
+        },
+        {
+          "hour": 136,
+          "available_before": 1,
+          "drop_seq": 20,
+          "stage": 0,
+          "xp": 3060
+        },
+        {
+          "hour": 144,
+          "available_before": 1,
+          "drop_seq": 21,
+          "stage": 0,
+          "xp": 3240
+        },
+        {
+          "hour": 152,
+          "available_before": 1,
+          "drop_seq": 22,
+          "stage": 0,
+          "xp": 3420
+        },
+        {
+          "hour": 160,
+          "available_before": 1,
+          "drop_seq": 23,
+          "stage": 0,
+          "xp": 3600
+        }
+      ],
+      "drops": 23,
+      "stage": 0,
+      "xp": 3600
+    },
+    "missed_week": {
+      "logins": [
+        {
+          "hour": 0,
+          "available_before": 2,
+          "drop_seq": 3,
+          "stage": 0,
+          "xp": 0
+        },
+        {
+          "hour": 168,
+          "available_before": 3,
+          "drop_seq": 6,
+          "stage": 0,
+          "xp": 3780
+        }
+      ],
+      "drops": 6,
+      "stage": 0,
+      "xp": 3780
+    }
+  }
+}

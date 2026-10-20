@@ -1,0 +1,35 @@
+{
+  "checks": [
+    "real-page exact 53-action no-upgrade completion",
+    "manual save/load confirmation cancel/focus and refresh restore",
+    "two real pages: stale request rejected without mutation",
+    "response lost after commit + independent tab write + reload + identical-ID retry preserves latest state and counts once",
+    "confirmed new game clears slot; 320px layout and keyboard action"
+  ],
+  "console_errors": [
+    {
+      "text": "Failed to load resource: the server responded with a status of 409 (Conflict)",
+      "injected": true
+    },
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "injected": true
+    }
+  ],
+  "page_errors": [],
+  "failed_requests": [
+    {
+      "url": "http://127.0.0.1:43321/api/action",
+      "failure": "net::ERR_FAILED",
+      "injected": true
+    }
+  ],
+  "http_errors": [
+    {
+      "status": 409,
+      "url": "http://127.0.0.1:43321/api/action",
+      "injected": true
+    }
+  ],
+  "passed": true
+}

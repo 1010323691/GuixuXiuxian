@@ -1,0 +1,20 @@
+test_backward_clock_does_not_regrant (tests.test_growth.GrowthTests.test_backward_clock_does_not_regrant) ... ok
+test_exact_day_and_split_remainders (tests.test_growth.GrowthTests.test_exact_day_and_split_remainders) ... ok
+test_load_preserves_consumption_assets_and_progression (tests.test_growth.GrowthTests.test_load_preserves_consumption_assets_and_progression) ... ok
+test_no_action_xp_bypass (tests.test_growth.GrowthTests.test_no_action_xp_bypass) ... ok
+test_no_cap_and_waiting_for_breakthrough (tests.test_growth.GrowthTests.test_no_cap_and_waiting_for_breakthrough) ... ok
+test_old_rate_then_new_stage_and_spending (tests.test_growth.GrowthTests.test_old_rate_then_new_stage_and_spending) ... ok
+test_pre_world_has_no_growth (tests.test_growth.GrowthTests.test_pre_world_has_no_growth) ... ok
+test_preview_no_mutation_and_160_seconds (tests.test_growth.GrowthTests.test_preview_no_mutation_and_160_seconds) ... ok
+test_stored_balance_and_rate_corruption_rejected (tests.test_growth.GrowthTests.test_stored_balance_and_rate_corruption_rejected) ... ok
+test_completed_old_day_claim_survives_new_period_and_no_reroll (tests.test_activities.ActivityTests.test_completed_old_day_claim_survives_new_period_and_no_reroll) ... ok
+test_daily_two_targets_no_retroactive_progress (tests.test_activities.ActivityTests.test_daily_two_targets_no_retroactive_progress) ... ok
+test_expired_unfinished_does_not_lock_new_day_or_gain_progress (tests.test_activities.ActivityTests.test_expired_unfinished_does_not_lock_new_day_or_gain_progress) ... ok
+test_nested_corruption_rejected_and_not_mutated (tests.test_activities.ActivityTests.test_nested_corruption_rejected_and_not_mutated) ... ok
+test_social_and_any_use_count_only_valid_successful_events (tests.test_activities.ActivityTests.test_social_and_any_use_count_only_valid_successful_events) ... ok
+test_week_is_monday_anchored_and_only_once (tests.test_activities.ActivityTests.test_week_is_monday_anchored_and_only_once) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.497s
+
+OK

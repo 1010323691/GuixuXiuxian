@@ -1,0 +1,9 @@
+test_full_occupied_run_restart_load_refund_and_success_do_not_hide_eight_hours (tests.test_r4_http.R4HTTPTests.test_full_occupied_run_restart_load_refund_and_success_do_not_hide_eight_hours) ... ok
+test_real_manual_win_then_sweeps_spend_three_and_eight_hour_get_is_readonly (tests.test_r4_http.R4HTTPTests.test_real_manual_win_then_sweeps_spend_three_and_eight_hour_get_is_readonly) ... ok
+test_same_start_payload_replay_after_time_keeps_reservation_and_database_once (tests.test_r4_http.R4HTTPTests.test_same_start_payload_replay_after_time_keeps_reservation_and_database_once) ... ok
+test_two_distinct_start_ids_same_revision_only_one_reserves (tests.test_r4_http.R4HTTPTests.test_two_distinct_start_ids_same_revision_only_one_reserves) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 10.718s
+
+OK

@@ -1,0 +1,8 @@
+test_companion_damage_excluded_and_midnight_keeps_period_binding (tests.test_r3_boss.R3BossHTTPTests.test_companion_damage_excluded_and_midnight_keeps_period_binding) ... ok
+test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor (tests.test_r3_boss.R3BossHTTPTests.test_empty_exit_no_participation_and_restart_keeps_same_attempt_cursor) ... ok
+test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts (tests.test_r3_boss.R3BossHTTPTests.test_twelve_round_zero_damage_participation_then_best_only_delta_and_three_attempts) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 7.877s
+
+OK

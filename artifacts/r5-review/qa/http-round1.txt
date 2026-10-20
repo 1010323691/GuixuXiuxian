@@ -1,0 +1,10 @@
+test_all_scenarios_builds_strategies_are_deterministic_and_do_not_mutate_inputs (test_lab_http.LabHTTPTests.test_all_scenarios_builds_strategies_are_deterministic_and_do_not_mutate_inputs) ... ok
+test_health_config_are_readonly_and_production_routes_absent (test_lab_http.LabHTTPTests.test_health_config_are_readonly_and_production_routes_absent) ... ok
+test_malformed_nonfinite_duplicate_keys_and_size_limit_rejected (test_lab_http.LabHTTPTests.test_malformed_nonfinite_duplicate_keys_and_size_limit_rejected) ... ok
+test_unknown_missing_enums_and_exact_budget_types_rejected (test_lab_http.LabHTTPTests.test_unknown_missing_enums_and_exact_budget_types_rejected) ... ok
+test_zero_defaults_match_explicit_zero_and_budget_edges_are_accepted (test_lab_http.LabHTTPTests.test_zero_defaults_match_explicit_zero_and_budget_edges_are_accepted) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.147s
+
+OK

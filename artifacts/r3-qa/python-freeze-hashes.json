@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-20T07:15:17.903768+00:00",
+  "files": {
+    "game/world.py": "dfdd1a696f7f451ba5fdddbd320ddcaef8e5b40231194001b3ac65c910ab54f3",
+    "game/r3_config.py": "6f8e2e0950a620c602c90fc5996fc27ec72a78db2f3f99a89067799d1b9a337c",
+    "game/growth.py": "b1c507075a04b89f8fa9c5371370051f4ec710d62be44611d73d2494f46fb2d4",
+    "game/activities.py": "ab3152388170ede25e6a7a0d40f5a36e29923961bf899d184a8be74518e2ac3c",
+    "game/__init__.py": "f42e2b8ef841e23ab81e3f95ca640180d26c0515b4b62487eef780d1b14d4724",
+    "game/world_config.py": "744d8ab1742352794a76ba618aedfcb3b0b5af3793701a62220da909ff7e37da",
+    "game/storage.py": "deaf40271c3b0b220a4bd832da51b20323150718d71307d9ea068e93f335b1d9",
+    "game/gameplay_config.py": "9da3576c5562ed784799eae36e375a857d8de25227e74b5b599a70da9fb7ba4d",
+    "game/rules.py": "e739799d411b12ff444c7f56bec65df8970a7334d04548af28f9da2208c6f5a8",
+    "game/loot.py": "a72a7f82241477abf846308b99c113904d693195d9a81b527890752bfd5aabbc",
+    "game/config.py": "360453d7be4b87114157272b67c6cda7f5985418946e5ff491240da1a3177ef1",
+    "server.py": "41b8ec89e0e87318299846010036a38401ef85ac891de454ae35c909f220b0aa"
+  }
+}

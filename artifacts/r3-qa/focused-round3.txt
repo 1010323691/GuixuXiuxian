@@ -1,0 +1,16 @@
+test_den_defending_heavy_prevents_poison_and_pill_clears_without_reapply (tests.test_r3_mechanics.R3DungeonMechanicTests.test_den_defending_heavy_prevents_poison_and_pill_clears_without_reapply) ... ok
+test_den_guard_talisman_is_not_defense_and_poison_death_cannot_reapply (tests.test_r3_mechanics.R3DungeonMechanicTests.test_den_guard_talisman_is_not_defense_and_poison_death_cannot_reapply) ... ok
+test_den_old_poison_ticks_before_repeated_heavy_refreshes_full_two_turns (tests.test_r3_mechanics.R3DungeonMechanicTests.test_den_old_poison_ticks_before_repeated_heavy_refreshes_full_two_turns) ... ok
+test_den_poison_first_applies_without_tick_then_old_poison_ticks_even_on_control (tests.test_r3_mechanics.R3DungeonMechanicTests.test_den_poison_first_applies_without_tick_then_old_poison_ticks_even_on_control) ... ok
+test_difficulty_one_has_no_special_mechanic (tests.test_r3_mechanics.R3DungeonMechanicTests.test_difficulty_one_has_no_special_mechanic) ... ok
+test_forge_single_shield_physical_overflows_but_fire_does_not (tests.test_r3_mechanics.R3DungeonMechanicTests.test_forge_single_shield_physical_overflows_but_fire_does_not) ... ok
+test_tower_drain_is_preventable_and_zero_mp_does_not_turn_into_hp_damage (tests.test_r3_mechanics.R3DungeonMechanicTests.test_tower_drain_is_preventable_and_zero_mp_does_not_turn_into_hp_damage) ... ok
+test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_restart_load (tests.test_r3_activities_http.R3ActivityHTTPTests.test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_restart_load) ... ok
+test_weekly_stars_needs_actual_array_and_valid_boss_then_claims_after_next_week (tests.test_r3_activities_http.R3ActivityHTTPTests.test_weekly_stars_needs_actual_array_and_valid_boss_then_claims_after_next_week) ... ok
+test_equipping_then_unequipping_treasure_settles_old_rate_without_retroactive_bonus (tests.test_r3_growth.R3GrowthHTTPTests.test_equipping_then_unequipping_treasure_settles_old_rate_without_retroactive_bonus) ... ok
+test_old_checkpoint_neither_swallows_new_equipment_nor_revives_dismantled_item (tests.test_r3_checkpoint.R3CheckpointHTTPTests.test_old_checkpoint_neither_swallows_new_equipment_nor_revives_dismantled_item) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 21.052s
+
+OK

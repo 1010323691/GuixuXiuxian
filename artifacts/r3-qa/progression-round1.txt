@@ -1,0 +1,46 @@
+test_eight_stage_full_growth_and_final_spending_through_real_http (tests.test_r3_progression.R3PublicProgressionTests.test_eight_stage_full_growth_and_final_spending_through_real_http) ... FAIL
+test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties (tests.test_r3_progression.R3PublicProgressionTests.test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties) ... FAIL
+
+======================================================================
+FAIL: test_eight_stage_full_growth_and_final_spending_through_real_http (tests.test_r3_progression.R3PublicProgressionTests.test_eight_stage_full_growth_and_final_spending_through_real_http)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_progression.py", line 48, in test_eight_stage_full_growth_and_final_spending_through_real_http
+    checkpoints = self.planner.full_growth(self.server.clock)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/r3_route.py", line 77, in full_growth
+    self.prepare()
+  File "/workspace/GuixuXiuxian/tests/r3_route.py", line 40, in prepare
+    self.three_equipment()
+  File "/workspace/GuixuXiuxian/tests/r3_route.py", line 59, in three_equipment
+    self.perform('world_loot_enhance', uid=uid)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 76, in perform
+    return self.execute(projected, **{key: value for key, value in params.items() if key not in projected['params']})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 37, in execute
+    assert projected['enabled'], (projected['label'], projected['reason'])
+           ~~~~~~~~~^^^^^^^^^^^
+AssertionError: ('强化第0章灵刃', '缺少矿石：需要4，当前2。')
+
+======================================================================
+FAIL: test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties (tests.test_r3_progression.R3PublicProgressionTests.test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_r3_progression.py", line 21, in test_low_difficulty_materials_and_crafted_enhancement_unlock_two_higher_difficulties
+    p.prepare()
+  File "/workspace/GuixuXiuxian/tests/r3_route.py", line 40, in prepare
+    self.three_equipment()
+  File "/workspace/GuixuXiuxian/tests/r3_route.py", line 59, in three_equipment
+    self.perform('world_loot_enhance', uid=uid)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 76, in perform
+    return self.execute(projected, **{key: value for key, value in params.items() if key not in projected['params']})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 37, in execute
+    assert projected['enabled'], (projected['label'], projected['reason'])
+           ~~~~~~~~~^^^^^^^^^^^
+AssertionError: ('强化第0章灵刃', '缺少矿石：需要4，当前2。')
+
+----------------------------------------------------------------------
+Ran 2 tests in 3.118s
+
+FAILED (failures=2)

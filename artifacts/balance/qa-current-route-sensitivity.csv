@@ -1,0 +1,11 @@
+route,global_actions,world_ticks,assumed_actions_per_minute,minutes_per_day,active_minutes,continuous_days,sessions_ceiling
+cultivator,271,217,0.5,30,542.0,18.066666666666666,19
+cultivator,271,217,1,30,271.0,9.033333333333333,10
+cultivator,271,217,2,30,135.5,4.516666666666667,5
+cultivator,271,217,5,30,54.2,1.8066666666666666,2
+cultivator,271,217,10,30,27.1,0.9033333333333333,1
+explorer,540,486,0.5,30,1080.0,36.0,36
+explorer,540,486,1,30,540.0,18.0,18
+explorer,540,486,2,30,270.0,9.0,9
+explorer,540,486,5,30,108.0,3.6,4
+explorer,540,486,10,30,54.0,1.8,2

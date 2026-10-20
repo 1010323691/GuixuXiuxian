@@ -1,0 +1,14 @@
+test_sweep_commit_failure_rolls_back_credit_item_pity_and_can_retry_same_id (tests.test_r4_http.R4HTTPTests.test_sweep_commit_failure_rolls_back_credit_item_pity_and_can_retry_same_id) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 242, in write
+    db.execute('INSERT INTO requests VALUES(?,?)',(request_id,canonical))
+sqlite3.IntegrityError: r4-after-state
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.524s
+
+OK

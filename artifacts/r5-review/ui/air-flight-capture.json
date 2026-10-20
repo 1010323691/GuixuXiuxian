@@ -1,0 +1,18 @@
+[
+  {
+    "viewport": "desktop",
+    "event_id": "2246139371d407328ce7:3",
+    "x": 795.603271484375,
+    "origin_x": 453.859375,
+    "delta": 341.743896484375,
+    "frame_tick": "1"
+  },
+  {
+    "viewport": "mobile",
+    "event_id": "3a008454ff7e8d7eb8d9:3",
+    "x": 135.8697509765625,
+    "origin_x": 39.9375,
+    "delta": 95.9322509765625,
+    "frame_tick": "1"
+  }
+]

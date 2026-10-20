@@ -1,0 +1,1580 @@
+{
+  "passed": true,
+  "coverage": {
+    "world_loot_equip": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "该实例已装备。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先为法宝选择方向。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "该实例已装备。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先为法宝选择方向。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "该实例已装备。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先为法宝选择方向。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "该实例已装备。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先为法宝选择方向。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_enhance": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_dismantle": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先卸下该实例。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先卸下该实例。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先卸下该实例。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "blade"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "请先卸下该实例。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_quality": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "main"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_choose": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "uid": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_unequip": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "slot": "armor"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "slot": "pendant"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "slot": "weapon"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "slot": "armor"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "slot": "pendant"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "slot": "weapon"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "slot": "armor"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "slot": "pendant"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "slot": "weapon"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "slot": "armor"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "slot": "pendant"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "槽位为空。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "slot": "weapon"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_claim": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "character",
+        "params": {
+          "receipt": "fixture-pending"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "character",
+        "params": {
+          "receipt": "fixture-pending"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "character",
+        "params": {
+          "receipt": "fixture-pending"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "character",
+        "params": {
+          "receipt": "fixture-pending"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_craft_treasure": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "craft",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "craft",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "craft",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "craft",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "craft",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "craft",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "craft",
+        "params": {
+          "slot": "main"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "craft",
+        "params": {
+          "slot": "guard"
+        },
+        "fields": [
+          {
+            "name": "effect_type",
+            "label": "法宝方向",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "cultivation",
+                "label": "修炼型"
+              },
+              {
+                "value": "combat",
+                "label": "战力型"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_loot_exchange": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "craft",
+        "params": {
+          "item": "enhance_material"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "craft",
+        "params": {
+          "item": "dust"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "craft",
+        "params": {
+          "item": "enhance_material"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "craft",
+        "params": {
+          "item": "dust"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "craft",
+        "params": {
+          "item": "enhance_material"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "craft",
+        "params": {
+          "item": "dust"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "craft",
+        "params": {
+          "item": "enhance_material"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "craft",
+        "params": {
+          "item": "dust"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_boss_enter": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "exploration",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "exploration",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "exploration",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "exploration",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_milestone_accept": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 25
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "herb",
+                "label": "交付药草2"
+              },
+              {
+                "value": "pill",
+                "label": "接取后炼回元丹"
+              }
+            ]
+          }
+        ],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 50
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "alchemy",
+                "label": "炼丹"
+              },
+              {
+                "value": "smithing",
+                "label": "炼器"
+              },
+              {
+                "value": "talismans",
+                "label": "制符"
+              },
+              {
+                "value": "formations",
+                "label": "阵法"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 75
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "secret",
+                "label": "接取后通关任一秘境"
+              },
+              {
+                "value": "commission",
+                "label": "接取后完成材料课业"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 50
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "alchemy",
+                "label": "炼丹"
+              },
+              {
+                "value": "smithing",
+                "label": "炼器"
+              },
+              {
+                "value": "talismans",
+                "label": "制符"
+              },
+              {
+                "value": "formations",
+                "label": "阵法"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 75
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "secret",
+                "label": "接取后通关任一秘境"
+              },
+              {
+                "value": "commission",
+                "label": "接取后完成材料课业"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 50
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "alchemy",
+                "label": "炼丹"
+              },
+              {
+                "value": "smithing",
+                "label": "炼器"
+              },
+              {
+                "value": "talismans",
+                "label": "制符"
+              },
+              {
+                "value": "formations",
+                "label": "阵法"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 75
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "secret",
+                "label": "接取后通关任一秘境"
+              },
+              {
+                "value": "commission",
+                "label": "接取后完成材料课业"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 50
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "alchemy",
+                "label": "炼丹"
+              },
+              {
+                "value": "smithing",
+                "label": "炼器"
+              },
+              {
+                "value": "talismans",
+                "label": "制符"
+              },
+              {
+                "value": "formations",
+                "label": "阵法"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 75
+        },
+        "fields": [
+          {
+            "name": "branch",
+            "label": "选择目标",
+            "type": "select",
+            "required": true,
+            "options": [
+              {
+                "value": "secret",
+                "label": "接取后通关任一秘境"
+              },
+              {
+                "value": "commission",
+                "label": "接取后完成材料课业"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "reason": "尚未达到本阶段精确进度。"
+      }
+    ],
+    "world_activity_accept": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "project": "expedition"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "project": "artisan"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {
+          "project": "social"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "project": "expedition"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "project": "artisan"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "project": "social"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "project": "expedition"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "project": "artisan"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "project": "social"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "project": "expedition"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "project": "artisan"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "project": "social"
+        },
+        "fields": [],
+        "enabled": false,
+        "reason": "本UTC日已选择项目。"
+      }
+    ],
+    "world_activity_week_accept": [
+      {
+        "context": "owned-equipped-unselected-pending + 25percent",
+        "page": "quests",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {},
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_milestone_claim": [
+      {
+        "context": "accepted optional milestone",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 25
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 25
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "stage": 0,
+          "tier": 25
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_activity_claim": [
+      {
+        "context": "completed two-objective daily",
+        "page": "quests",
+        "params": {
+          "key": "d:2027-01-15"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      },
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "quests",
+        "params": {
+          "key": "d:2027-01-15"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ],
+    "world_boss_claim": [
+      {
+        "context": "valid low-damage world Boss period",
+        "page": "exploration",
+        "params": {
+          "day": "2027-01-15"
+        },
+        "fields": [],
+        "enabled": true,
+        "reason": ""
+      }
+    ]
+  },
+  "contexts": [
+    "owned-equipped-unselected-pending + 25percent",
+    "accepted optional milestone",
+    "completed two-objective daily",
+    "valid low-damage world Boss period"
+  ],
+  "dungeon_previews_checked": 9,
+  "covered": 16
+}

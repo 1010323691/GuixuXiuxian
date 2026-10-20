@@ -1,0 +1,33 @@
+{
+  "archive": "guixu-mortal-v1.2.0.zip",
+  "passed": true,
+  "checks": [
+    "archive static assets, default longline, legal prologue and world entry",
+    "real materials -> instance equipment -> Boss score/delta -> dust -> cultivation treasure and 545.4/day",
+    "R4 curve2, seven real story layers, accepted craft progress and recoverable credits survive older checkpoint",
+    "stop/restart restores real save and continuous entitlement without any injected HTTP time",
+    "explicit free profile retains old immediate growth",
+    "packaged migration tests run with bundled old-save fixture and no dist directory"
+  ],
+  "archive_files": 268,
+  "runtime_sha256": {
+    "server.py": "1e6df718ae842e577e3c0f09fc5538f0f1fbcdfed4ec57da6cfa9bcc9106d789",
+    "VERSION": "1e5b51cde515396a9fa762909cf8ca6584ccc564b325d2eebeea76175fe95c4d",
+    "game/__init__.py": "f42e2b8ef841e23ab81e3f95ca640180d26c0515b4b62487eef780d1b14d4724",
+    "game/activities.py": "ab3152388170ede25e6a7a0d40f5a36e29923961bf899d184a8be74518e2ac3c",
+    "game/cadence.py": "fc33d7d89eda3cf4e99d9fda29a7e9e9d95fd2ec46712dc448335a1324b0012e",
+    "game/config.py": "360453d7be4b87114157272b67c6cda7f5985418946e5ff491240da1a3177ef1",
+    "game/gameplay_config.py": "405e9b3948df76c69a203563b680ca3e6c1327f752b9acdbed95d2733f916ad9",
+    "game/growth.py": "760b385a5651f093df0d90f6c28ab9dafdd83059fc9dc9aa4e5d9d8dc719744d",
+    "game/journey.py": "eff17c029bf67feaefb813fb1a2f2a58b3e0f96a119ce1920d5ad954c37b0146",
+    "game/loot.py": "c0e108fed25d8ace701ba9173650bf5708e4e5995d9a240bdffdd0e935c423a6",
+    "game/r3_config.py": "8014072da05547b6a203d353ebe4e2e08fd1c8558513611ad07fb3058dd872a8",
+    "game/rules.py": "e739799d411b12ff444c7f56bec65df8970a7334d04548af28f9da2208c6f5a8",
+    "game/storage.py": "76770087f8d4d40d27552eab6ecd3299dcf724f1f7452badbacea2817e434511",
+    "game/world.py": "4c64d48f52526930414ff308e8066b7f963c5658d9dd0109c04f58773e469db7",
+    "game/world_config.py": "744d8ab1742352794a76ba618aedfcb3b0b5af3793701a62220da909ff7e37da",
+    "static/app.js": "d00bc80fdef318a5d43b06f9084996ea309cd92ea60a740463c3f56baee24231",
+    "static/index.html": "9c2c94ebf242784239c89465ece041391f8e21adb38a871516540967b6f9f1ec",
+    "static/styles.css": "47d493e4d942a655e2a3afe4166833e481e966e2e61330beb4ddbd879a2e7079"
+  }
+}

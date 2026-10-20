@@ -1,0 +1,9 @@
+test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency (tests.test_r3_rewards.R3RewardTests.test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency) ... ok
+test_completed_run_cannot_settle_twice_even_with_new_client_request (tests.test_r3_rewards.R3RewardTests.test_completed_run_cannot_settle_twice_even_with_new_client_request) ... ok
+test_deterministic_template_cycle_and_normal_difficulty_tenth_pity (tests.test_r3_rewards.R3RewardTests.test_deterministic_template_cycle_and_normal_difficulty_tenth_pity) ... ok
+test_reward_recovery_uses_elapsed_time_not_a_fresh_day_label (tests.test_r3_rewards.R3RewardTests.test_reward_recovery_uses_elapsed_time_not_a_fresh_day_label) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.032s
+
+OK

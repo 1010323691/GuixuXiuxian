@@ -1,0 +1,25 @@
+test_all_three_secrets_and_three_dungeons_have_real_completion (tests.test_world_systems.WorldSystemInvariantTests.test_all_three_secrets_and_three_dungeons_have_real_completion) ... ok
+test_three_npc_side_quests_require_real_delivery_and_claim_once (tests.test_world_systems.WorldSystemInvariantTests.test_three_npc_side_quests_require_real_delivery_and_claim_once) ... FAIL
+
+======================================================================
+FAIL: test_three_npc_side_quests_require_real_delivery_and_claim_once (tests.test_world_systems.WorldSystemInvariantTests.test_three_npc_side_quests_require_real_delivery_and_claim_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 590, in test_three_npc_side_quests_require_real_delivery_and_claim_once
+    p.secret('tide', 'xuanchao')
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 195, in secret
+    self.travel(region)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 191, in travel
+    self.perform('world_travel', region=region)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 76, in perform
+    return self.execute(projected, **{key: value for key, value in params.items() if key not in projected['params']})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 37, in execute
+    assert projected['enabled'], (projected['label'], projected['reason'])
+           ~~~~~~~~~^^^^^^^^^^^
+AssertionError: ('前往玄潮域', '需先达到元婴，该地域尚未解锁。')
+
+----------------------------------------------------------------------
+Ran 2 tests in 137.775s
+
+FAILED (failures=1)

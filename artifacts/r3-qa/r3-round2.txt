@@ -1,0 +1,38 @@
+test_explicit_free_retains_original_immediate_growth (tests.test_r3_profiles.R3ProfileHTTPTests.test_explicit_free_retains_original_immediate_growth) ... ok
+test_http_default_and_explicit_longline_create_independent_profile_ids (tests.test_r3_profiles.R3ProfileHTTPTests.test_http_default_and_explicit_longline_create_independent_profile_ids) ... ok
+test_unknown_modes_are_rejected_without_creating_or_overwriting (tests.test_r3_profiles.R3ProfileHTTPTests.test_unknown_modes_are_rejected_without_creating_or_overwriting) ... ok
+test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles (tests.test_r3_growth.R3GrowthHTTPTests.test_160_seconds_exact_growth_get_is_database_readonly_then_post_settles) ... ok
+test_before_world_entry_no_whole_day_pack_or_offline_world_progress (tests.test_r3_growth.R3GrowthHTTPTests.test_before_world_entry_no_whole_day_pack_or_offline_world_progress) ... ok
+test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database (tests.test_r3_growth.R3GrowthHTTPTests.test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database) ... ok
+test_failure_after_state_update_rolls_back_time_and_resources_and_request (tests.test_r3_growth.R3GrowthHTTPTests.test_failure_after_state_update_rolls_back_time_and_resources_and_request) ... ERROR:root:写入存档失败
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/server.py", line 86, in do_POST
+    self.send(200,self.server.store.write(path[5:],payload))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/game/storage.py", line 196, in write
+    db.execute('INSERT INTO requests VALUES(?,?)',(request_id,canonical))
+sqlite3.IntegrityError: qa-after-update
+ok
+test_fractional_time_survives_many_posts_instead_of_flooring_each_second (tests.test_r3_growth.R3GrowthHTTPTests.test_fractional_time_survives_many_posts_instead_of_flooring_each_second) ... ok
+test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_long_offline_does_not_auto_breakthrough_or_run_economy_or_cap_xp) ... ok
+test_material_actions_and_manual_cultivation_do_not_add_direct_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_material_actions_and_manual_cultivation_do_not_add_direct_xp) ... ok
+test_repeated_request_after_elapsed_time_never_double_action_or_settle (tests.test_r3_growth.R3GrowthHTTPTests.test_repeated_request_after_elapsed_time_never_double_action_or_settle) ... ok
+test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp (tests.test_r3_growth.R3GrowthHTTPTests.test_restart_retains_watermark_and_rollback_clock_cannot_mint_xp) ... ok
+test_two_distinct_requests_from_same_revision_only_one_commits (tests.test_r3_growth.R3GrowthHTTPTests.test_two_distinct_requests_from_same_revision_only_one_commits) ... ok
+test_dismantle_is_single_consumption_and_equipped_item_is_protected (tests.test_r3_items.R3ItemTests.test_dismantle_is_single_consumption_and_equipped_item_is_protected) ... ok
+test_enhancing_one_same_template_instance_does_not_change_another (tests.test_r3_items.R3ItemTests.test_enhancing_one_same_template_instance_does_not_change_another) ... ok
+test_equipment_quality_and_enhancement_are_additive_with_floor (tests.test_r3_items.R3ItemTests.test_equipment_quality_and_enhancement_are_additive_with_floor) ... ok
+test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent (tests.test_r3_items.R3ItemTests.test_two_max_treasures_plus_other_bonuses_cap_at_fifteen_percent) ... ok
+test_unselected_treasure_must_choose_once_and_cannot_have_both_effects (tests.test_r3_items.R3ItemTests.test_unselected_treasure_must_choose_once_and_cannot_have_both_effects) ... ok
+test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency (tests.test_r3_rewards.R3RewardTests.test_boss_reward_edges_low_participation_caps_and_no_npc_rank_dependency) ... ok
+test_completed_run_cannot_settle_twice_even_with_new_client_request (tests.test_r3_rewards.R3RewardTests.test_completed_run_cannot_settle_twice_even_with_new_client_request) ... ok
+test_deterministic_template_cycle_and_normal_difficulty_tenth_pity (tests.test_r3_rewards.R3RewardTests.test_deterministic_template_cycle_and_normal_difficulty_tenth_pity) ... ok
+test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time (tests.test_r3_rewards.R3RewardTests.test_success_quotas_keyed_by_start_utc_day_survive_forward_and_backward_time) ... ok
+test_load_retains_materials_growth_ai_tick_and_full_ownership_state (tests.test_r3_checkpoint.R3CheckpointHTTPTests.test_load_retains_materials_growth_ai_tick_and_full_ownership_state) ... ok
+test_loading_pre_entry_slot_cannot_return_world_character_to_prologue (tests.test_r3_checkpoint.R3CheckpointHTTPTests.test_loading_pre_entry_slot_cannot_return_world_character_to_prologue) ... ok
+test_profile_mismatch_rejected_by_checkpoint_merge_without_mutating_inputs (tests.test_r3_checkpoint.R3CheckpointHTTPTests.test_profile_mismatch_rejected_by_checkpoint_merge_without_mutating_inputs) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 23.082s
+
+OK

@@ -1,0 +1,306 @@
+{
+  "kind": "independent_current_version_audit",
+  "source_hashes": {
+    "game/world_config.py": "744d8ab1742352794a76ba618aedfcb3b0b5af3793701a62220da909ff7e37da",
+    "game/world.py": "d41cca700095f02790c8db83b37ca48d3d4d5e7f0a7fadee262ed8fcae9fefa9"
+  },
+  "breakthrough_costs": [
+    100,
+    160,
+    220,
+    280,
+    340,
+    400,
+    460
+  ],
+  "total_required_xp": 1960,
+  "stage7_display_cost_unused_for_breakthrough": 520,
+  "target_assumptions": {
+    "minutes_per_day": 30,
+    "days": [
+      35,
+      45
+    ],
+    "active_minutes_range": [
+      1050,
+      1350
+    ],
+    "active_hours_range": [
+      17.5,
+      22.5
+    ]
+  },
+  "current_route_action_sensitivity": [
+    {
+      "route": "cultivator",
+      "global_actions": 271,
+      "world_ticks": 217,
+      "assumed_actions_per_minute": 0.5,
+      "minutes_per_day": 30,
+      "active_minutes": 542.0,
+      "continuous_days": 18.066666666666666,
+      "sessions_ceiling": 19
+    },
+    {
+      "route": "cultivator",
+      "global_actions": 271,
+      "world_ticks": 217,
+      "assumed_actions_per_minute": 1,
+      "minutes_per_day": 30,
+      "active_minutes": 271.0,
+      "continuous_days": 9.033333333333333,
+      "sessions_ceiling": 10
+    },
+    {
+      "route": "cultivator",
+      "global_actions": 271,
+      "world_ticks": 217,
+      "assumed_actions_per_minute": 2,
+      "minutes_per_day": 30,
+      "active_minutes": 135.5,
+      "continuous_days": 4.516666666666667,
+      "sessions_ceiling": 5
+    },
+    {
+      "route": "cultivator",
+      "global_actions": 271,
+      "world_ticks": 217,
+      "assumed_actions_per_minute": 5,
+      "minutes_per_day": 30,
+      "active_minutes": 54.2,
+      "continuous_days": 1.8066666666666666,
+      "sessions_ceiling": 2
+    },
+    {
+      "route": "cultivator",
+      "global_actions": 271,
+      "world_ticks": 217,
+      "assumed_actions_per_minute": 10,
+      "minutes_per_day": 30,
+      "active_minutes": 27.1,
+      "continuous_days": 0.9033333333333333,
+      "sessions_ceiling": 1
+    },
+    {
+      "route": "explorer",
+      "global_actions": 540,
+      "world_ticks": 486,
+      "assumed_actions_per_minute": 0.5,
+      "minutes_per_day": 30,
+      "active_minutes": 1080.0,
+      "continuous_days": 36.0,
+      "sessions_ceiling": 36
+    },
+    {
+      "route": "explorer",
+      "global_actions": 540,
+      "world_ticks": 486,
+      "assumed_actions_per_minute": 1,
+      "minutes_per_day": 30,
+      "active_minutes": 540.0,
+      "continuous_days": 18.0,
+      "sessions_ceiling": 18
+    },
+    {
+      "route": "explorer",
+      "global_actions": 540,
+      "world_ticks": 486,
+      "assumed_actions_per_minute": 2,
+      "minutes_per_day": 30,
+      "active_minutes": 270.0,
+      "continuous_days": 9.0,
+      "sessions_ceiling": 9
+    },
+    {
+      "route": "explorer",
+      "global_actions": 540,
+      "world_ticks": 486,
+      "assumed_actions_per_minute": 5,
+      "minutes_per_day": 30,
+      "active_minutes": 108.0,
+      "continuous_days": 3.6,
+      "sessions_ceiling": 4
+    },
+    {
+      "route": "explorer",
+      "global_actions": 540,
+      "world_ticks": 486,
+      "assumed_actions_per_minute": 10,
+      "minutes_per_day": 30,
+      "active_minutes": 54.0,
+      "continuous_days": 1.8,
+      "sessions_ceiling": 2
+    }
+  ],
+  "xp_only_profiles": [
+    {
+      "profile": "default_wood",
+      "required_cultivate_actions": 70,
+      "stages": [
+        {
+          "stage": 0,
+          "cost": 100,
+          "xp_per_cultivate": 15,
+          "cultivate_actions": 7,
+          "carried_xp": 5
+        },
+        {
+          "stage": 1,
+          "cost": 160,
+          "xp_per_cultivate": 19,
+          "cultivate_actions": 9,
+          "carried_xp": 16
+        },
+        {
+          "stage": 2,
+          "cost": 220,
+          "xp_per_cultivate": 23,
+          "cultivate_actions": 9,
+          "carried_xp": 3
+        },
+        {
+          "stage": 3,
+          "cost": 280,
+          "xp_per_cultivate": 27,
+          "cultivate_actions": 11,
+          "carried_xp": 20
+        },
+        {
+          "stage": 4,
+          "cost": 340,
+          "xp_per_cultivate": 31,
+          "cultivate_actions": 11,
+          "carried_xp": 21
+        },
+        {
+          "stage": 5,
+          "cost": 400,
+          "xp_per_cultivate": 35,
+          "cultivate_actions": 11,
+          "carried_xp": 6
+        },
+        {
+          "stage": 6,
+          "cost": 460,
+          "xp_per_cultivate": 39,
+          "cultivate_actions": 12,
+          "carried_xp": 14
+        }
+      ],
+      "limitation": "XP-only arithmetic; excludes build acquisition, bosses, material/social gates and final quest. Not a legal full-game timing run."
+    },
+    {
+      "profile": "max_wood_array",
+      "required_cultivate_actions": 40,
+      "stages": [
+        {
+          "stage": 0,
+          "cost": 100,
+          "xp_per_cultivate": 36,
+          "cultivate_actions": 3,
+          "carried_xp": 8
+        },
+        {
+          "stage": 1,
+          "cost": 160,
+          "xp_per_cultivate": 40,
+          "cultivate_actions": 4,
+          "carried_xp": 8
+        },
+        {
+          "stage": 2,
+          "cost": 220,
+          "xp_per_cultivate": 44,
+          "cultivate_actions": 5,
+          "carried_xp": 8
+        },
+        {
+          "stage": 3,
+          "cost": 280,
+          "xp_per_cultivate": 48,
+          "cultivate_actions": 6,
+          "carried_xp": 16
+        },
+        {
+          "stage": 4,
+          "cost": 340,
+          "xp_per_cultivate": 52,
+          "cultivate_actions": 7,
+          "carried_xp": 40
+        },
+        {
+          "stage": 5,
+          "cost": 400,
+          "xp_per_cultivate": 56,
+          "cultivate_actions": 7,
+          "carried_xp": 32
+        },
+        {
+          "stage": 6,
+          "cost": 460,
+          "xp_per_cultivate": 60,
+          "cultivate_actions": 8,
+          "carried_xp": 52
+        }
+      ],
+      "limitation": "XP-only arithmetic; excludes build acquisition, bosses, material/social gates and final quest. Not a legal full-game timing run."
+    },
+    {
+      "profile": "max_wood_array_artisan",
+      "required_cultivate_actions": 38,
+      "stages": [
+        {
+          "stage": 0,
+          "cost": 100,
+          "xp_per_cultivate": 38,
+          "cultivate_actions": 3,
+          "carried_xp": 14
+        },
+        {
+          "stage": 1,
+          "cost": 160,
+          "xp_per_cultivate": 42,
+          "cultivate_actions": 4,
+          "carried_xp": 22
+        },
+        {
+          "stage": 2,
+          "cost": 220,
+          "xp_per_cultivate": 46,
+          "cultivate_actions": 5,
+          "carried_xp": 32
+        },
+        {
+          "stage": 3,
+          "cost": 280,
+          "xp_per_cultivate": 50,
+          "cultivate_actions": 5,
+          "carried_xp": 2
+        },
+        {
+          "stage": 4,
+          "cost": 340,
+          "xp_per_cultivate": 54,
+          "cultivate_actions": 7,
+          "carried_xp": 40
+        },
+        {
+          "stage": 5,
+          "cost": 400,
+          "xp_per_cultivate": 58,
+          "cultivate_actions": 7,
+          "carried_xp": 46
+        },
+        {
+          "stage": 6,
+          "cost": 460,
+          "xp_per_cultivate": 62,
+          "cultivate_actions": 7,
+          "carried_xp": 20
+        }
+      ],
+      "limitation": "XP-only arithmetic; excludes build acquisition, bosses, material/social gates and final quest. Not a legal full-game timing run."
+    }
+  ],
+  "warning": "All timing conversion is hypothetical human action density, not measured human playtime. No day gates implemented or modified."
+}

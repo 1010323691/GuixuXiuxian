@@ -1,0 +1,117 @@
+test_alchemy_trade_and_techniques (test_game.GameHTTPTests.test_alchemy_trade_and_techniques) ... ok
+test_combat_order_cost_defense_and_free_recovery (test_game.GameHTTPTests.test_combat_order_cost_defense_and_free_recovery) ... ok
+test_complete_legal_route_and_post_ending (test_game.GameHTTPTests.test_complete_legal_route_and_post_ending) ... ok
+test_corrupt_database_refused_without_overwrite (test_game.GameHTTPTests.test_corrupt_database_refused_without_overwrite) ... ok
+test_database_lock_rollback (test_game.GameHTTPTests.test_database_lock_rollback) ... ok
+test_default_name_empty_slot_and_long_name (test_game.GameHTTPTests.test_default_name_empty_slot_and_long_name) ... ok
+test_exact_gdd_53_action_route_without_optional_resources (test_game.GameHTTPTests.test_exact_gdd_53_action_route_without_optional_resources) ... ok
+test_idempotency_latest_snapshot_conflicts_and_restart (test_game.GameHTTPTests.test_idempotency_latest_snapshot_conflicts_and_restart) ... ok
+test_initial_projection_and_growth (test_game.GameHTTPTests.test_initial_projection_and_growth) ... ok
+test_invalid_inputs_and_origin_do_not_mutate (test_game.GameHTTPTests.test_invalid_inputs_and_origin_do_not_mutate) ... ok
+test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load (test_game.GameHTTPTests.test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load) ... ok
+test_nonfinite_json_is_bad_request_not_storage_failure (test_game.GameHTTPTests.test_nonfinite_json_is_bad_request_not_storage_failure) ... ok
+test_parallel_stale_writes_commit_only_once (test_game.GameHTTPTests.test_parallel_stale_writes_commit_only_once) ... ok
+test_slot_restart_and_monotonic_revision (test_game.GameHTTPTests.test_slot_restart_and_monotonic_revision) ... ok
+test_write_failure_after_state_update_rolls_back_entire_transaction (test_game.GameHTTPTests.test_write_failure_after_state_update_rolls_back_entire_transaction) ... ok
+test_active_battles_in_current_and_checkpoint_preserved_exactly (test_migration.MigrationTests.test_active_battles_in_current_and_checkpoint_preserved_exactly) ... ok
+test_backup_failure_never_updates_source (test_migration.MigrationTests.test_backup_failure_never_updates_source) ... ok
+test_cli_explicit_migration_starts_schema2_service (test_migration.MigrationTests.test_cli_explicit_migration_starts_schema2_service) ... ok
+test_corrupt_database_is_not_replaced (test_migration.MigrationTests.test_corrupt_database_is_not_replaced) ... ok
+test_corrupt_or_invalid_slot_refused_without_backup_or_overwrite (test_migration.MigrationTests.test_corrupt_or_invalid_slot_refused_without_backup_or_overwrite) ... ok
+test_empty_state_and_slot_stay_null_and_repeat_is_noop (test_migration.MigrationTests.test_empty_state_and_slot_stay_null_and_repeat_is_noop) ... ok
+test_failure_after_backup_rolls_back_and_keeps_recoverable_original (test_migration.MigrationTests.test_failure_after_backup_rolls_back_and_keeps_recoverable_original) ... ok
+test_migrates_current_and_slot_preserves_revision_ledger_and_backup (test_migration.MigrationTests.test_migrates_current_and_slot_preserves_revision_ledger_and_backup) ... ok
+test_migrator_may_not_change_legacy_fields (test_migration.MigrationTests.test_migrator_may_not_change_legacy_fields) ... ok
+test_parallel_explicit_startups_migrate_once (test_migration.MigrationTests.test_parallel_explicit_startups_migrate_once) ... ok
+test_requires_explicit_flag_and_preserves_source_bytes (test_migration.MigrationTests.test_requires_explicit_flag_and_preserves_source_bytes) ... ok
+test_unknown_newer_schema_refused_without_byte_changes (test_migration.MigrationTests.test_unknown_newer_schema_refused_without_byte_changes) ... ok
+test_free_recovery_from_one_hp_and_no_resources (test_rules.RuleBoundaryTests.test_free_recovery_from_one_hp_and_no_resources) ... ok
+test_invalid_values_and_extra_parameters (test_rules.RuleBoundaryTests.test_invalid_values_and_extra_parameters) ... ok
+test_log_retention_and_successful_action_counter (test_rules.RuleBoundaryTests.test_log_retention_and_successful_action_counter) ... ok
+test_pill_effect_precedes_enemy_and_clamps_independently (test_rules.RuleBoundaryTests.test_pill_effect_precedes_enemy_and_clamps_independently) ... ok
+test_resource_caps_and_full_action_rejection (test_rules.RuleBoundaryTests.test_resource_caps_and_full_action_rejection) ... ok
+test_active_world_keeps_legacy_history_readonly (test_world_contract.WorldContractTests.test_active_world_keeps_legacy_history_readonly) ... ok
+test_all_eleven_pages_and_fields_match_frozen_contract (test_world_contract.WorldContractTests.test_all_eleven_pages_and_fields_match_frozen_contract) ... ok
+test_nested_world_checkpoint_restart_and_old_page_conflict (test_world_contract.WorldContractTests.test_nested_world_checkpoint_restart_and_old_page_conflict) ... ok
+test_schema2_inactive_world_and_legacy_actions_do_not_tick (test_world_contract.WorldContractTests.test_schema2_inactive_world_and_legacy_actions_do_not_tick) ... ok
+test_world_activation_is_once_and_invalid_actions_are_atomic (test_world_contract.WorldContractTests.test_world_activation_is_once_and_invalid_actions_are_atomic) ... ok
+test_world_concurrent_actions_and_mid_commit_failure_are_atomic (test_world_contract.WorldContractTests.test_world_concurrent_actions_and_mid_commit_failure_are_atomic) ... ok
+test_world_duplicate_request_latest_snapshot_and_ai_tick_exactly_once (test_world_contract.WorldContractTests.test_world_duplicate_request_latest_snapshot_and_ai_tick_exactly_once) ... ok
+test_all_projected_actions_reject_extra_state_overrides_without_mutation (test_world_systems.WorldSystemInvariantTests.test_all_projected_actions_reject_extra_state_overrides_without_mutation) ... ok
+test_all_three_secrets_and_three_dungeons_have_real_completion (test_world_systems.WorldSystemInvariantTests.test_all_three_secrets_and_three_dungeons_have_real_completion) ... FAIL
+test_all_twelve_recipes_outputs_are_consumed_equipped_or_affect_rules (test_world_systems.WorldSystemInvariantTests.test_all_twelve_recipes_outputs_are_consumed_equipped_or_affect_rules) ... ok
+test_craft_achievement_title_changes_growth_and_cannot_duplicate (test_world_systems.WorldSystemInvariantTests.test_craft_achievement_title_changes_growth_and_cannot_duplicate) ... ok
+test_full_mortal_world_progress_with_legal_free_resources (test_world_systems.WorldSystemInvariantTests.test_full_mortal_world_progress_with_legal_free_resources) ... FAIL
+test_home_production_collect_and_array_effect_can_be_toggled (test_world_systems.WorldSystemInvariantTests.test_home_production_collect_and_array_effect_can_be_toggled) ... ok
+test_market_fields_reject_bad_quantity_and_buy_sell_are_real (test_world_systems.WorldSystemInvariantTests.test_market_fields_reject_bad_quantity_and_buy_sell_are_real) ... ok
+test_player_auction_return_is_once_and_bid_inventory_is_escrowed (test_world_systems.WorldSystemInvariantTests.test_player_auction_return_is_once_and_bid_inventory_is_escrowed) ... ok
+test_repeated_rewards_social_permissions_and_dispatched_progress (test_world_systems.WorldSystemInvariantTests.test_repeated_rewards_social_permissions_and_dispatched_progress) ... FAIL
+test_three_domain_npc_season_and_claim_once (test_world_systems.WorldSystemInvariantTests.test_three_domain_npc_season_and_claim_once) ... ok
+test_three_npc_relationships_teacher_and_family_variants (test_world_systems.WorldSystemInvariantTests.test_three_npc_relationships_teacher_and_family_variants) ... ok
+test_three_roots_bodies_and_skills_have_actual_effect_and_caps (test_world_systems.WorldSystemInvariantTests.test_three_roots_bodies_and_skills_have_actual_effect_and_caps) ... ok
+test_world_read_only_navigation_projection_never_advances_ai (test_world_systems.WorldSystemInvariantTests.test_world_read_only_navigation_projection_never_advances_ai) ... ok
+test_container_types_reject_valueerror_before_deep_access (test_world_validation.WorldValidationTests.test_container_types_reject_valueerror_before_deep_access) ... ok
+test_exact_counter_shape_and_non_null_battle_shape (test_world_validation.WorldValidationTests.test_exact_counter_shape_and_non_null_battle_shape) ... ok
+test_invalid_auction_identity_and_delivery_rejected (test_world_validation.WorldValidationTests.test_invalid_auction_identity_and_delivery_rejected) ... ok
+test_invalid_battle_snapshot_and_targets_rejected (test_world_validation.WorldValidationTests.test_invalid_battle_snapshot_and_targets_rejected) ... 
+  test_invalid_battle_snapshot_and_targets_rejected (test_world_validation.WorldValidationTests.test_invalid_battle_snapshot_and_targets_rejected) (field='stage') ... FAIL
+test_known_ids_enums_and_bounds_in_nested_records (test_world_validation.WorldValidationTests.test_known_ids_enums_and_bounds_in_nested_records) ... ok
+test_legal_initial_null_and_real_battle_snapshots (test_world_validation.WorldValidationTests.test_legal_initial_null_and_real_battle_snapshots) ... ok
+test_schema2_corruption_does_not_reset_database (test_world_validation.WorldValidationTests.test_schema2_corruption_does_not_reset_database) ... ok
+
+======================================================================
+FAIL: test_all_three_secrets_and_three_dungeons_have_real_completion (test_world_systems.WorldSystemInvariantTests.test_all_three_secrets_and_three_dungeons_have_real_completion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 369, in test_all_three_secrets_and_three_dungeons_have_real_completion
+    p.full_progress()
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 203, in full_progress
+    self.common_social('sword', 'healer')
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 169, in common_social
+    self.perform('world_family_build', facility=facility)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 74, in perform
+    raise AssertionError(('operation not uniquely reachable in UI', action_id, params, candidates))
+AssertionError: ('operation not uniquely reachable in UI', 'world_family_build', {'facility': 'garden'}, [])
+
+======================================================================
+FAIL: test_full_mortal_world_progress_with_legal_free_resources (test_world_systems.WorldSystemInvariantTests.test_full_mortal_world_progress_with_legal_free_resources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 269, in test_full_mortal_world_progress_with_legal_free_resources
+    self.planner.full_progress()
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 203, in full_progress
+    self.common_social('sword', 'healer')
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 169, in common_social
+    self.perform('world_family_build', facility=facility)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 74, in perform
+    raise AssertionError(('operation not uniquely reachable in UI', action_id, params, candidates))
+AssertionError: ('operation not uniquely reachable in UI', 'world_family_build', {'facility': 'garden'}, [])
+
+======================================================================
+FAIL: test_repeated_rewards_social_permissions_and_dispatched_progress (test_world_systems.WorldSystemInvariantTests.test_repeated_rewards_social_permissions_and_dispatched_progress)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 331, in test_repeated_rewards_social_permissions_and_dispatched_progress
+    p.common_social('sword', 'healer')
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 169, in common_social
+    self.perform('world_family_build', facility=facility)
+  File "/workspace/GuixuXiuxian/tests/test_world_systems.py", line 74, in perform
+    raise AssertionError(('operation not uniquely reachable in UI', action_id, params, candidates))
+AssertionError: ('operation not uniquely reachable in UI', 'world_family_build', {'facility': 'garden'}, [])
+
+======================================================================
+FAIL: test_invalid_battle_snapshot_and_targets_rejected (test_world_validation.WorldValidationTests.test_invalid_battle_snapshot_and_targets_rejected) (field='stage')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/GuixuXiuxian/tests/test_world_validation.py", line 79, in test_invalid_battle_snapshot_and_targets_rejected
+    broken=copy.deepcopy(state);broken['world']['battle'][key]=value;self.rejects(broken)
+                                                                     ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/GuixuXiuxian/tests/test_world_validation.py", line 25, in rejects
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 59 tests in 120.982s
+
+FAILED (failures=4)

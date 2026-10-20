@@ -1,0 +1,6 @@
+test_once_thrice_and_missed_week_are_public_actions_not_quota_simulation (tests.test_r4_login_routes.R4LoginRouteTests.test_once_thrice_and_missed_week_are_public_actions_not_quota_simulation) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 21.811s
+
+OK

@@ -1,0 +1,25 @@
+test_alchemy_trade_and_techniques (test_game.GameHTTPTests.test_alchemy_trade_and_techniques) ... ok
+test_combat_order_cost_defense_and_free_recovery (test_game.GameHTTPTests.test_combat_order_cost_defense_and_free_recovery) ... ok
+test_complete_legal_route_and_post_ending (test_game.GameHTTPTests.test_complete_legal_route_and_post_ending) ... ok
+test_corrupt_database_refused_without_overwrite (test_game.GameHTTPTests.test_corrupt_database_refused_without_overwrite) ... ok
+test_database_lock_rollback (test_game.GameHTTPTests.test_database_lock_rollback) ... ok
+test_default_name_empty_slot_and_long_name (test_game.GameHTTPTests.test_default_name_empty_slot_and_long_name) ... ok
+test_exact_gdd_53_action_route_without_optional_resources (test_game.GameHTTPTests.test_exact_gdd_53_action_route_without_optional_resources) ... ok
+test_idempotency_latest_snapshot_conflicts_and_restart (test_game.GameHTTPTests.test_idempotency_latest_snapshot_conflicts_and_restart) ... ok
+test_initial_projection_and_growth (test_game.GameHTTPTests.test_initial_projection_and_growth) ... ok
+test_invalid_inputs_and_origin_do_not_mutate (test_game.GameHTTPTests.test_invalid_inputs_and_origin_do_not_mutate) ... ok
+test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load (test_game.GameHTTPTests.test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load) ... ok
+test_nonfinite_json_is_bad_request_not_storage_failure (test_game.GameHTTPTests.test_nonfinite_json_is_bad_request_not_storage_failure) ... ok
+test_parallel_stale_writes_commit_only_once (test_game.GameHTTPTests.test_parallel_stale_writes_commit_only_once) ... ok
+test_slot_restart_and_monotonic_revision (test_game.GameHTTPTests.test_slot_restart_and_monotonic_revision) ... ok
+test_write_failure_after_state_update_rolls_back_entire_transaction (test_game.GameHTTPTests.test_write_failure_after_state_update_rolls_back_entire_transaction) ... ok
+test_free_recovery_from_one_hp_and_no_resources (test_rules.RuleBoundaryTests.test_free_recovery_from_one_hp_and_no_resources) ... ok
+test_invalid_values_and_extra_parameters (test_rules.RuleBoundaryTests.test_invalid_values_and_extra_parameters) ... ok
+test_log_retention_and_successful_action_counter (test_rules.RuleBoundaryTests.test_log_retention_and_successful_action_counter) ... ok
+test_pill_effect_precedes_enemy_and_clamps_independently (test_rules.RuleBoundaryTests.test_pill_effect_precedes_enemy_and_clamps_independently) ... ok
+test_resource_caps_and_full_action_rejection (test_rules.RuleBoundaryTests.test_resource_caps_and_full_action_rejection) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 6.357s
+
+OK

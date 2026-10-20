@@ -1,0 +1,1290 @@
+{
+  "fixture_version": 1,
+  "provenance": {
+    "source_archive": "guixu-mortal-v1.1.0.zip",
+    "source_archive_sha256": "59a2d0321ac5a3be81d884e2351795938cb5b6a37a95e42a07e7791c02c3964a",
+    "generation": "Released v1.1.0 ZIP extracted and run in isolated subprocess; no field removal or application data used.",
+    "generator_python": "\nimport json,sys\nfrom game.storage import Store\nfrom tests.support import baseline_route\nfrom game import world_config as C\nnow=1800000000\ns=Store(sys.argv[1],clock=lambda:now)\ndef write(endpoint,**extra):\n    rev=s.snapshot()['revision']\n    return s.write(endpoint,dict(request_id='old-'+str(rev+1),expected_revision=rev,**extra))\ndef act(action,**params):return write('action',action=action,params=params)\nwrite('new-game',name='真实v1.1旧档')\nbaseline_route(s.snapshot,act)\nact('world_enter');act('world_activity_accept',project='social')\ndungeon=next(k for k,v in C.DUNGEONS.items() if v['region']=='qinglan')\nact('world_dungeon_enter',dungeon=dungeon,difficulty=1,chapter=0)\nact('world_dungeon_next');write('save');act('world_defend')\nprint(json.dumps({'revision':s.snapshot()['revision'],'db':str(s.path)}))\n",
+    "source_database_sha256": "50cc9fb5b4788e3765fee0a62c337b8c410797020e232aaaca4911b32323111d",
+    "source_state_sha256": "fe4737836eca095516525595c9e82bb03cafa741eb62d7d73457349356eb7255",
+    "source_slot_sha256": "43e35429f0ce312051dc05591ec37b268fd3e395d3432aff48fbc8af85f640fc",
+    "source_requests_sha256": "013bed0bc39bb65f27f58c06cb8a1fb11d572f2579fb0bda9e8c20369006d542"
+  },
+  "current": {
+    "schema_version": 2,
+    "revision": 62,
+    "state": {
+      "actions_taken": 58,
+      "battle": null,
+      "completed": true,
+      "cultivation": 8,
+      "herbs": 0,
+      "hp": 36,
+      "logs": [
+        "第7行 · 修为 −32，突破至炼气二层！气血与灵力恢复充盈。",
+        "第7行 · 第一缕灵息终于沿经脉完成周天。你将残卷收入怀中，灵雾林的入口已不再遥远。",
+        "第7行 · 前往灵雾林。",
+        "第8行 · 迎战雾林妖猿，留意敌方下一招。",
+        "第9行 · 运功强攻，造成22伤害。",
+        "第9行 · 雾林妖猿发起攻击，气血 −12。",
+        "第10行 · 运功强攻，造成22伤害。",
+        "第10行 · 雾林妖猿正在蓄势，本回合未出手。",
+        "第11行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第11行 · 雾林妖猿施展重击，气血 −10。",
+        "第12行 · 运功强攻，造成22伤害。",
+        "第12行 · 雾林妖猿发起攻击，气血 −12。",
+        "第13行 · 出手攻击，造成11伤害。",
+        "第13行 · 雾林妖猿正在蓄势，本回合未出手。",
+        "第14行 · 出手攻击，造成3伤害。",
+        "第14行 · 战胜雾林妖猿！灵石 +12，修为 +0。",
+        "第14行 · 记下雾林妖猿首胜。",
+        "第15行 · 吐纳归元，修为 +8。",
+        "第16行 · 吐纳归元，修为 +8。",
+        "第17行 · 吐纳归元，修为 +8。",
+        "第18行 · 吐纳归元，修为 +8。",
+        "第19行 · 吐纳归元，修为 +8。",
+        "第20行 · 吐纳归元，修为 +8。",
+        "第21行 · 吐纳归元，修为 +8。",
+        "第22行 · 吐纳归元，修为 +8。",
+        "第23行 · 修为 −64，突破至炼气三层！气血与灵力恢复充盈。",
+        "第23行 · 妖猿的咆哮渐远，紊乱的灵息在丹田凝成细流。你看懂断碑上的路标，归墟古境向你敞开。",
+        "第23行 · 前往归墟古境。",
+        "第24行 · 迎战守阵石傀，留意敌方下一招。",
+        "第25行 · 运功强攻，造成28伤害。",
+        "第25行 · 守阵石傀发起攻击，气血 −16。",
+        "第26行 · 运功强攻，造成28伤害。",
+        "第26行 · 守阵石傀正在蓄势，本回合未出手。",
+        "第27行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第27行 · 守阵石傀施展重击，气血 −14。",
+        "第28行 · 运功强攻，造成28伤害。",
+        "第28行 · 守阵石傀发起攻击，气血 −16。",
+        "第29行 · 出手攻击，造成14伤害。",
+        "第29行 · 守阵石傀正在蓄势，本回合未出手。",
+        "第30行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第30行 · 守阵石傀施展重击，气血 −14。",
+        "第31行 · 运功强攻，造成28伤害。",
+        "第31行 · 守阵石傀发起攻击，气血 −16。",
+        "第32行 · 出手攻击，造成14伤害。",
+        "第32行 · 战胜守阵石傀！灵石 +18，修为 +0。",
+        "第32行 · 记下守阵石傀首胜。",
+        "第33行 · 吐纳归元，修为 +10。",
+        "第34行 · 吐纳归元，修为 +10。",
+        "第35行 · 吐纳归元，修为 +10。",
+        "第36行 · 吐纳归元，修为 +10。",
+        "第37行 · 吐纳归元，修为 +10。",
+        "第38行 · 吐纳归元，修为 +10。",
+        "第39行 · 吐纳归元，修为 +10。",
+        "第40行 · 吐纳归元，修为 +10。",
+        "第41行 · 吐纳归元，修为 +10。",
+        "第42行 · 吐纳归元，修为 +10。",
+        "第43行 · 修为 −96，突破至筑基！气血与灵力恢复充盈。",
+        "第43行 · 石傀沉寂后，残卷的最后一页浮现出完整心法。你以归元之息筑稳道基，终于有能力直面裂隙中的影子。",
+        "第44行 · 迎战归墟之影，留意敌方下一招。",
+        "第45行 · 运功强攻，造成38伤害。",
+        "第45行 · 归墟之影发起攻击，气血 −22。",
+        "第46行 · 运功强攻，造成38伤害。",
+        "第46行 · 归墟之影正在蓄势，本回合未出手。",
+        "第47行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第47行 · 归墟之影施展重击，气血 −19。",
+        "第48行 · 运功强攻，造成38伤害。",
+        "第48行 · 归墟之影发起攻击，气血 −22。",
+        "第49行 · 运功强攻，造成38伤害。",
+        "第49行 · 归墟之影正在蓄势，本回合未出手。",
+        "第50行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第50行 · 归墟之影施展重击，气血 −19。",
+        "第51行 · 运功强攻，造成38伤害。",
+        "第51行 · 归墟之影发起攻击，气血 −22。",
+        "第52行 · 出手攻击，造成19伤害。",
+        "第52行 · 归墟之影正在蓄势，本回合未出手。",
+        "第53行 · 出手攻击，造成11伤害。",
+        "第53行 · 战胜归墟之影！灵石 +30，修为 +0。",
+        "第53行 · 记下归墟之影首胜。",
+        "第53行 · 归墟之影化作晨雾，古境的裂隙在你的吐纳间缓缓闭合。你已稳固筑基，而山中还有漫长岁月；归墟已平，修行未止。",
+        "第54行 · 筑基之后，你才察觉自己的灵根与体质。青岚不再是修行的终点，三洲的来信带来界门将开的消息。",
+        "第54行 · 获得一次入世行囊：凡界灵石60、草6、矿6、木6、灵晶2。",
+        "第55行 · 已接取日常项目：同道相济；从本次接取之后记录双目标。",
+        "第55行 · 铁衣道人出价8；旧托管即时退回。",
+        "第55行 · 林药师出价8；旧托管即时退回。",
+        "第55行 · 林药师出价8；旧托管即时退回。",
+        "第56行 · 章节固定副本开始；掉落序号、品质、配置和UTC日资格已绑定本次run。",
+        "第56行 · 沈观星出价9；旧托管即时退回。",
+        "第56行 · 沈观星出价9；旧托管即时退回。",
+        "第56行 · 铁衣道人出价9；旧托管即时退回。",
+        "第57行 · 副本第1战开始。",
+        "第57行 · 林药师（规则NPC）：采集药草 +2；托管一件至NPC拍卖",
+        "第57行 · 铁衣道人出价10；旧托管即时退回。",
+        "第57行 · 林药师出价10；旧托管即时退回。",
+        "第57行 · 林药师出价10；旧托管即时退回。",
+        "第58行 · 防御回灵 +6，本回合伤害减半。",
+        "第58行 · 妖兽巢巡守妖兽本回合造成10伤害。",
+        "第58行 · 沈观星出价11；旧托管即时退回。",
+        "第58行 · 沈观星出价11；旧托管即时退回。",
+        "第58行 · 铁衣道人出价11；旧托管即时退回。",
+        "第58行 · 铁衣道人出价6；旧托管即时退回。"
+      ],
+      "mp": 4,
+      "name": "真实v1.1旧档",
+      "pills": 0,
+      "realm": 3,
+      "region": "ruins",
+      "stones": 60,
+      "technique": 0,
+      "victories": [
+        "ape",
+        "sentinel",
+        "shadow"
+      ],
+      "world": {
+        "achievements": [],
+        "active": true,
+        "arena": {
+          "claims": [],
+          "current": null,
+          "growth": 0,
+          "points": 0,
+          "regional_points": 0,
+          "season": 0,
+          "wins": 0
+        },
+        "arrays": {
+          "mountain": 0,
+          "seal": 0,
+          "spirit": 0
+        },
+        "arrays_enabled": {
+          "mountain": true,
+          "seal": true,
+          "spirit": true
+        },
+        "arts": {
+          "alchemy": 0,
+          "formations": 0,
+          "smithing": 0,
+          "talismans": 0
+        },
+        "auction_seq": 4,
+        "auctions": [
+          {
+            "base": 8,
+            "bidder": "stargazer",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "1",
+            "item": "herb",
+            "last_bid": 4,
+            "price": 11,
+            "quantity": 6,
+            "seller": "healer",
+            "settled": false
+          },
+          {
+            "base": 8,
+            "bidder": "stargazer",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "2",
+            "item": "herb",
+            "last_bid": 4,
+            "price": 11,
+            "quantity": 6,
+            "seller": "smith",
+            "settled": false
+          },
+          {
+            "base": 8,
+            "bidder": "smith",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "3",
+            "item": "herb",
+            "last_bid": 4,
+            "price": 11,
+            "quantity": 6,
+            "seller": "stargazer",
+            "settled": false
+          },
+          {
+            "base": 6,
+            "bidder": "smith",
+            "cancelled": false,
+            "delivery": {},
+            "end": 9,
+            "id": "4",
+            "item": "pill",
+            "last_bid": 4,
+            "price": 6,
+            "quantity": 1,
+            "seller": "healer",
+            "settled": false
+          }
+        ],
+        "battle": {
+          "attack": 20,
+          "growth": 0,
+          "heals": 0,
+          "heavy": 35,
+          "hp": 110,
+          "kind": "dungeon",
+          "max_hp": 110,
+          "name": "妖兽巢巡守妖兽",
+          "shield": 0,
+          "snapshot": null,
+          "stage": 0,
+          "start_tick": 2,
+          "target": "den",
+          "turn": 1
+        },
+        "companion": null,
+        "constitution": {
+          "awakened": false,
+          "id": "renew",
+          "level": 0
+        },
+        "contribution_total": 0,
+        "contributions": {},
+        "counters": {
+          "battles": 0,
+          "crafts": 0,
+          "gathers": 0,
+          "teaching": 0,
+          "wins": 0
+        },
+        "dialogue": {},
+        "disciples": {},
+        "dungeon": {
+          "difficulty": 1,
+          "id": "den",
+          "round": 0,
+          "run_id": "run:500cf738-5927-4014-a97d-c37c35b28001:1",
+          "stage": 0
+        },
+        "dungeon_wins": [],
+        "encounter": null,
+        "ending": false,
+        "equipment": {
+          "armor": null,
+          "pendant": null,
+          "weapon": null
+        },
+        "event": null,
+        "event_seq": 0,
+        "exploration": null,
+        "extension": {
+          "content_version": 1,
+          "next_realm_locked": true,
+          "realm_cap": "渡劫"
+        },
+        "factions": {},
+        "family": null,
+        "family_buildings": {
+          "garden": 0,
+          "guard": 0,
+          "school": 0
+        },
+        "family_builds": 0,
+        "family_members": [],
+        "family_renown": 0,
+        "friends": [],
+        "gear": {},
+        "guard_wins": [],
+        "home": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "home_origin": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "home_storage": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "hp": 190,
+        "inventory": {
+          "crystal": 2,
+          "herb": 6,
+          "ore": 6,
+          "wood": 6
+        },
+        "journal": [
+          "筑基之后，你才察觉自己的灵根与体质。青岚不再是修行的终点，三洲的来信带来界门将开的消息。",
+          "获得一次入世行囊：凡界灵石60、草6、矿6、木6、灵晶2。",
+          "已接取日常项目：同道相济；从本次接取之后记录双目标。",
+          "铁衣道人出价8；旧托管即时退回。",
+          "林药师出价8；旧托管即时退回。",
+          "林药师出价8；旧托管即时退回。",
+          "章节固定副本开始；掉落序号、品质、配置和UTC日资格已绑定本次run。",
+          "沈观星出价9；旧托管即时退回。",
+          "沈观星出价9；旧托管即时退回。",
+          "铁衣道人出价9；旧托管即时退回。",
+          "副本第1战开始。",
+          "林药师（规则NPC）：采集药草 +2；托管一件至NPC拍卖",
+          "铁衣道人出价10；旧托管即时退回。",
+          "林药师出价10；旧托管即时退回。",
+          "林药师出价10；旧托管即时退回。",
+          "防御回灵 +6，本回合伤害减半。",
+          "妖兽巢巡守妖兽本回合造成10伤害。",
+          "沈观星出价11；旧托管即时退回。",
+          "沈观星出价11；旧托管即时退回。",
+          "铁衣道人出价11；旧托管即时退回。",
+          "铁衣道人出价6；旧托管即时退回。"
+        ],
+        "last_chat": {},
+        "last_teach": -3,
+        "master": null,
+        "mp": 60,
+        "npc_agents": {
+          "healer": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 2,
+              "ore": 6,
+              "pill": 1,
+              "wood": 6
+            },
+            "last": "采集药草 +2；托管一件至NPC拍卖",
+            "pending": {},
+            "turns": 1,
+            "wallet": 50
+          },
+          "smith": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 0,
+              "ore": 6,
+              "pill": 2,
+              "wood": 6
+            },
+            "last": "NPC正在筹备修行物资。",
+            "pending": {},
+            "turns": 0,
+            "wallet": 33
+          },
+          "stargazer": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 0,
+              "ore": 6,
+              "pill": 2,
+              "wood": 6
+            },
+            "last": "NPC正在筹备修行物资。",
+            "pending": {},
+            "turns": 0,
+            "wallet": 28
+          }
+        },
+        "quests": {},
+        "r3": {
+          "activities": {
+            "entries": {
+              "d:2027-01-15": {
+                "claimed": false,
+                "completed": false,
+                "config_version": 1,
+                "kind": "daily",
+                "name": "同道相济",
+                "objectives": [
+                  {
+                    "amount": 1,
+                    "kind": "commission",
+                    "label": "接取后交付宗门材料或正式委托1次",
+                    "progress": 0,
+                    "target": "any"
+                  },
+                  {
+                    "amount": 1,
+                    "kind": "social",
+                    "label": "接取后与NPC交谈/赠礼/请教1次",
+                    "progress": 0,
+                    "target": "any"
+                  }
+                ],
+                "period": "2027-01-15",
+                "project": "social",
+                "receipt": null,
+                "reward": {
+                  "dust": 1,
+                  "enhance_material": 2
+                }
+              }
+            },
+            "version": 1
+          },
+          "boss": {},
+          "crafted": {
+            "alchemy": 0,
+            "formations": 0,
+            "smithing": 0,
+            "talismans": 0
+          },
+          "crafted_recipes": {
+            "armor": 0,
+            "barrier_pill": 0,
+            "blade": 0,
+            "fire_talisman": 0,
+            "guard_talisman": 0,
+            "mountain_array": 0,
+            "pendant": 0,
+            "pill": 0,
+            "root_dew": 0,
+            "seal_array": 0,
+            "soul_talisman": 0,
+            "spirit_array": 0
+          },
+          "daily": {},
+          "daily_count": 0,
+          "drop_seq": 0,
+          "equipped": {
+            "armor": null,
+            "guard": null,
+            "main": null,
+            "pendant": null,
+            "weapon": null
+          },
+          "growth": {
+            "balance_micro": 0,
+            "last_settled": 1800000000,
+            "rate_num": 54000000000000,
+            "remainder": 0,
+            "total_micro": 0,
+            "version": 1
+          },
+          "instances": {},
+          "materials": {
+            "boss_coin": 0,
+            "dust": 0,
+            "enhance_material": 0
+          },
+          "milestones": {},
+          "pending": {},
+          "pity": {
+            "1": 0,
+            "2": 0,
+            "3": 0
+          },
+          "profile_id": "500cf738-5927-4014-a97d-c37c35b28001",
+          "receipts": [],
+          "run_seq": 1,
+          "runs": {
+            "run:500cf738-5927-4014-a97d-c37c35b28001:1": {
+              "chapter": 0,
+              "completed": false,
+              "day": "2027-01-15",
+              "difficulty": 1,
+              "dungeon": "den",
+              "eligible": true,
+              "pity_next": 1,
+              "planned_seq": 1,
+              "quality": 0,
+              "table_version": 1,
+              "template": "blade"
+            }
+          },
+          "secret_count": 0,
+          "seq": 0,
+          "used": {
+            "alchemy": 0,
+            "formations": 0,
+            "smithing": 0,
+            "talismans": 0
+          },
+          "version": 1
+        },
+        "region": "qinglan",
+        "relations": {},
+        "root": {
+          "awakened": false,
+          "id": "wood",
+          "level": 0,
+          "points": 0
+        },
+        "secret_wins": [],
+        "sect": null,
+        "sect_earned": {},
+        "sect_quest": null,
+        "skill": "origin",
+        "skills": {
+          "origin": 1
+        },
+        "stage": 0,
+        "tick": 4,
+        "title": null,
+        "version": 2,
+        "wallet": 60,
+        "xp": 0
+      }
+    },
+    "slot": {
+      "actions_taken": 57,
+      "battle": null,
+      "completed": true,
+      "cultivation": 8,
+      "herbs": 0,
+      "hp": 36,
+      "logs": [
+        "第1行 · 吐纳归元，修为 +6。",
+        "第2行 · 吐纳归元，修为 +6。",
+        "第3行 · 吐纳归元，修为 +6。",
+        "第4行 · 吐纳归元，修为 +6。",
+        "第5行 · 吐纳归元，修为 +6。",
+        "第6行 · 吐纳归元，修为 +6。",
+        "第7行 · 修为 −32，突破至炼气二层！气血与灵力恢复充盈。",
+        "第7行 · 第一缕灵息终于沿经脉完成周天。你将残卷收入怀中，灵雾林的入口已不再遥远。",
+        "第7行 · 前往灵雾林。",
+        "第8行 · 迎战雾林妖猿，留意敌方下一招。",
+        "第9行 · 运功强攻，造成22伤害。",
+        "第9行 · 雾林妖猿发起攻击，气血 −12。",
+        "第10行 · 运功强攻，造成22伤害。",
+        "第10行 · 雾林妖猿正在蓄势，本回合未出手。",
+        "第11行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第11行 · 雾林妖猿施展重击，气血 −10。",
+        "第12行 · 运功强攻，造成22伤害。",
+        "第12行 · 雾林妖猿发起攻击，气血 −12。",
+        "第13行 · 出手攻击，造成11伤害。",
+        "第13行 · 雾林妖猿正在蓄势，本回合未出手。",
+        "第14行 · 出手攻击，造成3伤害。",
+        "第14行 · 战胜雾林妖猿！灵石 +12，修为 +0。",
+        "第14行 · 记下雾林妖猿首胜。",
+        "第15行 · 吐纳归元，修为 +8。",
+        "第16行 · 吐纳归元，修为 +8。",
+        "第17行 · 吐纳归元，修为 +8。",
+        "第18行 · 吐纳归元，修为 +8。",
+        "第19行 · 吐纳归元，修为 +8。",
+        "第20行 · 吐纳归元，修为 +8。",
+        "第21行 · 吐纳归元，修为 +8。",
+        "第22行 · 吐纳归元，修为 +8。",
+        "第23行 · 修为 −64，突破至炼气三层！气血与灵力恢复充盈。",
+        "第23行 · 妖猿的咆哮渐远，紊乱的灵息在丹田凝成细流。你看懂断碑上的路标，归墟古境向你敞开。",
+        "第23行 · 前往归墟古境。",
+        "第24行 · 迎战守阵石傀，留意敌方下一招。",
+        "第25行 · 运功强攻，造成28伤害。",
+        "第25行 · 守阵石傀发起攻击，气血 −16。",
+        "第26行 · 运功强攻，造成28伤害。",
+        "第26行 · 守阵石傀正在蓄势，本回合未出手。",
+        "第27行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第27行 · 守阵石傀施展重击，气血 −14。",
+        "第28行 · 运功强攻，造成28伤害。",
+        "第28行 · 守阵石傀发起攻击，气血 −16。",
+        "第29行 · 出手攻击，造成14伤害。",
+        "第29行 · 守阵石傀正在蓄势，本回合未出手。",
+        "第30行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第30行 · 守阵石傀施展重击，气血 −14。",
+        "第31行 · 运功强攻，造成28伤害。",
+        "第31行 · 守阵石傀发起攻击，气血 −16。",
+        "第32行 · 出手攻击，造成14伤害。",
+        "第32行 · 战胜守阵石傀！灵石 +18，修为 +0。",
+        "第32行 · 记下守阵石傀首胜。",
+        "第33行 · 吐纳归元，修为 +10。",
+        "第34行 · 吐纳归元，修为 +10。",
+        "第35行 · 吐纳归元，修为 +10。",
+        "第36行 · 吐纳归元，修为 +10。",
+        "第37行 · 吐纳归元，修为 +10。",
+        "第38行 · 吐纳归元，修为 +10。",
+        "第39行 · 吐纳归元，修为 +10。",
+        "第40行 · 吐纳归元，修为 +10。",
+        "第41行 · 吐纳归元，修为 +10。",
+        "第42行 · 吐纳归元，修为 +10。",
+        "第43行 · 修为 −96，突破至筑基！气血与灵力恢复充盈。",
+        "第43行 · 石傀沉寂后，残卷的最后一页浮现出完整心法。你以归元之息筑稳道基，终于有能力直面裂隙中的影子。",
+        "第44行 · 迎战归墟之影，留意敌方下一招。",
+        "第45行 · 运功强攻，造成38伤害。",
+        "第45行 · 归墟之影发起攻击，气血 −22。",
+        "第46行 · 运功强攻，造成38伤害。",
+        "第46行 · 归墟之影正在蓄势，本回合未出手。",
+        "第47行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第47行 · 归墟之影施展重击，气血 −19。",
+        "第48行 · 运功强攻，造成38伤害。",
+        "第48行 · 归墟之影发起攻击，气血 −22。",
+        "第49行 · 运功强攻，造成38伤害。",
+        "第49行 · 归墟之影正在蓄势，本回合未出手。",
+        "第50行 · 凝神防御，灵力 +3，本回合所受伤害减半。",
+        "第50行 · 归墟之影施展重击，气血 −19。",
+        "第51行 · 运功强攻，造成38伤害。",
+        "第51行 · 归墟之影发起攻击，气血 −22。",
+        "第52行 · 出手攻击，造成19伤害。",
+        "第52行 · 归墟之影正在蓄势，本回合未出手。",
+        "第53行 · 出手攻击，造成11伤害。",
+        "第53行 · 战胜归墟之影！灵石 +30，修为 +0。",
+        "第53行 · 记下归墟之影首胜。",
+        "第53行 · 归墟之影化作晨雾，古境的裂隙在你的吐纳间缓缓闭合。你已稳固筑基，而山中还有漫长岁月；归墟已平，修行未止。",
+        "第54行 · 筑基之后，你才察觉自己的灵根与体质。青岚不再是修行的终点，三洲的来信带来界门将开的消息。",
+        "第54行 · 获得一次入世行囊：凡界灵石60、草6、矿6、木6、灵晶2。",
+        "第55行 · 已接取日常项目：同道相济；从本次接取之后记录双目标。",
+        "第55行 · 铁衣道人出价8；旧托管即时退回。",
+        "第55行 · 林药师出价8；旧托管即时退回。",
+        "第55行 · 林药师出价8；旧托管即时退回。",
+        "第56行 · 章节固定副本开始；掉落序号、品质、配置和UTC日资格已绑定本次run。",
+        "第56行 · 沈观星出价9；旧托管即时退回。",
+        "第56行 · 沈观星出价9；旧托管即时退回。",
+        "第56行 · 铁衣道人出价9；旧托管即时退回。",
+        "第57行 · 副本第1战开始。",
+        "第57行 · 林药师（规则NPC）：采集药草 +2；托管一件至NPC拍卖",
+        "第57行 · 铁衣道人出价10；旧托管即时退回。",
+        "第57行 · 林药师出价10；旧托管即时退回。",
+        "第57行 · 林药师出价10；旧托管即时退回。"
+      ],
+      "mp": 4,
+      "name": "真实v1.1旧档",
+      "pills": 0,
+      "realm": 3,
+      "region": "ruins",
+      "stones": 60,
+      "technique": 0,
+      "victories": [
+        "ape",
+        "sentinel",
+        "shadow"
+      ],
+      "world": {
+        "achievements": [],
+        "active": true,
+        "arena": {
+          "claims": [],
+          "current": null,
+          "growth": 0,
+          "points": 0,
+          "regional_points": 0,
+          "season": 0,
+          "wins": 0
+        },
+        "arrays": {
+          "mountain": 0,
+          "seal": 0,
+          "spirit": 0
+        },
+        "arrays_enabled": {
+          "mountain": true,
+          "seal": true,
+          "spirit": true
+        },
+        "arts": {
+          "alchemy": 0,
+          "formations": 0,
+          "smithing": 0,
+          "talismans": 0
+        },
+        "auction_seq": 4,
+        "auctions": [
+          {
+            "base": 8,
+            "bidder": "smith",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "1",
+            "item": "herb",
+            "last_bid": 3,
+            "price": 10,
+            "quantity": 6,
+            "seller": "healer",
+            "settled": false
+          },
+          {
+            "base": 8,
+            "bidder": "healer",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "2",
+            "item": "herb",
+            "last_bid": 3,
+            "price": 10,
+            "quantity": 6,
+            "seller": "smith",
+            "settled": false
+          },
+          {
+            "base": 8,
+            "bidder": "healer",
+            "cancelled": false,
+            "delivery": {},
+            "end": 6,
+            "id": "3",
+            "item": "herb",
+            "last_bid": 3,
+            "price": 10,
+            "quantity": 6,
+            "seller": "stargazer",
+            "settled": false
+          },
+          {
+            "base": 6,
+            "bidder": null,
+            "cancelled": false,
+            "delivery": {},
+            "end": 9,
+            "id": "4",
+            "item": "pill",
+            "last_bid": 3,
+            "price": 0,
+            "quantity": 1,
+            "seller": "healer",
+            "settled": false
+          }
+        ],
+        "battle": {
+          "attack": 20,
+          "growth": 0,
+          "heals": 0,
+          "heavy": 35,
+          "hp": 110,
+          "kind": "dungeon",
+          "max_hp": 110,
+          "name": "妖兽巢巡守妖兽",
+          "shield": 0,
+          "snapshot": null,
+          "stage": 0,
+          "start_tick": 2,
+          "target": "den",
+          "turn": 0
+        },
+        "companion": null,
+        "constitution": {
+          "awakened": false,
+          "id": "renew",
+          "level": 0
+        },
+        "contribution_total": 0,
+        "contributions": {},
+        "counters": {
+          "battles": 0,
+          "crafts": 0,
+          "gathers": 0,
+          "teaching": 0,
+          "wins": 0
+        },
+        "dialogue": {},
+        "disciples": {},
+        "dungeon": {
+          "difficulty": 1,
+          "id": "den",
+          "round": 0,
+          "run_id": "run:500cf738-5927-4014-a97d-c37c35b28001:1",
+          "stage": 0
+        },
+        "dungeon_wins": [],
+        "encounter": null,
+        "ending": false,
+        "equipment": {
+          "armor": null,
+          "pendant": null,
+          "weapon": null
+        },
+        "event": null,
+        "event_seq": 0,
+        "exploration": null,
+        "extension": {
+          "content_version": 1,
+          "next_realm_locked": true,
+          "realm_cap": "渡劫"
+        },
+        "factions": {},
+        "family": null,
+        "family_buildings": {
+          "garden": 0,
+          "guard": 0,
+          "school": 0
+        },
+        "family_builds": 0,
+        "family_members": [],
+        "family_renown": 0,
+        "friends": [],
+        "gear": {},
+        "guard_wins": [],
+        "home": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "home_origin": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "home_storage": {
+          "chamber": 0,
+          "garden": 0,
+          "workshop": 0
+        },
+        "hp": 200,
+        "inventory": {
+          "crystal": 2,
+          "herb": 6,
+          "ore": 6,
+          "wood": 6
+        },
+        "journal": [
+          "筑基之后，你才察觉自己的灵根与体质。青岚不再是修行的终点，三洲的来信带来界门将开的消息。",
+          "获得一次入世行囊：凡界灵石60、草6、矿6、木6、灵晶2。",
+          "已接取日常项目：同道相济；从本次接取之后记录双目标。",
+          "铁衣道人出价8；旧托管即时退回。",
+          "林药师出价8；旧托管即时退回。",
+          "林药师出价8；旧托管即时退回。",
+          "章节固定副本开始；掉落序号、品质、配置和UTC日资格已绑定本次run。",
+          "沈观星出价9；旧托管即时退回。",
+          "沈观星出价9；旧托管即时退回。",
+          "铁衣道人出价9；旧托管即时退回。",
+          "副本第1战开始。",
+          "林药师（规则NPC）：采集药草 +2；托管一件至NPC拍卖",
+          "铁衣道人出价10；旧托管即时退回。",
+          "林药师出价10；旧托管即时退回。",
+          "林药师出价10；旧托管即时退回。"
+        ],
+        "last_chat": {},
+        "last_teach": -3,
+        "master": null,
+        "mp": 60,
+        "npc_agents": {
+          "healer": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 2,
+              "ore": 6,
+              "pill": 1,
+              "wood": 6
+            },
+            "last": "采集药草 +2；托管一件至NPC拍卖",
+            "pending": {},
+            "turns": 1,
+            "wallet": 30
+          },
+          "smith": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 0,
+              "ore": 6,
+              "pill": 2,
+              "wood": 6
+            },
+            "last": "NPC正在筹备修行物资。",
+            "pending": {},
+            "turns": 0,
+            "wallet": 40
+          },
+          "stargazer": {
+            "inventory": {
+              "crystal": 2,
+              "herb": 0,
+              "ore": 6,
+              "pill": 2,
+              "wood": 6
+            },
+            "last": "NPC正在筹备修行物资。",
+            "pending": {},
+            "turns": 0,
+            "wallet": 50
+          }
+        },
+        "quests": {},
+        "r3": {
+          "activities": {
+            "entries": {
+              "d:2027-01-15": {
+                "claimed": false,
+                "completed": false,
+                "config_version": 1,
+                "kind": "daily",
+                "name": "同道相济",
+                "objectives": [
+                  {
+                    "amount": 1,
+                    "kind": "commission",
+                    "label": "接取后交付宗门材料或正式委托1次",
+                    "progress": 0,
+                    "target": "any"
+                  },
+                  {
+                    "amount": 1,
+                    "kind": "social",
+                    "label": "接取后与NPC交谈/赠礼/请教1次",
+                    "progress": 0,
+                    "target": "any"
+                  }
+                ],
+                "period": "2027-01-15",
+                "project": "social",
+                "receipt": null,
+                "reward": {
+                  "dust": 1,
+                  "enhance_material": 2
+                }
+              }
+            },
+            "version": 1
+          },
+          "boss": {},
+          "crafted": {
+            "alchemy": 0,
+            "formations": 0,
+            "smithing": 0,
+            "talismans": 0
+          },
+          "crafted_recipes": {
+            "armor": 0,
+            "barrier_pill": 0,
+            "blade": 0,
+            "fire_talisman": 0,
+            "guard_talisman": 0,
+            "mountain_array": 0,
+            "pendant": 0,
+            "pill": 0,
+            "root_dew": 0,
+            "seal_array": 0,
+            "soul_talisman": 0,
+            "spirit_array": 0
+          },
+          "daily": {},
+          "daily_count": 0,
+          "drop_seq": 0,
+          "equipped": {
+            "armor": null,
+            "guard": null,
+            "main": null,
+            "pendant": null,
+            "weapon": null
+          },
+          "growth": {
+            "balance_micro": 0,
+            "last_settled": 1800000000,
+            "rate_num": 54000000000000,
+            "remainder": 0,
+            "total_micro": 0,
+            "version": 1
+          },
+          "instances": {},
+          "materials": {
+            "boss_coin": 0,
+            "dust": 0,
+            "enhance_material": 0
+          },
+          "milestones": {},
+          "pending": {},
+          "pity": {
+            "1": 0,
+            "2": 0,
+            "3": 0
+          },
+          "profile_id": "500cf738-5927-4014-a97d-c37c35b28001",
+          "receipts": [],
+          "run_seq": 1,
+          "runs": {
+            "run:500cf738-5927-4014-a97d-c37c35b28001:1": {
+              "chapter": 0,
+              "completed": false,
+              "day": "2027-01-15",
+              "difficulty": 1,
+              "dungeon": "den",
+              "eligible": true,
+              "pity_next": 1,
+              "planned_seq": 1,
+              "quality": 0,
+              "table_version": 1,
+              "template": "blade"
+            }
+          },
+          "secret_count": 0,
+          "seq": 0,
+          "used": {
+            "alchemy": 0,
+            "formations": 0,
+            "smithing": 0,
+            "talismans": 0
+          },
+          "version": 1
+        },
+        "region": "qinglan",
+        "relations": {},
+        "root": {
+          "awakened": false,
+          "id": "wood",
+          "level": 0,
+          "points": 0
+        },
+        "secret_wins": [],
+        "sect": null,
+        "sect_earned": {},
+        "sect_quest": null,
+        "skill": "origin",
+        "skills": {
+          "origin": 1
+        },
+        "stage": 0,
+        "tick": 3,
+        "title": null,
+        "version": 2,
+        "wallet": 60,
+        "xp": 0
+      }
+    }
+  },
+  "requests": [
+    {
+      "request_id": "old-1",
+      "payload": "{\"endpoint\":\"new-game\",\"payload\":{\"expected_revision\":0,\"name\":\"真实v1.1旧档\",\"request_id\":\"old-1\"}}"
+    },
+    {
+      "request_id": "old-10",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"challenge\",\"expected_revision\":9,\"params\":{\"enemy\":\"ape\"},\"request_id\":\"old-10\"}}"
+    },
+    {
+      "request_id": "old-11",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":10,\"params\":{},\"request_id\":\"old-11\"}}"
+    },
+    {
+      "request_id": "old-12",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":11,\"params\":{},\"request_id\":\"old-12\"}}"
+    },
+    {
+      "request_id": "old-13",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"defend\",\"expected_revision\":12,\"params\":{},\"request_id\":\"old-13\"}}"
+    },
+    {
+      "request_id": "old-14",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":13,\"params\":{},\"request_id\":\"old-14\"}}"
+    },
+    {
+      "request_id": "old-15",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":14,\"params\":{},\"request_id\":\"old-15\"}}"
+    },
+    {
+      "request_id": "old-16",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":15,\"params\":{},\"request_id\":\"old-16\"}}"
+    },
+    {
+      "request_id": "old-17",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":16,\"params\":{},\"request_id\":\"old-17\"}}"
+    },
+    {
+      "request_id": "old-18",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":17,\"params\":{},\"request_id\":\"old-18\"}}"
+    },
+    {
+      "request_id": "old-19",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":18,\"params\":{},\"request_id\":\"old-19\"}}"
+    },
+    {
+      "request_id": "old-2",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":1,\"params\":{},\"request_id\":\"old-2\"}}"
+    },
+    {
+      "request_id": "old-20",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":19,\"params\":{},\"request_id\":\"old-20\"}}"
+    },
+    {
+      "request_id": "old-21",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":20,\"params\":{},\"request_id\":\"old-21\"}}"
+    },
+    {
+      "request_id": "old-22",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":21,\"params\":{},\"request_id\":\"old-22\"}}"
+    },
+    {
+      "request_id": "old-23",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":22,\"params\":{},\"request_id\":\"old-23\"}}"
+    },
+    {
+      "request_id": "old-24",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":23,\"params\":{},\"request_id\":\"old-24\"}}"
+    },
+    {
+      "request_id": "old-25",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"breakthrough\",\"expected_revision\":24,\"params\":{},\"request_id\":\"old-25\"}}"
+    },
+    {
+      "request_id": "old-26",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"travel\",\"expected_revision\":25,\"params\":{\"region\":\"ruins\"},\"request_id\":\"old-26\"}}"
+    },
+    {
+      "request_id": "old-27",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"challenge\",\"expected_revision\":26,\"params\":{\"enemy\":\"sentinel\"},\"request_id\":\"old-27\"}}"
+    },
+    {
+      "request_id": "old-28",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":27,\"params\":{},\"request_id\":\"old-28\"}}"
+    },
+    {
+      "request_id": "old-29",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":28,\"params\":{},\"request_id\":\"old-29\"}}"
+    },
+    {
+      "request_id": "old-3",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":2,\"params\":{},\"request_id\":\"old-3\"}}"
+    },
+    {
+      "request_id": "old-30",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"defend\",\"expected_revision\":29,\"params\":{},\"request_id\":\"old-30\"}}"
+    },
+    {
+      "request_id": "old-31",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":30,\"params\":{},\"request_id\":\"old-31\"}}"
+    },
+    {
+      "request_id": "old-32",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":31,\"params\":{},\"request_id\":\"old-32\"}}"
+    },
+    {
+      "request_id": "old-33",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"defend\",\"expected_revision\":32,\"params\":{},\"request_id\":\"old-33\"}}"
+    },
+    {
+      "request_id": "old-34",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":33,\"params\":{},\"request_id\":\"old-34\"}}"
+    },
+    {
+      "request_id": "old-35",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":34,\"params\":{},\"request_id\":\"old-35\"}}"
+    },
+    {
+      "request_id": "old-36",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":35,\"params\":{},\"request_id\":\"old-36\"}}"
+    },
+    {
+      "request_id": "old-37",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":36,\"params\":{},\"request_id\":\"old-37\"}}"
+    },
+    {
+      "request_id": "old-38",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":37,\"params\":{},\"request_id\":\"old-38\"}}"
+    },
+    {
+      "request_id": "old-39",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":38,\"params\":{},\"request_id\":\"old-39\"}}"
+    },
+    {
+      "request_id": "old-4",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":3,\"params\":{},\"request_id\":\"old-4\"}}"
+    },
+    {
+      "request_id": "old-40",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":39,\"params\":{},\"request_id\":\"old-40\"}}"
+    },
+    {
+      "request_id": "old-41",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":40,\"params\":{},\"request_id\":\"old-41\"}}"
+    },
+    {
+      "request_id": "old-42",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":41,\"params\":{},\"request_id\":\"old-42\"}}"
+    },
+    {
+      "request_id": "old-43",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":42,\"params\":{},\"request_id\":\"old-43\"}}"
+    },
+    {
+      "request_id": "old-44",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":43,\"params\":{},\"request_id\":\"old-44\"}}"
+    },
+    {
+      "request_id": "old-45",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":44,\"params\":{},\"request_id\":\"old-45\"}}"
+    },
+    {
+      "request_id": "old-46",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"breakthrough\",\"expected_revision\":45,\"params\":{},\"request_id\":\"old-46\"}}"
+    },
+    {
+      "request_id": "old-47",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"challenge\",\"expected_revision\":46,\"params\":{\"enemy\":\"shadow\"},\"request_id\":\"old-47\"}}"
+    },
+    {
+      "request_id": "old-48",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":47,\"params\":{},\"request_id\":\"old-48\"}}"
+    },
+    {
+      "request_id": "old-49",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":48,\"params\":{},\"request_id\":\"old-49\"}}"
+    },
+    {
+      "request_id": "old-5",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":4,\"params\":{},\"request_id\":\"old-5\"}}"
+    },
+    {
+      "request_id": "old-50",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"defend\",\"expected_revision\":49,\"params\":{},\"request_id\":\"old-50\"}}"
+    },
+    {
+      "request_id": "old-51",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":50,\"params\":{},\"request_id\":\"old-51\"}}"
+    },
+    {
+      "request_id": "old-52",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":51,\"params\":{},\"request_id\":\"old-52\"}}"
+    },
+    {
+      "request_id": "old-53",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"defend\",\"expected_revision\":52,\"params\":{},\"request_id\":\"old-53\"}}"
+    },
+    {
+      "request_id": "old-54",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"power_attack\",\"expected_revision\":53,\"params\":{},\"request_id\":\"old-54\"}}"
+    },
+    {
+      "request_id": "old-55",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":54,\"params\":{},\"request_id\":\"old-55\"}}"
+    },
+    {
+      "request_id": "old-56",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"attack\",\"expected_revision\":55,\"params\":{},\"request_id\":\"old-56\"}}"
+    },
+    {
+      "request_id": "old-57",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"world_enter\",\"expected_revision\":56,\"params\":{},\"request_id\":\"old-57\"}}"
+    },
+    {
+      "request_id": "old-58",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"world_activity_accept\",\"expected_revision\":57,\"params\":{\"project\":\"social\"},\"request_id\":\"old-58\"}}"
+    },
+    {
+      "request_id": "old-59",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"world_dungeon_enter\",\"expected_revision\":58,\"params\":{\"chapter\":0,\"difficulty\":1,\"dungeon\":\"den\"},\"request_id\":\"old-59\"}}"
+    },
+    {
+      "request_id": "old-6",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":5,\"params\":{},\"request_id\":\"old-6\"}}"
+    },
+    {
+      "request_id": "old-60",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"world_dungeon_next\",\"expected_revision\":59,\"params\":{},\"request_id\":\"old-60\"}}"
+    },
+    {
+      "request_id": "old-61",
+      "payload": "{\"endpoint\":\"save\",\"payload\":{\"expected_revision\":60,\"request_id\":\"old-61\"}}"
+    },
+    {
+      "request_id": "old-62",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"world_defend\",\"expected_revision\":61,\"params\":{},\"request_id\":\"old-62\"}}"
+    },
+    {
+      "request_id": "old-7",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"cultivate\",\"expected_revision\":6,\"params\":{},\"request_id\":\"old-7\"}}"
+    },
+    {
+      "request_id": "old-8",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"breakthrough\",\"expected_revision\":7,\"params\":{},\"request_id\":\"old-8\"}}"
+    },
+    {
+      "request_id": "old-9",
+      "payload": "{\"endpoint\":\"action\",\"payload\":{\"action\":\"travel\",\"expected_revision\":8,\"params\":{\"region\":\"forest\"},\"request_id\":\"old-9\"}}"
+    }
+  ],
+  "summary": {
+    "source_version": "1.1.0",
+    "schema_version": 2,
+    "revision": 62,
+    "request_count": 62,
+    "active_activity_keys": [
+      "d:2027-01-15"
+    ],
+    "current_run_id": "run:500cf738-5927-4014-a97d-c37c35b28001:1",
+    "slot_run_id": "run:500cf738-5927-4014-a97d-c37c35b28001:1",
+    "current_battle_turn": 1,
+    "slot_battle_turn": 0
+  }
+}

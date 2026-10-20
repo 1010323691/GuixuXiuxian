@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "kind": "legal real HTTP with injected UTC, not human month observation",
+  "early_checkpoints": [
+    {
+      "hours": 12.0,
+      "stage": 1,
+      "claimed": 4
+    },
+    {
+      "hours": 48.0,
+      "stage": 2,
+      "claimed": 6
+    },
+    {
+      "hours": 120.0,
+      "stage": 3,
+      "claimed": 7
+    }
+  ],
+  "elapsed_seconds": 3847902,
+  "world_actions": 404,
+  "stage": 7,
+  "remaining_xp": 0,
+  "ending": true,
+  "manual_clears": [
+    "den:0:1",
+    "den:0:2"
+  ],
+  "elite_wins": [
+    "caravan_guard",
+    "venom_keeper",
+    "astral_warden"
+  ]
+}

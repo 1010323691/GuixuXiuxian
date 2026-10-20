@@ -1,0 +1,167 @@
+[
+  {
+    "scenario": "daily_full",
+    "policy": "asap_manual",
+    "days": 39
+  },
+  {
+    "scenario": "daily_full",
+    "policy": "login_before",
+    "days": 39
+  },
+  {
+    "scenario": "daily_half",
+    "policy": "asap_manual",
+    "days": 48.666666667
+  },
+  {
+    "scenario": "daily_half",
+    "policy": "login_before",
+    "days": 49
+  },
+  {
+    "scenario": "daily_zero_activities",
+    "policy": "asap_manual",
+    "days": 65
+  },
+  {
+    "scenario": "daily_zero_activities",
+    "policy": "login_before",
+    "days": 66
+  },
+  {
+    "scenario": "wood_base_plus10",
+    "policy": "asap_manual",
+    "days": 36.742424242
+  },
+  {
+    "scenario": "wood_base_plus10",
+    "policy": "login_before",
+    "days": 38
+  },
+  {
+    "scenario": "fire_earth_other_bonuses_plus11",
+    "policy": "asap_manual",
+    "days": 36.459116524
+  },
+  {
+    "scenario": "fire_earth_other_bonuses_plus11",
+    "policy": "login_before",
+    "days": 37
+  },
+  {
+    "scenario": "max_base_plus15_no_extra",
+    "policy": "asap_manual",
+    "days": 35.703304998
+  },
+  {
+    "scenario": "max_base_plus15_no_extra",
+    "policy": "login_before",
+    "days": 36
+  },
+  {
+    "scenario": "max_base_plus15_extra30",
+    "policy": "asap_manual",
+    "days": 34.602164425
+  },
+  {
+    "scenario": "max_base_plus15_extra30",
+    "policy": "login_before",
+    "days": 35
+  },
+  {
+    "scenario": "half_activity_base_plus15",
+    "policy": "asap_manual",
+    "days": 43.799114332
+  },
+  {
+    "scenario": "half_activity_base_plus15",
+    "policy": "login_before",
+    "days": 45
+  },
+  {
+    "scenario": "login_every_two_days",
+    "policy": "login_before",
+    "days": 52
+  },
+  {
+    "scenario": "login_every_three_days",
+    "policy": "login_before",
+    "days": 57
+  },
+  {
+    "scenario": "login_every_two_days_plus15",
+    "policy": "login_before",
+    "days": 46
+  },
+  {
+    "scenario": "miss_first_seven_daily_logins",
+    "policy": "login_before",
+    "days": 43
+  },
+  {
+    "scenario": "return_after_thirty_missed_logins",
+    "policy": "login_before",
+    "days": 59
+  },
+  {
+    "scenario": "start_at_utc_2350",
+    "policy": "asap_manual",
+    "days": 38.333333333
+  },
+  {
+    "scenario": "start_at_utc_2350",
+    "policy": "login_before",
+    "days": 39.006944444
+  },
+  {
+    "scenario": "max_start_at_utc_2350",
+    "policy": "asap_manual",
+    "days": 34.007420569
+  },
+  {
+    "scenario": "max_start_at_utc_2350",
+    "policy": "login_before",
+    "days": 35.006944444
+  },
+  {
+    "scenario": "start_one_second_before_utc_midnight",
+    "policy": "asap_manual",
+    "days": 38.333333333
+  },
+  {
+    "scenario": "start_one_second_before_utc_midnight",
+    "policy": "login_before",
+    "days": 39.000011574
+  },
+  {
+    "scenario": "max_at_one_second_before_utc_midnight",
+    "policy": "asap_manual",
+    "days": 34.002887538
+  },
+  {
+    "scenario": "max_at_one_second_before_utc_midnight",
+    "policy": "login_before",
+    "days": 35.000011574
+  },
+  {
+    "scenario": "error_bonus_applies_to_all_rewards",
+    "policy": "asap_manual",
+    "days": 33.897863811
+  },
+  {
+    "scenario": "error_bonus_applies_to_all_rewards",
+    "policy": "login_before",
+    "days": 35
+  },
+  {
+    "scenario": "error_three_uncapped_multiplicative_buffs",
+    "policy": "asap_manual",
+    "days": 29.669560078
+  },
+  {
+    "scenario": "error_three_uncapped_multiplicative_buffs",
+    "policy": "login_before",
+    "days": 31
+  }
+]
