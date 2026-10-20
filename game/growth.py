@@ -3,9 +3,9 @@
 The current state is authoritative; a manual checkpoint never rewinds this account.
 Time is supplied by Store, never accepted from an HTTP payload.
 """
-import copy
 import math
 from fractions import Fraction
+from .clone import clone
 
 MICRO = 1_000_000
 DENOMINATOR = 86400 * 10 * 10000
@@ -78,7 +78,7 @@ def sync(state, now):
     """Copy and integrate the persisted OLD rate; never advance world.tick."""
     if not _integer(now):
         raise ValueError('服务端UTC时钟无效')
-    s = copy.deepcopy(state)
+    s = clone(state)
     if not is_longline(s):
         return s
     w = s['world']
@@ -110,7 +110,7 @@ def upgrade_legacy(state,now):
     the representation change. Unsealed unspent balances are rescaled;
     sealed reserves keep their actual amount after old-rate settlement.
     """
-    if not is_longline(state) or curve_version(state)==2:return copy.deepcopy(state)
+    if not is_longline(state) or curve_version(state)==2:return clone(state)
     from . import r3_config as R
     result=sync(state,now);w=result['world'];g=w['r3']['growth']
     if curve_version(result)==2:return result
@@ -130,7 +130,7 @@ def upgrade_legacy(state,now):
 
 def finish(before, after, now):
     """Reconcile legitimate integer XP spending, then begin the new rate segment."""
-    s = copy.deepcopy(after)
+    s = clone(after)
     if not is_longline(s):
         return s
     if s['world']['r3'].get('growth') is None:
@@ -175,16 +175,16 @@ def load_checkpoint(current, slot):
     if not is_longline(current):
         if is_longline(slot):
             raise GameError('INCOMPATIBLE_SAVE', '检查点模式不属于当前角色。')
-        return copy.deepcopy(slot), ['已载入手动检查点。']
+        return clone(slot), ['已载入手动检查点。']
     if not is_longline(slot) or current['world']['r3']['profile_id'] != slot['world']['r3']['profile_id']:
         raise GameError('INCOMPATIBLE_SAVE', '检查点不属于当前长线角色。')
     if not current['world']['active']:
         if slot['world']['active']:
             raise GameError('INCOMPATIBLE_SAVE', '检查点入世状态不兼容。')
-        return copy.deepcopy(slot), ['已恢复序章检查点；尚未开始凡界持续修炼。']
+        return clone(slot), ['已恢复序章检查点；尚未开始凡界持续修炼。']
     if not slot['world']['active']:
         raise GameError('INCOMPATIBLE_SAVE', '已入世角色不能退回序章；成长与资产保留。')
-    s = copy.deepcopy(current)
+    s = clone(current)
     if any(s['world'][key] is not None for key in ('battle', 'exploration', 'dungeon')):
         return s, ['当前正在战斗或探索，保留当前位置与完整进度；修为、境界花费、资产及奖励资格均未回退。']
     # Only position is a checkpoint; no quest reward or battle cursor is restored.

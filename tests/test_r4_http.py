@@ -5,7 +5,7 @@ import sqlite3
 import unittest
 import uuid
 from tests.r3_support import ClockHTTP
-from tests.support import baseline_route
+from tests.support import baseline_route, open_db
 from tests.r3_route import R3Planner
 
 
@@ -20,7 +20,7 @@ class R4HTTPTests(unittest.TestCase):
     def credits(self):return self.server.snapshot()['view']['world']['loot']['credits']
 
     def dump(self):
-        with sqlite3.connect(self.server.data/'game.db') as db:return tuple(db.iterdump())
+        with open_db(self.server.data/'game.db') as db:return tuple(db.iterdump())
 
     def reject(self,command,**params):
         before=self.server.snapshot();payload=dict(request_id=str(uuid.uuid4()),expected_revision=before['revision'],action=command,params=params)
@@ -93,12 +93,12 @@ class R4HTTPTests(unittest.TestCase):
     def test_sweep_commit_failure_rolls_back_credit_item_pity_and_can_retry_same_id(self):
         self.p.dungeon(difficulty=1)
         before=self.dump();snap=self.server.snapshot()
-        with sqlite3.connect(self.server.data/'game.db') as db:
+        with open_db(self.server.data/'game.db') as db:
             db.execute("CREATE TRIGGER r4_fail BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'r4-after-state'); END")
         payload=dict(request_id='r4-sweep-transaction',expected_revision=snap['revision'],action='world_dungeon_sweep',params=dict(dungeon='den',chapter=0,difficulty=1))
         status,body=self.server.request('POST','/api/action',payload)
         self.assertEqual(status,503,body)
-        with sqlite3.connect(self.server.data/'game.db') as db:db.execute('DROP TRIGGER r4_fail')
+        with open_db(self.server.data/'game.db') as db:db.execute('DROP TRIGGER r4_fail')
         self.assertEqual(self.dump(),before)
         status,body=self.server.request('POST','/api/action',payload)
         self.assertEqual(status,200,body)

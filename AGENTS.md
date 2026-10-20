@@ -18,7 +18,7 @@
 
 世界操作沿用request_id与expected_revision、SQLite原子事务。world资产与序章资产隔离，顶层actions_taken/logs是全局历史。保存/载入包含全部单机世界，但revision/请求账本不能回退。schema1须 `--migrate-save` 显式先备份再升级current/slot；损坏或未知schema拒绝保留，禁止静默清档。备份要停服，手动slot不是灾备。
 
-验证入口：`python -m unittest discover -s tests -v`、`python -m tests.browser_smoke`、`python -m tests.browser_world`。后两者为可选开发依赖Playwright/系统Chromium；游戏运行无第三方包。测试使用独立临时数据，不对玩家data注入故障。完成状态仅按最新代码和当轮实际证据，不沿用历史通过证明新改动。
+验证入口：`python -m tests.parallel`（并行白盒全量，约30–45秒；可加子串只跑部分）或串行 `python -m unittest discover -s tests -v`、`python -m tests.browser_smoke`、`python -m tests.browser_world`。后两者为可选开发依赖Playwright/系统Chromium；游戏运行无第三方包。测试使用独立临时数据，不对玩家data注入故障。完成状态仅按最新代码和当轮实际证据，不沿用历史通过证明新改动。
 
 ## 本轮交付状态
 当前新增 R5 独立空中斗法评审与实验，统一结论 `docs/iterations/R5_DECISIONS.md`、最新独立验收 `R5_LAB_TESTING.md`、代码 `prototypes/r5-combat/`。PM 维护统一结论/任务/打包；策划维护 R5_DESIGN_PROPOSAL；架构维护 R5_ARCHITECTURE_PROPOSAL；开发维护实验 engine/server/README；视觉维护实验 static 与 R5_UI_PROPOSAL；QA 维护实验 tests、验收证据及 R5_LAB_TESTING。正式 game/static/data 与 v1.2 发行包不能因实验被改写；本轮实验不代表正式自动战斗、持久化迁移和经济重平衡已完成。

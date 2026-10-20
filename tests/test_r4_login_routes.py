@@ -31,4 +31,4 @@ class R4LoginRouteTests(unittest.TestCase):
         self.assertTrue(all(x['stage']==0 for x in results.values()))
         self.assertGreater(results['missed_week']['xp'],results['once_daily']['xp'])
         out=ROOT/'artifacts/r4-qa/login-routes.json';out.parent.mkdir(parents=True,exist_ok=True)
-        out.write_text(json.dumps({'kind':'production HTTP, stage0 isolation, injected UTC; not human play duration','passed':True,'routes':results},ensure_ascii=False,indent=2))
+        out.write_text(json.dumps({'kind':'production HTTP, stage0 isolation, injected UTC; not human play duration','passed':True,'routes':results},ensure_ascii=False,indent=2), encoding='utf-8')

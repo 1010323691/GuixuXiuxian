@@ -7,7 +7,7 @@ reachability proof and not counted as unittest cases.
 import json
 import sqlite3
 from tests.r3_support import ClockHTTP
-from tests.support import ROOT,baseline_route
+from tests.support import ROOT,baseline_route, open_db
 
 EXPECTED={'world_loot_equip','world_loot_unequip','world_loot_enhance',
     'world_loot_dismantle','world_loot_choose','world_loot_craft_treasure',
@@ -39,7 +39,7 @@ def main():
                     'params':a['params'],'fields':a.get('fields',[]),'enabled':a['enabled'],'reason':a['reason']})
     try:
         server.create();baseline_route(server.snapshot,server.action);server.action('world_enter')
-        with sqlite3.connect(server.data/'game.db') as db:
+        with open_db(server.data/'game.db') as db:
             state=json.loads(db.execute('SELECT state FROM current WHERE id=1').fetchone()[0]);w=state['world'];r=w['r3']
             def item(uid,t,path):return dict(uid=uid,template_id=t,chapter=0,quality=0,enhance=0,effect_type=path,source_receipt='fixture:'+uid)
             r['instances']={'blade':item('blade','blade','combat'),
@@ -73,7 +73,7 @@ def main():
         report['covered']=len(report['coverage'])
     finally:
         folder=ROOT/'artifacts'/'r3-qa';folder.mkdir(parents=True,exist_ok=True)
-        (folder/'new-action-projection.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        (folder/'new-action-projection.json').write_text(json.dumps(report,ensure_ascii=False,indent=2), encoding='utf-8')
         server.close()
     print(json.dumps({'passed':report['passed'],'covered':report['covered'],'contexts':report['contexts']},ensure_ascii=False))
 

@@ -22,4 +22,4 @@ class R4ProgressionTests(unittest.TestCase):
             'stage':w['stage'],'remaining_xp':w['xp'],'ending':w['ending'],
             'manual_clears':w['r3']['journey']['manual_clears'],'elite_wins':w['r3']['journey']['elite_wins']}
         folder=ROOT/'artifacts'/'r4-qa';folder.mkdir(parents=True,exist_ok=True)
-        (folder/'full-progression.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        (folder/'full-progression.json').write_text(json.dumps(report,ensure_ascii=False,indent=2), encoding='utf-8')

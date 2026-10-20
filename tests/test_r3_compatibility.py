@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from game import rules
 from game.storage import Store
-from tests.support import baseline_route
+from tests.support import baseline_route, open_db
 
 
 class R3CompatibilityTests(unittest.TestCase):
@@ -25,7 +25,7 @@ class R3CompatibilityTests(unittest.TestCase):
             state['world']['gear']['blade']=3
             state['world']['equipment']['weapon']='blade'
             rules.validate_state(state)
-            with sqlite3.connect(Path(folder)/'game.db') as db:
+            with open_db(Path(folder)/'game.db') as db:
                 db.execute('UPDATE current SET state=?,slot=? WHERE id=1',
                            (json.dumps(state),json.dumps(state)))
             reopened=Store(folder).snapshot()

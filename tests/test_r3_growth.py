@@ -6,7 +6,7 @@ import unittest
 import uuid
 
 from tests.r3_support import ClockHTTP
-from tests.support import baseline_route
+from tests.support import baseline_route, open_db
 
 
 class R3GrowthHTTPTests(unittest.TestCase):
@@ -20,7 +20,7 @@ class R3GrowthHTTPTests(unittest.TestCase):
         return self.server.action('world_enter')
 
     def db_dump(self):
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             return tuple(db.iterdump())
 
     def test_before_world_entry_no_whole_day_pack_or_offline_world_progress(self):
@@ -117,13 +117,13 @@ class R3GrowthHTTPTests(unittest.TestCase):
         entered = self.enter()
         before = self.db_dump()
         self.server.clock.advance(160)
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             db.execute("CREATE TRIGGER r3_qa_fail BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'qa-after-update'); END")
         payload = {'request_id': 'r3-rollback-after-state', 'expected_revision': entered['revision'],
                    'action': 'world_gather', 'params': {'item': 'ore'}}
         status, body = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 503, body)
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             db.execute('DROP TRIGGER r3_qa_fail')
         self.assertEqual(self.db_dump(), before, 'failed commit advanced growth watermark or ownership')
         status, committed = self.server.request('POST', '/api/action', payload)
@@ -150,27 +150,27 @@ class R3GrowthHTTPTests(unittest.TestCase):
         from game.storage import Store
         self.enter()
         self.server.stop()
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             original = db.execute('SELECT state FROM current WHERE id=1').fetchone()[0]
         for field, value in [('rate_num', 10**60), ('balance_micro', 7_000_000)]:
             with self.subTest(field=field):
                 state = json.loads(original)
                 state['world']['r3']['growth'][field] = value
-                with sqlite3.connect(self.server.data / 'game.db') as db:
+                with open_db(self.server.data / 'game.db') as db:
                     db.execute('UPDATE current SET state=? WHERE id=1', (json.dumps(state),))
                 digest = hashlib.sha256((self.server.data / 'game.db').read_bytes()).hexdigest()
                 with self.assertRaises(ValueError):
                     Store(self.server.data, clock=self.server.clock)
                 self.assertEqual(hashlib.sha256((self.server.data / 'game.db').read_bytes()).hexdigest(), digest)
         # Restore fixture solely so cleanup never leaves a misleading corrupt test archive.
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             db.execute('UPDATE current SET state=? WHERE id=1', (original,))
 
     def test_equipping_then_unequipping_treasure_settles_old_rate_without_retroactive_bonus(self):
         import json
         self.enter()
         # Boundary fixture grants an owned, unequipped item; public acquisition has a separate route.
-        with sqlite3.connect(self.server.data / 'game.db') as db:
+        with open_db(self.server.data / 'game.db') as db:
             state=json.loads(db.execute('SELECT state FROM current WHERE id=1').fetchone()[0])
             uid='fixture-rate-main'
             state['world']['r3']['instances'][uid]=dict(uid=uid,template_id='main_treasure',

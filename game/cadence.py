@@ -3,8 +3,8 @@
 Reservations occupy capacity until a run succeeds. Failed/abandoned runs release
 that exact reservation. The current-state ledger is never restored from a slot.
 """
-import copy
 import datetime as dt
+from .clone import clone
 
 CAPACITY = 3
 INTERVAL = 8 * 3600
@@ -54,7 +54,7 @@ def _sync(w,now):
 
 def sync(state,now):
     if not _int(now):raise ValueError('挑战资格时钟无效')
-    result=copy.deepcopy(state)
+    result=clone(state)
     if _long(result) and 'cadence' in result['world']['r3']:
         _sync(result['world'],now)
     return result
@@ -84,7 +84,7 @@ def finish(w,run_id,success,context=None):
 
 
 def migrate_legacy(state,now):
-    result=copy.deepcopy(state)
+    result=clone(state)
     if not _long(result) or 'cadence' in result['world']['r3']:return result
     w=result['world'];r=w['r3'];g=r.get('growth') or {}
     now=max(now,g.get('last_settled') or now)

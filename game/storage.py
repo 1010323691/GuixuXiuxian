@@ -106,7 +106,7 @@ class Store:
                     raise ValueError('迁移备份与原件内容不一致')
             finally:
                 target.close();source.close()
-            with backup.open('rb') as stream:os.fsync(stream.fileno())
+            with backup.open('r+b') as stream:os.fsync(stream.fileno())  # Windows rejects fsync on read-only handles
             self.migration_backup=backup
         except Exception:
             backup.unlink(missing_ok=True)
@@ -142,8 +142,11 @@ class Store:
 
     def connect(self):
         db=sqlite3.connect(self.path,timeout=5)
-        db.execute('PRAGMA busy_timeout=5000')
-        db.execute('PRAGMA synchronous=FULL')
+        try:
+            db.execute('PRAGMA busy_timeout=5000')
+            db.execute('PRAGMA synchronous=FULL')
+        except Exception:
+            db.close();raise  # e.g. corrupt file: release the handle so the original is not left locked
         return db
 
     def _read(self,db):

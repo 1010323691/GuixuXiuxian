@@ -3,14 +3,14 @@ import json
 import sqlite3
 from playwright.sync_api import sync_playwright, expect
 from tests.r3_support import ClockHTTP
-from tests.support import ROOT, baseline_route
-from tests.browser_world import BrowserWorldDriver
+from tests.support import ROOT, baseline_route, open_db
+from tests.browser_world import BrowserWorldDriver, reveal
 
 
 def main():
     artifacts = ROOT / 'artifacts' / 'r3-qa'
     artifacts.mkdir(parents=True, exist_ok=True)
-    server = ClockHTTP()
+    server = ClockHTTP(live=True)
     report = {'passed': False, 'checks': [], 'page_errors': [], 'console_errors': [],
               'failed_requests': [], 'post_requests': []}
     try:
@@ -35,6 +35,7 @@ def main():
             driver.visit('social')
             draft_form=page.locator('form[data-world-action=world_family_create]')
             draft_details=draft_form.locator('xpath=ancestor::details')
+            reveal(draft_form)
             if draft_details.count() and not draft_details.get_attribute('open'):
                 draft_details.locator('summary').click()
             draft=draft_form.locator('input[name=name]')
@@ -42,7 +43,7 @@ def main():
             draft.focus()
             original_draft=draft.element_handle()
             before_posts = len(report['post_requests'])
-            with sqlite3.connect(server.data / 'game.db') as db:
+            with open_db(server.data / 'game.db') as db:
                 before_db = tuple(db.iterdump())
             server.clock.advance(160)
             with page.expect_response(lambda r: r.url == server.url+'/api/state' and r.request.method == 'GET',timeout=20000):
@@ -52,7 +53,7 @@ def main():
             assert len(report['post_requests']) == before_posts
             expect(draft).to_have_value('保留未提交草稿')
             assert original_draft.evaluate('(el)=>el===document.activeElement'), 'GET refresh replaced form node or lost focus'
-            with sqlite3.connect(server.data / 'game.db') as db:
+            with open_db(server.data / 'game.db') as db:
                 assert tuple(db.iterdump()) == before_db, 'read-only refresh persisted growth'
             report['checks'].append('default longline + visible 53-action prologue + entry + exact160sec read-only automatic GET growth')
             # Real forms: acquire and craft an owned instance, then equip its UID.
@@ -96,6 +97,7 @@ def main():
             treasure=next(iter(new))
             driver.action('world_loot_equip',uid=treasure)
             assert abs(server.snapshot()['view']['growth']['rate']['per_day']-545.4)<1e-9
+            reveal(page.locator('#r3-item-select'))
             expect(page.locator('#r3-item-select')).to_be_visible()
             page.locator('#r3-item-select').select_option(treasure)
             expect(page.locator('.r3-comparison')).to_be_visible()
@@ -128,6 +130,7 @@ def main():
             before=server.snapshot()
             posts=len(report['post_requests'])
             selected=goals[0]
+            reveal(page.locator('.r3-goal-button').first)
             page.locator('.r3-goal-button').first.click()
             expect(page.locator('[data-world-page='+json.dumps(selected['page'])+']')).to_have_attribute('aria-pressed','true')
             assert server.snapshot()['revision']==before['revision']
@@ -180,7 +183,7 @@ def main():
             report['passed'] = True
             browser.close()
     finally:
-        (artifacts/'browser-r3-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        (artifacts/'browser-r3-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2), encoding='utf-8')
         server.close()
     print(json.dumps(report,ensure_ascii=False))
 

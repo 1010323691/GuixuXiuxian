@@ -1,6 +1,7 @@
 """Complete local cultivation world: pure state transitions and view projection."""
 import copy
 import math
+import pickle
 import unicodedata
 from . import world_config as C
 from . import loot
@@ -8,6 +9,7 @@ from . import r3_config as R
 from . import gameplay_config as G
 from . import activities
 from . import journey
+from .clone import clone
 
 CAP=999999
 ARTS=('alchemy','smithing','talismans','formations')
@@ -30,7 +32,7 @@ def initial_state():
 
 
 def migrate_v1(state):
-    result=copy.deepcopy(state)
+    result=clone(state)
     if result is not None and 'world' not in result:result['world']=initial_state()
     return result
 
@@ -859,7 +861,7 @@ def apply_action(state,action,params,context=None):
     if state is None:_error('请先创建角色。','NO_GAME')
     if not isinstance(action,str) or not action.startswith('world_') or not isinstance(params,dict):_bad('世界行动格式错误。')
     params=_normalize(action,params)
-    result=copy.deepcopy(state);w=result['world'];events=[]
+    result=clone(state);w=result['world'];events=[]
     if action=='world_enter' and not state['completed']:_error('需先完成序章，平息归墟之影。')
     if not w['active'] and action!='world_enter':_error('请先完成序章并进入修仙界。')
     _execute(w,action,params,events,context=context)
@@ -1107,6 +1109,9 @@ def _cost_text(cost):return '、'.join('%s ×%d'%(item_name(k),n) for k,n in cos
 
 def project(state,context=None):
     w=state['world'];stage=C.STAGES[w['stage']]['name'];attrs=attributes(w)
+    # Each projected action is dry-run on a private deep copy; projection never mutates w, so one
+    # pickle snapshot unpickled per action equals clone(w) at a fraction of the cost.
+    frozen=pickle.dumps(w,protocol=pickle.HIGHEST_PROTOCOL)
     pages=[dict(id=id,label=label,title=label+' · '+stage,description='',stats=[],sections=[],actions=[]) for id,label in PAGES];by={p['id']:p for p in pages}
     def section(page,title,rows=None,body=''):
         by[page]['sections'].append({'title':title,'body':body,'rows':[{'label':str(k),'value':str(v)} for k,v in (rows or [])]})
@@ -1114,7 +1119,7 @@ def project(state,context=None):
         params=params or {};fields=fields or [];reason=''
         try:
             if not w['active']:_error('需完成序章并进入修仙界。')
-            normalized=_normalize(id,{**params,**(probe or {})});_execute(copy.deepcopy(w),id,normalized,[],context=context)
+            normalized=_normalize(id,{**params,**(probe or {})});_execute(pickle.loads(frozen),id,normalized,[],context=context)
         except Exception as exc:
             from .rules import GameError
             if not isinstance(exc,GameError):raise

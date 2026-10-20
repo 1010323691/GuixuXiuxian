@@ -8,6 +8,7 @@ import unittest
 
 from game import rules, world, world_config
 from game.storage import Store
+from tests.support import open_db
 
 
 class WorldValidationTests(unittest.TestCase):
@@ -90,7 +91,7 @@ class WorldValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             store=Store(directory)
             invalid=self.fresh();invalid['world']['quests']=[]
-            with sqlite3.connect(store.path) as db:
+            with open_db(store.path) as db:
                 db.execute('UPDATE current SET state=? WHERE id=1',(json.dumps(invalid),))
             before=hashlib.sha256(store.path.read_bytes()).digest()
             with self.assertRaises(ValueError):Store(directory)

@@ -6,6 +6,28 @@ from playwright.sync_api import expect, sync_playwright
 from tests.support import ROOT, Server, baseline_route
 from tests.test_world_systems import WorldPlanner
 
+# V3 one-screen UI: nothing may scroll; long content is paged inside fixed regions.
+ONE_SCREEN = """() => {
+  const de = document.documentElement;
+  if (de.scrollHeight > innerHeight + 1 || de.scrollWidth > innerWidth + 1) return 'document ' + de.scrollWidth + 'x' + de.scrollHeight;
+  for (const el of document.querySelectorAll('body *')) {
+    if (!el.getClientRects().length || el.matches('input, select, textarea')) continue;
+    const style = getComputedStyle(el);
+    if (/(auto|scroll)/.test(style.overflowY + style.overflowX) && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)) return 'scrollable ' + (el.id || el.className || el.tagName);
+  }
+  return '';
+}"""
+
+
+def reveal(locator):
+    """Ask the paged UI to bring a node's tab and page into view (the same path goal/story buttons use)."""
+    locator.evaluate("(node) => node.dispatchEvent(new CustomEvent('guixu:reveal', {bubbles: true}))")
+
+
+def assert_one_screen(page, label):
+    problem = page.evaluate(ONE_SCREEN)
+    assert not problem, (label, page.viewport_size, problem)
+
 
 class BrowserWorldDriver:
     def __init__(self, page, server):
@@ -37,6 +59,7 @@ class BrowserWorldDriver:
         group = button.evaluate('(b) => b.closest(".action-group")?.id || null')
         if group and not button.is_visible():
             self.page.locator('[data-group=' + json.dumps(group.removeprefix('group-')) + ']').click()
+        reveal(button)
         return self.click_write(button)
 
     def visit(self, page_id):
@@ -46,6 +69,7 @@ class BrowserWorldDriver:
         show_all = self.page.locator('#world-actions-show-all')
         if show_all.count() and show_all.is_visible():
             show_all.click()
+        assert_one_screen(self.page, page_id)
         assert self.server.snapshot() == before, 'navigation advanced game or simulation'
         self.visited_pages.add(page_id)
 
@@ -62,6 +86,7 @@ class BrowserWorldDriver:
         target_params = json.dumps(action['params'], ensure_ascii=False, separators=(',', ':'))
         selector = '.world-submit[data-action=' + json.dumps(command) + '][data-params=' + json.dumps(target_params, ensure_ascii=False) + ']'
         button = self.page.locator(selector)
+        reveal(button)
         details = button.locator('xpath=ancestor::details')
         if details.count() and not details.get_attribute('open'):
             details.locator('summary').click()
@@ -84,7 +109,7 @@ class BrowserWorldDriver:
 def main():
     artifacts = ROOT / 'artifacts' / 'world-qa'
     artifacts.mkdir(parents=True, exist_ok=True)
-    server = Server()
+    server = Server(live=True)
     report = {'passed': False, 'page_errors': [], 'console_errors': [], 'failed_requests': [], 'http_errors': []}
     try:
         server.start()
@@ -154,6 +179,7 @@ def main():
                     numeric_form = candidate
                     break
             assert numeric_form is not None, 'no reachable numeric world form'
+            reveal(numeric_form)
             details = numeric_form.locator('xpath=ancestor::details')
             if details.count() and not details.get_attribute('open'):
                 details.locator('summary').click()

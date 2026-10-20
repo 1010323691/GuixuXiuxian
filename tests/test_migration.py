@@ -3,17 +3,16 @@ import hashlib
 import concurrent.futures
 import json
 import sqlite3
-import socket
-import subprocess
 import sys
 import tempfile
 import time
 import unittest
-import urllib.request
 from pathlib import Path
 from unittest.mock import patch
 
+import server
 from game.storage import Store, encode
+from tests.support import open_db
 
 
 def legacy_state(name='旧道友'):
@@ -34,7 +33,7 @@ class MigrationTests(unittest.TestCase):
     def fixture(self,state=True,slot=True):
         current=legacy_state() if state is True else state
         checkpoint=legacy_state('旧检查点') if slot is True else slot
-        with sqlite3.connect(self.path) as db:
+        with open_db(self.path) as db:
             db.executescript('CREATE TABLE current (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, revision INTEGER NOT NULL, state TEXT NOT NULL, slot TEXT NOT NULL); CREATE TABLE requests (request_id TEXT PRIMARY KEY,payload TEXT NOT NULL);')
             db.execute('INSERT INTO current VALUES(1,1,9,?,?)',(encode(current),encode(checkpoint)))
             db.execute('INSERT INTO requests VALUES(?,?)',('old-request',self.canonical))
@@ -44,7 +43,7 @@ class MigrationTests(unittest.TestCase):
         return hashlib.sha256(self.path.read_bytes()).hexdigest()
 
     def inspect(self,path=None):
-        with sqlite3.connect(path or self.path) as db:
+        with open_db(path or self.path) as db:
             return (db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),
                     db.execute('SELECT request_id,payload FROM requests ORDER BY request_id').fetchall())
 
@@ -89,7 +88,7 @@ class MigrationTests(unittest.TestCase):
 
     def test_failure_after_backup_rolls_back_and_keeps_recoverable_original(self):
         self.fixture()
-        with sqlite3.connect(self.path) as db:
+        with open_db(self.path) as db:
             db.execute("CREATE TRIGGER deny_migration BEFORE UPDATE ON current BEGIN SELECT RAISE(ABORT,'injected migration failure'); END")
         original=self.inspect()
         with self.assertRaises(sqlite3.Error):Store(self.directory,migrate=True)
@@ -145,7 +144,7 @@ class MigrationTests(unittest.TestCase):
 
     def test_unknown_newer_schema_refused_without_byte_changes(self):
         self.fixture()
-        with sqlite3.connect(self.path) as db:
+        with open_db(self.path) as db:
             db.execute('UPDATE current SET schema_version=99')
         before=self.digest()
         with self.assertRaisesRegex(ValueError,'版本'):
@@ -165,30 +164,14 @@ class MigrationTests(unittest.TestCase):
 
     def test_cli_explicit_migration_starts_schema2_service(self):
         self.fixture()
-        with socket.socket() as reservation:
-            reservation.bind(('127.0.0.1',0))
-            port=reservation.getsockname()[1]
-        process=subprocess.Popen([sys.executable,str(Path(__file__).resolve().parents[1]/'server.py'),
-                                  '--port',str(port),'--data-dir',str(self.directory),'--migrate-save'],
-                                 stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-        try:
-            deadline=time.monotonic()+5
-            while time.monotonic()<deadline:
-                if process.poll() is not None:
-                    self.fail('Migration CLI exited before becoming ready')
-                try:
-                    with urllib.request.urlopen(f'http://127.0.0.1:{port}/api/health',timeout=.3) as response:
-                        health=json.load(response)
-                    break
-                except OSError:
-                    time.sleep(.03)
-            else:self.fail('Migration CLI did not become ready')
-            self.assertEqual(health['schema_version'],2)
-            self.assertEqual(len(list(self.directory.glob('*.bak.db'))),1)
-            self.assertEqual(self.inspect()[0][:2],(2,9))
-        finally:
-            process.terminate()
-            process.wait(timeout=5)
+        with patch.object(server.GameServer,'serve_forever',lambda self:None):
+            service=server.main(['--port','0','--data-dir',str(self.directory),'--migrate-save'])
+        status,body,_=server.dispatch(service.store,'GET','/api/health',{'Host':'127.0.0.1:8000'},b'',('127.0.0.1',8000))
+        health=json.loads(body)
+        self.assertEqual(status,200)
+        self.assertEqual(health['schema_version'],2)
+        self.assertEqual(len(list(self.directory.glob('*.bak.db'))),1)
+        self.assertEqual(self.inspect()[0][:2],(2,9))
 
 
 if __name__=='__main__':

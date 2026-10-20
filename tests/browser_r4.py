@@ -3,14 +3,14 @@ import json
 from playwright.sync_api import sync_playwright, expect
 from tests.r3_support import ClockHTTP
 from tests.support import ROOT, baseline_route
-from tests.browser_world import BrowserWorldDriver
+from tests.browser_world import BrowserWorldDriver, reveal
 from tests.r4_route import R4Planner
 
 
 def main():
     out=ROOT/'artifacts/r4-qa';out.mkdir(parents=True,exist_ok=True)
     report=dict(passed=False,checks=[],page_errors=[],console_errors=[],failed_requests=[],posts=[])
-    server=ClockHTTP().start()
+    server=ClockHTTP(live=True).start()
     try:
         with sync_playwright() as pw:
             browser=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
@@ -26,6 +26,7 @@ def main():
             expect(page.locator('#r4-credits-balance')).to_be_visible()
             # Goal buttons reference projected actions; clicking navigates without a POST.
             goal=page.locator('.r3-goal-button').first
+            reveal(goal)
             before=server.snapshot()['revision'];count=len(report['posts'])
             goal.click();assert server.snapshot()['revision']==before and len(report['posts'])==count
             report['checks'].append('live story goal navigates only; initial three credits visible')
@@ -59,7 +60,7 @@ def main():
             assert not report['page_errors'] and not report['console_errors'] and not report['failed_requests'],report
             report['passed']=True;browser.close()
     finally:
-        server.close();(out/'browser-r4-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        server.close();(out/'browser-r4-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2), encoding='utf-8')
     print(json.dumps(report,ensure_ascii=False))
 
 if __name__=='__main__':main()

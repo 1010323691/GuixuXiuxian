@@ -1,9 +1,9 @@
 """Pure deterministic rules; no HTTP, disk, clocks or randomness."""
-import copy
 import unicodedata
 from . import config as C
 from . import world
 from . import loot
+from .clone import clone
 
 
 class GameError(Exception):
@@ -151,7 +151,7 @@ def apply_action(state, action, params, context=None):
     if state and state.get('world',{}).get('active'):
         fail('已进入完整修仙界，请使用世界行动。')
     check(state,action,params)
-    s=copy.deepcopy(state)
+    s=clone(state)
     events=[]
     r=s['realm']
     def add(key,amount,maximum=9999):

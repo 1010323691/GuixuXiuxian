@@ -1,12 +1,14 @@
 import concurrent.futures
 import hashlib
 import sqlite3
-import subprocess
+import io
+from contextlib import redirect_stderr
 import sys
 import unittest
 import uuid
 
-from tests.support import ROOT, Server, route_to_ending, baseline_route
+from server import main as server_main
+from tests.support import ROOT, Server, route_to_ending, baseline_route, open_db
 
 
 class GameHTTPTests(unittest.TestCase):
@@ -248,13 +250,13 @@ class GameHTTPTests(unittest.TestCase):
         self.new()
         before = self.server.snapshot()
         database = next(self.server.data.glob('*.db'))
-        with sqlite3.connect(database) as connection:
+        with open_db(database) as connection:
             connection.execute("CREATE TRIGGER qa_fail_requests BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT, 'QA injected write failure'); END")
         payload = {'request_id': 'rollback-once', 'expected_revision': before['revision'], 'action': 'gather', 'params': {}}
         status, body = self.server.request('POST', '/api/action', payload)
         self.assertEqual((status, body['error']['code']), (503, 'SAVE_FAILED'))
         self.assertEqual(self.server.snapshot(), before)
-        with sqlite3.connect(database) as connection:
+        with open_db(database) as connection:
             self.assertEqual(connection.execute('SELECT count(*) FROM requests WHERE request_id=?', ('rollback-once',)).fetchone()[0], 0)
             connection.execute('DROP TRIGGER qa_fail_requests')
         status, committed = self.server.request('POST', '/api/action', payload)
@@ -282,9 +284,9 @@ class GameHTTPTests(unittest.TestCase):
         database = databases[0]
         database.write_bytes(b'not a sqlite database\x00broken')
         original = hashlib.sha256(database.read_bytes()).hexdigest()
-        result = subprocess.run([sys.executable, str(ROOT / 'server.py'), '--port', '0', '--data-dir', str(self.server.data)],
-            cwd=ROOT, capture_output=True, text=True, timeout=10)
-        self.assertNotEqual(result.returncode, 0)
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as exited:
+            server_main(['--port', '0', '--data-dir', str(self.server.data)])
+        self.assertNotEqual(exited.exception.code, 0)
         self.assertEqual(hashlib.sha256(database.read_bytes()).hexdigest(), original)
 
 

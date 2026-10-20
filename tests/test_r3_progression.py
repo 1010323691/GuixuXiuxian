@@ -66,4 +66,4 @@ class R3PublicProgressionTests(unittest.TestCase):
                   'stage':w['stage'],'xp_remaining':w['xp'],
                   'themed_bosses':self.planner.mechanics_seen}
         folder=ROOT/'artifacts'/'r4-qa';folder.mkdir(parents=True,exist_ok=True)
-        (folder/'retained-growth-route.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2))
+        (folder/'retained-growth-route.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2), encoding='utf-8')

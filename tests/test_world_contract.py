@@ -5,7 +5,7 @@ import sqlite3
 import unittest
 import uuid
 
-from tests.support import Server, baseline_route
+from tests.support import Server, baseline_route, open_db
 
 
 PAGE_IDS = ['world', 'character', 'sects', 'social', 'craft', 'exploration',
@@ -166,14 +166,14 @@ class WorldContractTests(unittest.TestCase):
         after = self.server.snapshot()
         self.assertEqual(after['state']['world']['tick'], before['state']['world']['tick'] + 1)
         database = next(self.server.data.glob('*.db'))
-        with sqlite3.connect(database) as connection:
+        with open_db(database) as connection:
             connection.execute("CREATE TRIGGER qa_fail_world BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'QA world commit failure'); END")
         payload = {'request_id': 'world-rollback', 'expected_revision': after['revision'],
                    'action': 'world_gather', 'params': {'item': 'wood'}}
         status, error = self.server.request('POST', '/api/action', payload)
         self.assertEqual((status, error['error']['code']), (503, 'SAVE_FAILED'))
         self.assertEqual(self.server.snapshot(), after, 'state/AI/orders changed after failed commit')
-        with sqlite3.connect(database) as connection:
+        with open_db(database) as connection:
             connection.execute('DROP TRIGGER qa_fail_world')
         status, retry = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 200, retry)

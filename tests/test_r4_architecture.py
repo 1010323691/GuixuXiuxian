@@ -18,6 +18,7 @@ from unittest.mock import patch
 
 from game import cadence, growth,journey,rules,loot,gameplay_config as G
 from game.storage import Store,encode
+from tests.support import open_db
 
 NOW=1_800_000_000
 
@@ -110,7 +111,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         cls.root=tempfile.TemporaryDirectory(prefix='guixu-r4-old-release-')
         cls.folder=Path(cls.root.name)
         fixture_path=Path(__file__).parent/'fixtures'/'r4_v1_1_released_save.json'
-        fixture=json.loads(fixture_path.read_text())
+        fixture=json.loads(fixture_path.read_text(encoding='utf-8'))
         current=fixture['current'];source=fixture['provenance']
         cls.row=(current['schema_version'],current['revision'],encode(current['state']),encode(current['slot']))
         cls.ledger=[(entry['request_id'],entry['payload']) for entry in fixture['requests']]
@@ -118,7 +119,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         assert hashlib.sha256(cls.row[3].encode()).hexdigest()==source['source_slot_sha256']
         assert hashlib.sha256(json.dumps(cls.ledger,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()==source['source_requests_sha256']
         cls.original=cls.folder/'old-data';cls.original.mkdir()
-        with sqlite3.connect(cls.original/'game.db') as db:
+        with open_db(cls.original/'game.db') as db:
             db.executescript('CREATE TABLE current (id INTEGER PRIMARY KEY CHECK(id=1),schema_version INTEGER NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,slot TEXT NOT NULL);CREATE TABLE requests(request_id TEXT PRIMARY KEY,payload TEXT NOT NULL);')
             db.execute('INSERT INTO current VALUES(1,?,?,?,?)',cls.row)
             db.executemany('INSERT INTO requests VALUES(?,?)',cls.ledger)
@@ -132,11 +133,11 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
     def test_real_old_archive_current_slot_run_activity_and_backup(self):
         s=Store(self.data,clock=lambda:NOW+28800)
         self.assertIsNotNone(s.migration_backup)
-        with sqlite3.connect(s.migration_backup) as backup:
+        with open_db(s.migration_backup) as backup:
             self.assertEqual(backup.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
             self.assertEqual(backup.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
         self.assertEqual((self.original/'game.db').read_bytes(),self.original_bytes)
-        with sqlite3.connect(s.path) as db:
+        with open_db(s.path) as db:
             row=db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone()
             self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
         self.assertEqual(row[1],self.row[1]+1)
@@ -162,12 +163,12 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         self.assertTrue(duplicate['duplicate']);self.assertEqual(duplicate['revision'],row[1])
 
     def test_sql_failure_rolls_back_current_slot_revision_and_ledger(self):
-        with sqlite3.connect(self.data/'game.db') as db:
+        with open_db(self.data/'game.db') as db:
             db.execute("CREATE TRIGGER deny_r4 BEFORE UPDATE ON current BEGIN SELECT RAISE(ABORT,'r4-update-fault'); END")
         before=(self.data/'game.db').read_bytes()
         with self.assertRaises(sqlite3.IntegrityError):Store(self.data,clock=lambda:NOW+28800)
         self.assertEqual((self.data/'game.db').read_bytes(),before)
-        with sqlite3.connect(self.data/'game.db') as db:
+        with open_db(self.data/'game.db') as db:
             self.assertEqual(db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
             self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
         self.assertEqual(len(list(self.data.glob('*.bak.db'))),1)
@@ -179,7 +180,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         self.assertEqual((self.data/'game.db').read_bytes(),before)
 
     def test_non_integral_stage_ratio_and_unspent_overflow_preserved(self):
-        with sqlite3.connect(self.data/'game.db') as db:
+        with open_db(self.data/'game.db') as db:
             raw=json.loads(self.row[2]);w=raw['world'];w['battle']=None;w['dungeon']=None;w['stage']=5;w['xp']=50000
             g=w['r3']['growth'];g['balance_micro']=50000*growth.MICRO+123;g['remainder']=1;g['rate_num']=540*growth.MICRO*65*10000
             raw_original=copy.deepcopy(raw)
@@ -196,7 +197,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         self.assertEqual(sum(s.migration_backup is not None for s in stores),1)
         self.assertEqual(len(list(self.data.glob('*.bak.db'))),1)
         self.assertEqual({s.snapshot()['revision'] for s in stores},{self.row[1]+1})
-        with sqlite3.connect(self.data/'game.db') as db:
+        with open_db(self.data/'game.db') as db:
             self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
 
     def test_upgraded_checkpoint_never_restores_old_growth_or_reservation(self):
@@ -233,7 +234,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
 
 class CrossModuleReviewTests(unittest.TestCase):
     def setUp(self):
-        source=json.loads((Path(__file__).parent/'fixtures'/'r4_v1_1_released_save.json').read_text())['current']['state']
+        source=json.loads((Path(__file__).parent/'fixtures'/'r4_v1_1_released_save.json').read_text(encoding='utf-8'))['current']['state']
         self.state=growth.upgrade_legacy(source,NOW)
         self.state=cadence.migrate_legacy(self.state,NOW);journey.migrate(self.state['world'])
         w=self.state['world'];loot.release_run(w);w['battle']=None;w['dungeon']=None

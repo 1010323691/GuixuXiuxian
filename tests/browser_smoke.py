@@ -5,13 +5,14 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
 from tests.support import ROOT, Server, baseline_route
+from tests.browser_world import assert_one_screen, reveal as reveal_node
 
 
 def main():
     artifacts = ROOT / 'artifacts' / 'qa'
     artifacts.mkdir(parents=True, exist_ok=True)
     report = {'checks': [], 'console_errors': [], 'page_errors': [], 'failed_requests': [], 'http_errors': []}
-    server = Server()
+    server = Server(live=True)
     try:
         server.start()
         with sync_playwright() as playwright:
@@ -37,6 +38,7 @@ def main():
                 group = target.locator(selector).evaluate('(button) => button.closest(".action-group")?.id || null')
                 if group and not target.locator(selector).is_visible():
                     target.locator('[data-group=' + json.dumps(group.removeprefix('group-')) + ']').click()
+                reveal_node(target.locator(selector))
                 expect(target.locator(selector)).to_be_visible()
 
             def click_write(selector, endpoint, target=page):
@@ -165,6 +167,7 @@ def main():
             action('cultivate')
             page.screenshot(path=str(artifacts / 'mobile-320.png'), full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'horizontal overflow at 320px'
+            assert_one_screen(page, 'prologue 320px')
             buttons = page.locator('button:visible').evaluate_all('(buttons) => buttons.map(b => ({text:b.textContent,height:b.getBoundingClientRect().height}))')
             assert all(button['height'] >= 44 for button in buttons), buttons
             page.locator('[data-action-key="cultivate:{}"]').focus()
