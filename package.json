@@ -1,0 +1,20 @@
+{
+  "name": "guixu-xiuxian-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Build tooling for the battle arena (static/battle3d.js). Players and the Python server need no Node.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/three": "0.170.0",
+    "esbuild": "0.25.12",
+    "postprocessing": "6.39.5",
+    "three": "0.170.0",
+    "three.quarks": "0.16.0",
+    "typescript": "5.9.3"
+  }
+}

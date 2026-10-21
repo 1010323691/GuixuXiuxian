@@ -182,3 +182,11 @@ R5独立交付：`dist/guixu-r5-combat-lab.zip`，71文件/7,787,575字节，SHA
 文档车道范围与原则：现行文档（README、API.md、PLAYING/R3_PLAYING/R4_PLAYING、UI、AGENTS）改到新语义并使用术语表替代词；`docs/GDD.md`、`REVIEW.md`、`BALANCE.md`、`TESTING.md`、`ARCHITECTURE.md`（序章历史）、`DELIVERY.md` 及 `docs/iterations/` 下既有冻结文档保留原文，仅加头注或附“多用户化增量”章节。
 
 未验证项（均不得写成已通过）：白盒全量及新增 `test_auth_*`、`test_isolation`、`test_concurrency`、`test_sql_isolation`、`test_autosave`、`test_legacy_claim`、`test_terminology` 的通过数；Playwright 浏览器套件；scrypt 在目标机的耗时与 `synchronous=FULL` 下写事务 P99；HTTPS 反代与 `--secure-cookies`/`--trust-proxy` 实际表现；真实旧库的迁移与认领演练；多用户版发行包的构建与独立解包验证。已知环境约束：子代理须显式指定可用模型；浏览器套件依赖本机 Playwright。
+
+## 云海御空 v2 斗法台（2026-10-21，分支 feat/flight-battle-v2）
+| ID | 任务 | 状态 |
+|---|---|---|
+| FB1 | 阶段一：TS 构建链、程序化环境（晴空/云海/石柱/塔亭松/瀑布/浮岛/远山/飞鸟）、主角与魔物、飞剑阵/符箓/法阵光束/八卦镜/魔爪/天剑、导演镜头、后期；实验场 `/battle-lab.html` | 实现完成，待用户视觉验收 |
+| FB2 | 阶段二：`static/fx3d.js` 改托管新斗法台，按 `battle_report` 事件驱动模板，保留跳过/减弱动效/无 WebGL 降级 | 未开始（等 FB1 验收） |
+| FB3 | 阶段三：规则层真实小怪（SWARMS、预算守恒拆分、AoE、前瞻目标维度、校验器、战报扩展）+ 群战表现 | 未开始 |
+| FB4 | 阶段四：转向行为自由飞行、避障、性能分级 | 未开始 |

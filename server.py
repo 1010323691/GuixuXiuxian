@@ -17,7 +17,7 @@ from game.settings import Settings
 from game.storage import Database, LayoutError, LegacyLayoutError, Store
 
 STATIC=Path(__file__).resolve().parent/'static'
-FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8'),'/fx3d.js':('fx3d.js','text/javascript; charset=utf-8'),'/battle3d.js':('battle3d.js','text/javascript; charset=utf-8'),'/vendor/three.module.min.js':('vendor/three.module.min.js','text/javascript; charset=utf-8')}
+FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8'),'/fx3d.js':('fx3d.js','text/javascript; charset=utf-8'),'/battle3d.js':('battle3d.js','text/javascript; charset=utf-8'),'/arena3d.js':('arena3d.js','text/javascript; charset=utf-8'),'/battle-lab.html':('battle-lab.html','text/html; charset=utf-8'),'/battle_lab.js':('battle_lab.js','text/javascript; charset=utf-8'),'/vendor/three.module.min.js':('vendor/three.module.min.js','text/javascript; charset=utf-8')}
 VENDOR_ADDONS=('CopyShader','EffectComposer','LuminosityHighPassShader','MaskPass','OutputPass','OutputShader','Pass','RenderPass','ShaderPass','UnrealBloomPass')  # three r170 官方后期扩展，同源内置
 FILES.update({'/vendor/addons/%s.js'%n:('vendor/addons/%s.js'%n,'text/javascript; charset=utf-8') for n in VENDOR_ADDONS})
 JSON_TYPE='application/json; charset=utf-8'

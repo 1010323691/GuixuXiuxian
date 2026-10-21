@@ -107,3 +107,8 @@ R4最终质量裁决：一次181项全量与四浏览器通过，完整长线和
 - 版本号（本轮是否发布为 v1.3.0 等）由 PM/用户决定，尚未确定；多用户版发行包尚未构建与独立验证。
 
 **验收口径**：全量白盒、浏览器套件（Playwright，本机可能不可用，不可用则记“未运行”）、scrypt 目标机耗时、HTTPS 反代实际表现、`synchronous=FULL` 的写延迟，全部以 QA 实测记录为准；未验证项不得写成已通过。
+
+## 云海御空 v2 斗法台（2026-10-21，用户调整意见书：品质不妥协、实现可灵活、分四阶段独立验收）
+- **D015 前端 TypeScript + esbuild 构建链**：新三维斗法台源码在 `src/battle/*.ts`，`npm run build` 打包为 `static/arena3d.js`（提交入库）；`three` 外置映射到同源 `/vendor/three.module.min.js`，three.quarks 0.16.0（MIT）与 postprocessing 6.39.5（Zlib）打包进 bundle。开发依赖版本固定在 `package.json`（esbuild 0.25.12、typescript 5.9.3、three/@types/three 0.170.0），`node_modules/` 不入库。玩家与 Python 服务运行不需要 Node；bundle 头部记录源码 SHA-256，`tests/test_frontend_build.py` 不依赖 Node 校验 bundle 与源码一致。
+- **D016 角色与魔物采用程序化精修**：检索 Poly Pizza / Quaternius / Gobkit / KayKit（均 CC0、免登录）后，角色/魔物均为低多边形Q版，达不到 `battleSample.png` 的品质；高品质免费模型（Sketchfab CC-BY）需登录下载，不由智能体代登。经用户裁决：主角与魔物用程序化卡渲+墨线精修（Verlet 布料：长发/飘带/披帛/袖尾/衣摆），场景道具（塔/亭/松/石柱/浮岛）亦程序化生成以统一风格。本阶段未引入任何第三方模型资产，故无署名义务；后续若引入，须先列来源/许可/大小并经用户同意，再登记 CREDITS。
+- **阶段顺序**：①高品质单体战斗原型（实验场 `/battle-lab.html`，游戏内不链接）→ ②接入 Python 战报精确同步 → ③多单位群战（含规则层真实小怪）→ ④复杂AI/避障/性能。每阶段经用户视觉验收后才进入下一阶段；Python 仍是战斗结算唯一来源，三维只做表现。
