@@ -190,4 +190,4 @@ R5独立交付：`dist/guixu-r5-combat-lab.zip`，71文件/7,787,575字节，SHA
 | FB2 | 阶段二：`static/fx3d.js` 改托管新斗法台，按 `battle_report` 事件驱动模板，保留跳过/减弱动效/无 WebGL 降级 | **已验收**（2026-10-21 用户视觉验收通过；D019；旧 `battle3d.js` 与 three 后期扩展已退役；证据见 `docs/acceptance-report.md` 首节） |
 | FB2b | 回放下方文字战报（行动行/意图/事件列表）退役，场景与过程保留（D020） | 完成 |
 | FB3 | 阶段三：规则层真实小怪（SWARMS、预算守恒拆分、AoE、前瞻目标维度、校验器、战报扩展）+ 群战表现 | **已验收**（2026-10-21 用户视觉验收通过；D021，`docs/iterations/FB3_SWARM.md`） |
-| FB4 | 阶段四：转向行为自由飞行、避障、性能分级 | **实现完成，待用户视觉验收**（D022；12 单位回放避障/性能证据见 `docs/acceptance-report.md`） |
+| FB4 | 阶段四：转向行为自由飞行、避障、性能分级 | **已验收**（2026-10-21 用户视觉验收通过；D022，12 单位回放避障/性能证据见 `docs/acceptance-report.md`） |
