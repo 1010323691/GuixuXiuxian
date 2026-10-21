@@ -1263,6 +1263,31 @@ def _deep_validate(w):
     if w['extension']!={'content_version':1,'realm_cap':'渡劫','next_realm_locked':True}:invalid()
 
 
+def _guide(w,pages):
+    """“下一步”提示：沿用 _advance_reason 的条件顺序，指向第一个可执行且推进当前瓶颈的事项；不新增规则。"""
+    if w['ending'] or w['battle']:return None
+    reason=_advance_reason(w)
+    def recipe_label(item):
+        return next(('制作'+r['name'] for r in C.RECIPES.values() if item in r['output']),None)
+    if w['stage']==7:target=('character','world_finish',None)
+    elif not reason:target=('character','world_advance',None)
+    elif reason.startswith('修为还差'):target=('character','world_cultivate',None) if 'r3' not in w else ('character',None,None)
+    elif reason.startswith('需先挑战'):target=('exploration','world_boss',None)
+    elif '破障丹' in reason:target=('craft','world_craft',recipe_label('barrier_pill'))
+    elif '镇魂符' in reason:target=('craft','world_craft',recipe_label('soul_talisman'))
+    elif '聚灵阵' in reason:target=('craft','world_craft',recipe_label('spirit_array'))
+    elif '宗门' in reason:target=('sects','world_sect_daily',None)
+    elif '弟子授业' in reason:target=('social','world_chat',None)
+    elif '家族建设' in reason:target=('social','world_family_build',None)
+    elif '装备' in reason:target=('craft',None,None)
+    else:target=('character',None,None)
+    page,action_id,label=target
+    hit=None
+    if action_id:
+        hit=next((a for a in next(p for p in pages if p['id']==page)['actions'] if a['id']==action_id and a['enabled'] and (label is None or a['label']==label)),None)
+    return {'text':reason or '突破条件已齐，可以突破。','page':page,'action_id':hit['id'] if hit else None,'label':hit['label'] if hit else None,'params':hit['params'] if hit else None}
+
+
 def _cost_text(cost):return '、'.join('%s ×%d'%(item_name(k),n) for k,n in cost.items()) or '免费'
 
 
@@ -1307,7 +1332,7 @@ def project(state,context=None):
     add('character','world_cultivate','吐纳修炼','免费','修为随境界、木灵根、聚灵阵与称号增加')
     add('character','world_rest','静养恢复','免费','恢复气血最多80、灵力最多30，再加体质/静室/称号效果')
     add('character','world_advance','突破下一境界','修为%d及阶段条件'%(C.STAGES[w['stage']]['xp_cost']),'保证突破，恢复新气血灵力上限')
-    add('character','world_finish','完成凡界终章','渡劫首胜、三秘境与主线任务','封闭凡界界门，保留经营与重复挑战')
+    add('character','world_finish','完成凡界终章','渡劫首胜、三秘境与主线任务','封闭凡界界门，保留经营与重复挑战',confirm='封界后凡界主线终结，不可撤销；经营与重复挑战仍可继续。确认封界？')
     for key,catalog,action in [('root',C.ROOTS,'world_root'),('constitution',C.CONSTITUTIONS,'world_constitution')]:
         obj=w[key];section('character','灵根' if key=='root' else '体质',[('当前',catalog[obj['id']]['name']+' %d级'%obj['level']),('觉醒','第一次选择免费' if not obj['awakened'] else '重修消耗30凡界灵石')])
         add('character',action,'鉴定灵根' if key=='root' else '选择体质','首次免费，之后30灵石','基础增益按等级+1；更改只截断上限，不回满',fields=[select('choice','选择禀赋',[(k,v['name']+'：'+v['description']) for k,v in catalog.items()])],probe={'choice':next(k for k in catalog if k!=obj['id'])})
@@ -1332,7 +1357,7 @@ def project(state,context=None):
     for npc,n in C.NPCS.items():
         section('social',n['name']+' · NPC',[('好感',w['relations'].get(npc,0)),('好友','已结交' if npc in w['friends'] else '未结交'),('族员','已加入' if npc in w['family_members'] else '未加入')],body=n['dialogue'][2 if npc in w['friends'] else 1 if w['quests'].get(n['quest'])=='claimed' else 0])
         for action,label,cost,effect in [('world_chat','交谈','每3行动一次','好感+1'),('world_gift','赠礼',item_name(n['gift'])+'2','好感+5'),('world_friend','结交','好感30','成为好友，首次修为20'),('world_companion','同行','已结交','每第三战斗回合支援10伤害'),('world_master','拜师','好感10','成为NPC师徒，可请教'),('world_consult','请教','5灵石，每3行动一次','对应技艺熟练5、好感2、修为6'),('world_family_invite','邀请入族','已建家族，好感20','NPC成员加入'),('world_family_remove','请离家族','当前族员','不清空关系')]:add('social',action,label+n['name'],cost,effect,{'npc':npc})
-    add('social','world_master_leave','辞别师父','免费','已学技艺保留')
+    add('social','world_master_leave','辞别师父','免费','已学技艺保留',confirm='辞别后师徒关系结束，已学技艺保留。确认辞别？')
     add('social','world_companion_leave','暂别同行','免费','友谊保留')
     add('social','world_family_create','建立家族','免费','玩家为唯一族长，可邀NPC共建',fields=[text('name','家族名',16)],probe={'name':'青岚家族'})
     for id,definition in C.FAMILIES.items():add('social','world_family_build','建设'+definition['name'],_cost_text(definition['cost']),definition['description']+' 最高3级',{'facility':id})
@@ -1361,7 +1386,7 @@ def project(state,context=None):
     add('exploration','world_secret_leave','离开秘境','无额外奖励','保留已经获得的节点材料')
     for id,d in C.DUNGEONS.items():add('exploration','world_dungeon_enter','进入'+d['name'],'位于'+C.REGIONS[d['region']]['name'],'两场妖兽、一场Boss；按入场境界快照，终场修为(24+6×入场境界序号)×难度',{'dungeon':id},[number('difficulty','难度',1,3)],{'difficulty':1})
     add('exploration','world_dungeon_next','继续副本下一战','当前副本进度','开始下一场；战间可以静养或制作')
-    add('exploration','world_dungeon_leave','撤离副本','不发未完成通关奖励','保留永久成长')
+    add('exploration','world_dungeon_leave','撤离副本','不发未完成通关奖励','保留永久成长',confirm='撤离后本次副本进度作废，不发通关奖励。确认撤离？')
     if w['encounter']:
         definition=C.EVENTS[w['encounter']['id']];section('exploration','奇遇：'+definition['name'],[('有效期','剩%d世界行动'%(w['encounter']['end']-w['tick']))],definition['description'])
         for id,c in definition['choices'].items():add('exploration','world_encounter',c['name'],_cost_text(c.get('cost',{})),'战斗护送' if c.get('battle') else '结果：'+_cost_text(c.get('reward',{})),{'choice':id})
@@ -1417,7 +1442,7 @@ def project(state,context=None):
     battle_view=None
     if w['battle']:
         b=w['battle'];battle_view={'name':b['name'],'hp':b['hp'],'max_hp':b['max_hp'],'intent':['常规攻击%d'%b['attack'],'蓄势：本回合无伤害','重击%d'%b['heavy']][b['turn']%3],'page':'arena' if b['kind'] in {'arena','regional'} else 'exploration'}
-    result={'version':2,'active':w['active'],'battle':battle_view,'stage':stage,'summary':'凡界已封界，修行未止。' if w['ending'] else _advance_reason(w) or '突破条件已齐。','resources':resources,'pages':pages}
+    result={'version':2,'active':w['active'],'battle':battle_view,'stage':stage,'summary':'凡界已封界，修行未止。' if w['ending'] else _advance_reason(w) or '突破条件已齐。','resources':resources,'pages':pages,'guide':_guide(w,pages),'estate':dict(w['home'])}
     if 'r3' in w:loot.project(state,result,context=context)
     return result
 

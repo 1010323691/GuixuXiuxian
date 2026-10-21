@@ -194,6 +194,15 @@ def _choose(s):
     return 'power_attack' if s['mp']>=6 else 'attack'
 
 
+def _fx_events(hp0,hp1,foe0,foe1):
+    """由本拍气血实际变化得出的可视特效事件（fx_only：只驱动演出，不进文字日志）。"""
+    out=[]
+    if foe0>foe1:out.append({'type':'damage','source':'player','target':'enemy','label':'命中','amount':foe0-foe1,'fx_only':True})
+    if hp0>hp1:out.append({'type':'damage','source':'enemy','target':'player','label':'受创','amount':hp0-hp1,'fx_only':True})
+    elif hp1>hp0:out.append({'type':'heal','source':'player','target':'player','label':'回复','amount':hp1-hp0,'fx_only':True})
+    return out
+
+
 def _auto_battle(state,context=None):
     s=state;events=[];labels={'attack':'普攻','power_attack':'运功强攻','defend':'凝神防御','use_pill':'服用回春丹','flee':'撤退'}
     enemy=C.ENEMIES[s['battle']['enemy']];r=s['realm'];intents=['常规攻击','蓄势','重击']
@@ -202,12 +211,13 @@ def _auto_battle(state,context=None):
     for n in range(1,AUTO_LIMIT+1):
         if not s['battle']:break
         action=_choose(s)
+        hp0,foe0=s['hp'],s['battle']['hp']
         s,ev=_step(s,action,{})
         events.extend('第%d拍·%s：%s'%(n,labels[action],line) for line in ev)
         text=''.join(ev)
         outcome='victory' if '战胜' in text else 'defeat' if '不敌' in text else outcome
         frames.append({'round':n,'player':{'hp':s['hp'],'mp':s['mp']},'enemy':{'hp':s['battle']['hp'] if s['battle'] else 0,'barrier':0},'intent':intents[s['battle']['turn']%3] if s['battle'] else '—','action':labels[action],
-            'events':[{'type':'text','source':'player','target':'enemy','label':line} for line in ev]})
+            'events':[{'type':'text','source':'player','target':'enemy','label':line} for line in ev]+_fx_events(hp0,s['hp'],foe0,s['battle']['hp'] if s['battle'] else 0)})
     else:
         s,ev=_step(s,'flee',{});events.extend(ev);outcome='stalemate'
     if isinstance(context,dict):

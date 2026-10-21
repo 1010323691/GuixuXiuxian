@@ -14,7 +14,7 @@
 2. **特效必须携带信息**。每个动效都要回答"它告诉玩家什么"，答不出就不加（见第 6 节）。
 3. **动效只用 `transform` / `opacity` / canvas**，不改布局；入场位移只朝上、朝左右，或者缩小，**不能增加分页区域的 `scrollHeight`**，否则会触发 500ms 溢出巡检的重排循环。
 4. **减少动态效果**（`prefers-reduced-motion: reduce`）时，CSS 关闭全部动画与过渡；`app.js` 的粒子、飞入、涟漪、突破演出和槽位过渡都按 `reducedMotion()` 跳过。信息本身（数值、文字、颜色）不丢。
-5. 不新增静态文件，不请求外部资源。字体只用系统字体栈，图标是内联 SVG sprite 或 CSS mask 的 data URI，纸纹是内联 SVG `feTurbulence`。
+5. （2026-10-21修订）不请求外部CDN资源；允许同源内置 `static/vendor/` 下的固定版本库（Three.js，仅战报三维特效，见 `docs/visual-effects-plan.md`）。字体只用系统字体栈，图标是内联 SVG sprite 或 CSS mask 的 data URI，纸纹是内联 SVG `feTurbulence`。
 
 ## 2. 色彩
 

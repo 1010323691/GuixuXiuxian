@@ -167,7 +167,7 @@
     const context = canvas.getContext("2d");
     let host = null, tier = -1, color = [63, 165, 133], width = 0, height = 0, motes = [], frameId = 0, last = 0;
     const observer = globalThis.ResizeObserver ? new ResizeObserver(() => resize()) : null;
-    const visible = () => !!host && host.isConnected && !document.hidden && !reducedMotion() && host.getClientRects().length > 0 && !host.closest("[hidden]");
+    const visible = () => !!host && host.isConnected && !document.hidden && !reducedMotion() && !document.body.classList.contains("stage3d-on") && host.getClientRects().length > 0 && !host.closest("[hidden]");
     function mote(anywhere) {
       const speed = 1 + tier * .09;
       return { x: Math.random() * width, y: anywhere ? Math.random() * height : height + 4, r: .7 + Math.random() * 1.7, vy: -(5 + Math.random() * 12) * speed, vx: (Math.random() - .5) * 5, phase: Math.random() * 6.283, twinkle: 1.2 + Math.random() * 2 };
@@ -234,6 +234,19 @@
     }
     document.addEventListener("visibilitychange", start);
     return { mount, start };
+  })();
+
+  /* 三维舞台氛围（Three.js，按需加载）：成功时接管该宿主的灵气演出，失败/无 WebGL/减少动态时保留上面的 Canvas2D。 */
+  const stage3d = (() => {
+    let mod = null, loading = null, failed = false;
+    const load = () => loading || (loading = import("/fx3d.js").then((m) => { mod = m; return m; }).catch(() => { failed = true; return null; }));
+    function mount(host, tier, page, estate) {
+      if (failed || reducedMotion() || !host) { mod?.unmountStage(); return; }
+      const spec = { host, tier, color: token(`--aura-${Math.max(0, Math.min(8, tier))}`), page, estate };
+      if (!mod) { load().then((m) => { if (m && host.isConnected) m.mountStage(spec); }); return; }
+      if (!mod.mountStage(spec)) failed = !document.body.classList.contains("stage3d-on");
+    }
+    return { mount };
   })();
 
   const fx = (() => {
@@ -1381,8 +1394,9 @@
     }
     for (const block of blocks) if (!(page.sections || []).some((section) => (section.id || section.title) === block.dataset.sectionKey) && !block.contains(document.activeElement)) block.hidden = true;
     $("world-summary").textContent = world.summary || "观照当前进度，再择下一步修行。";
+    renderGuide(world);
     const quests = world.pages.find((entry) => entry.id === "quests");
-    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 8);
+    const tracked = (quests?.sections || []).flatMap((section) => (section.rows || []).map((row) => (["状态", "奖励"].includes(row.label) ? { ...row, label: `${section.title} · ${row.label}` } : row))).slice(0, 8);
     $("world-tracked-quests").replaceChildren(...tracked.map((row) => {
       const note = element("div", "tracked-quest");
       note.append(element("h4", "", row.label), element("p", "", row.value));
@@ -1398,12 +1412,37 @@
     tickGrowth();
   }
 
+  /** “下一步”提示：服务端给出当前瓶颈与第一个可执行事项，这里只负责跳转与高亮。 */
+  function renderGuide(world) {
+    const guide = world.guide, button = $("world-guide-go");
+    if (!guide?.page) { button.hidden = true; return; }
+    const page = world.pages.find((entry) => entry.id === guide.page);
+    button.hidden = false;
+    button.textContent = guide.label ? `去办理 · ${guide.label}` : `前往 · ${page?.label || guide.page}`;
+    button.dataset.page = guide.page;
+    button.dataset.actionKey = guide.action_id ? worldActionKey(guide.page, { id: guide.action_id, params: guide.params || {} }) : "";
+  }
+
+  function followGuide() {
+    const button = $("world-guide-go");
+    selectWorldPage(button.dataset.page);
+    const key = button.dataset.actionKey;
+    if (!key) return;
+    const node = [...document.querySelectorAll(".world-action")].find((entry) => entry.dataset.actionKey === key);
+    if (!node) return;
+    revealNode(node);
+    node.classList.add("guided");
+    setTimeout(() => node.classList.remove("guided"), 2400);
+    (node.querySelector(".world-submit:not(:disabled)") || node.querySelector("summary"))?.focus({ preventScroll: true });
+  }
+
   function selectWorldPage(id) {
     if (!snapshot?.view.world?.pages.some((page) => page.id === id)) return;
     const navigationFocused = !!document.activeElement?.dataset.worldPage;
     const changed = selectedWorldPage !== id;
     selectedWorldPage = id;
     renderWorld(snapshot.view.world);
+    stage3d.mount(document.querySelector(".world-page-heading"), realmTier($("realm").textContent), id, snapshot.view.world.estate);
     if (changed) animate(document.querySelector(".world-page-heading .stage-copy"), "copy-in");
     if (navigationFocused) [...document.querySelectorAll("[data-world-page]")].find((button) => button.dataset.worldPage === id)?.focus({ preventScroll: true });
   }
@@ -1627,9 +1666,10 @@
       }));
     }
     $("world-summary").textContent = world.summary || "观照当前进度，再择下一步修行。";
+    renderGuide(world);
     $("world-tracked-quests").replaceChildren();
     const quests = pages.find((entry) => entry.id === "quests");
-    const tracked = (quests?.sections || []).flatMap((section) => section.rows || []).slice(0, 8);
+    const tracked = (quests?.sections || []).flatMap((section) => (section.rows || []).map((row) => (["状态", "奖励"].includes(row.label) ? { ...row, label: `${section.title} · ${row.label}` } : row))).slice(0, 8);
     for (const row of tracked) {
       const note = element("div", "tracked-quest");
       note.append(element("h4", "", row.label), element("p", "", row.value));
@@ -1742,7 +1782,9 @@
     updateControls();
     syncHudHeight();
     const auraHost = view.phase === "creation" ? $("creation") : worldActive ? document.querySelector(".world-page-heading") : document.querySelector(".journey > .scene");
-    aura.mount(auraHost, realmTier($("realm").textContent));
+    const auraTier = realmTier($("realm").textContent);
+    aura.mount(auraHost, auraTier);
+    stage3d.mount(auraHost, auraTier, worldActive ? selectedWorldPage : "", view.world?.estate);
     scheduleQi();
   }
 
@@ -2325,6 +2367,7 @@
   $("refresh-button").addEventListener("click", () => readState());
   $("history-button").addEventListener("click", () => { expanded = !expanded; renderLogs(snapshot.view.logs); });
   $("world-quests-link").addEventListener("click", () => selectWorldPage("quests"));
+  $("world-guide-go").addEventListener("click", followGuide);
   $("world-action-search").addEventListener("input", () => {
     worldActionFilters.set(selectedWorldPage, { query: $("world-action-search").value });
     filterWorldActions();

@@ -1,4 +1,5 @@
 """Real Chromium R4 seven-story/three-elite route; UTC injected, never save XP."""
+from tests.support import launch_browser, attach_session
 import json
 from playwright.sync_api import sync_playwright, expect
 from tests.r3_support import ClockHTTP
@@ -13,12 +14,13 @@ def main():
     server=ClockHTTP(live=True).start()
     try:
         with sync_playwright() as pw:
-            browser=pw.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+            browser=launch_browser(pw)
             page=browser.new_page(viewport={'width':1440,'height':900})
             page.on('pageerror',lambda e:report['page_errors'].append(str(e)))
             page.on('console',lambda m:report['console_errors'].append(m.text) if m.type=='error' else None)
             page.on('requestfailed',lambda r:report['failed_requests'].append(r.url))
             page.on('request',lambda r:report['posts'].append(r.post_data_json.get('action',r.url)) if r.method=='POST' else None)
+            attach_session(page, server)
             page.goto(server.url);driver=BrowserWorldDriver(page,server)
             page.locator('#name').fill('R4独立实玩')
             driver.click_write(page.locator('#create-button'),'/api/new-game')

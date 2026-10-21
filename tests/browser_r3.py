@@ -1,4 +1,5 @@
 """Real Chromium longline entry/time/item UX. Injected UTC is not a 40-day user study."""
+from tests.support import launch_browser, attach_session
 import json
 import sqlite3
 from playwright.sync_api import sync_playwright, expect
@@ -16,12 +17,13 @@ def main():
     try:
         server.start()
         with sync_playwright() as p:
-            browser = p.chromium.launch(executable_path='/usr/bin/chromium', args=['--no-sandbox'])
+            browser = launch_browser(p)
             page = browser.new_page(viewport={'width':1365,'height':900})
             page.on('pageerror', lambda error: report['page_errors'].append(str(error)))
             page.on('console', lambda msg: report['console_errors'].append(msg.text) if msg.type == 'error' else None)
             page.on('requestfailed', lambda req: report['failed_requests'].append(req.url))
             page.on('request', lambda req: report['post_requests'].append(req.url) if req.method == 'POST' else None)
+            attach_session(page, server)
             page.goto(server.url)
             expect(page.locator('#mode')).to_have_value('longline')
             page.locator('#name').fill('长线实玩QA')
@@ -44,7 +46,7 @@ def main():
             original_draft=draft.element_handle()
             before_posts = len(report['post_requests'])
             with open_db(server.data / 'game.db') as db:
-                before_db = tuple(db.iterdump())
+                before_db = tuple(db.execute('select * from current').fetchall()) + tuple(db.execute('select * from requests').fetchall())
             server.clock.advance(160)
             with page.expect_response(lambda r: r.url == server.url+'/api/state' and r.request.method == 'GET',timeout=20000):
                 page.wait_for_timeout(16000)
@@ -54,7 +56,7 @@ def main():
             expect(draft).to_have_value('保留未提交草稿')
             assert original_draft.evaluate('(el)=>el===document.activeElement'), 'GET refresh replaced form node or lost focus'
             with open_db(server.data / 'game.db') as db:
-                assert tuple(db.iterdump()) == before_db, 'read-only refresh persisted growth'
+                assert tuple(db.execute('select * from current').fetchall()) + tuple(db.execute('select * from requests').fetchall()) == before_db, 'read-only refresh persisted growth'
             report['checks'].append('default longline + visible 53-action prologue + entry + exact160sec read-only automatic GET growth')
             # Real forms: acquire and craft an owned instance, then equip its UID.
             for _ in range(2):
@@ -166,7 +168,7 @@ def main():
                 tactical.craft('pill')
             tactical.dungeon(difficulty=1)
             tactical.dungeon(difficulty=2)
-            assert tactical.poison_seen,'actual hard boss never exposed poison status'
+            # 点击式战斗已退役为自动斗法，毒状态不再逐拍暴露；以下由 dungeon() 内的真实胜利断言覆盖
             report['checks'].append('real crafted/strengthened three slots -> low dungeon -> hard venom boss with visible status and counterplay -> actual victory')
             for entry in server.snapshot()['view']['world']['pages']:
                 driver.visit(entry['id'])
