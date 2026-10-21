@@ -15,12 +15,13 @@
 
 ## 数据与接口
 - 进度：`world.battle` 新增可选 `minions: [{id:'m1'…, name, hp, max_hp, attack}]`（阵亡 hp=0 留在表中）。字段缺省即单体战斗——升级前已开打的战斗按旧规则打完，无需迁移。两处校验器（`validate` 与形状校验）同步放行并校验该字段。
+- 校验与平衡旋钮解耦：小怪名单的上界取 `world.SWARM_KINDS` / `world.MAX_MINIONS`（结构常量，与 `world_config.SWARMS` 的取值无关），精英战只校验不变量（`max_hp` 等于精英定义、`0 ≤ attack ≤ 精英 attack`、`0 ≤ heavy ≤ 精英 heavy`、每只小怪 `1 ≤ attack`、`hp ≤ max_hp ≤ CAP`、id 为 `m1..mn` 且名称非空）。因此调整 `SWARMS['counts'|'minion_hp_pct'|'minion_hit_pct']` 不会让进行中的战斗存档在读取时变成 503；代价是校验不再重算拆分结果，改配置前后的战斗按各自开战时的数值打完。
 - 战报 `battle_report`（不入库）：`enemy.units=[{id,name,max_hp}]`；每帧 `units=[{id,hp}]`；事件可带 `unit`（缺省=首领）与 `aoe:true`；新事件 `fall`（小怪伏诛）、`scatter`（首领败、残余溃散）。旧前端忽略新字段仍能播放首领。
-- 视图：当前战斗分区显示存活小怪数与总气血。
+- 视图：当前战斗分区显示存活小怪数与总气血；「下一意图」一行在首领下一招后给出「本拍预计承伤」，数值等于 `_incoming`（首领 + 存活小怪合击），与本拍真实结算一致。
 
 ## 影响分析
 - `game/world.py`：`_enemy/_start`、`_round`、`_incoming`、`_decide/_candidates/_rollout`、`_auto_battle`、两处校验、战斗视图。`game/loot.py` 战斗说明。
-- 精确数值测试：实际只有 8 项断言单体数值，均是首领机制测试（毒、汲灵、熔炉护盾、法宝冷却/回护）。这两组用 `tests/support.solo_battles` 固定为单体战斗（断言不改、注明原因），群战与这些机制的交互由新增 `tests/test_swarm_battle.py`（13 项）精确断言；R3/R4 合法路线测试未改且全部通过。
+- 精确数值测试：11 项断言单体数值，均是首领机制测试（毒、汲灵、熔炉护盾、法宝冷却/回护；`AutoBattleTreasureTests` 4 + `R3DungeonMechanicTests` 7）。这两组用 `tests/support.solo_battles` 固定为单体战斗（断言不改、注明原因），群战与这些机制的交叉面由新增 `tests/test_swarm_battle.py` 断言：`test_venom_with_a_pack_poisons_on_the_heavy_beat_and_the_pack_keeps_chipping`、`test_mana_seal_with_a_pack_drains_on_the_attack_beat_and_the_pack_keeps_chipping`、`test_furnace_barrier_absorbs_the_strike_and_the_pack_still_reaches_the_body`；R3/R4 合法路线测试未改且全部通过。
 - 平衡：`scripts/swarm_balance.py` 对比同一进度、同一策略下旧（单体）与新（群战）的拍数与剩余气血，目标拍数 ±15%、剩余气血 ±10%；R3/R4 合法路线全程须仍可通过。
 
 ## 平衡结果（`python scripts/swarm_balance.py`）

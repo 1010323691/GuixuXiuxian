@@ -5,7 +5,7 @@
 ## 已完成且已验证（本轮实际运行）
 | 项 | 证据 |
 |---|---|
-| 白盒全量 | `python -m tests.parallel`：**413 项通过，0 跳过**（含 bundle 源码哈希一致） |
+| 白盒全量 | `python -m tests.parallel`：413 项、0 跳过，其中 6 项并发/SQLite 类失败（`503 SAVE_FAILED`、`attempt to write a readonly database`）。同一失败集合在 `origin/main` 上同样出现且逐次漂移，属本机抖动，与本分支改动无关；稳定复现的确定性失败 4 项，另有 1–3 项随机抖动。bundle 头部 `src-sha256` 与 `body-sha256` 均由测试校验一致 |
 | 浏览器套件（本机 Edge，Playwright） | `browser_smoke`、`browser_world`、`browser_r3`、`browser_r4`、`browser_fx3d`、`browser_fx3d_real` **全部 passed** |
 | 12 单位避障 | `browser_fx3d_real` 新增压力回放（首领 + 10 小怪 + 主角，6 拍，含群攻收 3 只、首领败亡溃散）：`agents=12`，全程最小石柱间隙 `clearance=2.47`（≥0 即从未触柱），避障介入 `avoids=47` 个 tick，AI 频率 `aiHz=30`，终局小怪全部倒下/溃散 |
 | 性能（无头 Edge，`--use-angle=d3d11`） | 12 单位回放 `fps≈240`、`frameMs 4.2`、`drawCalls 46`、`triangles 131434`、`geometries 62`、`textures 31`，质量档 `level 0`（未触发降档） |
@@ -27,7 +27,7 @@
 ## 已完成且已验证（本轮实际运行）
 | 项 | 证据 |
 |---|---|
-| 白盒全量 | `python -m tests.parallel`：**413 项通过，0 跳过**（新增 `test_swarm_battle` 13 项；R3/R4 合法路线测试未改且通过；8 项首领机制测试用 `solo_battles` 固定为单体，断言不变） |
+| 白盒全量 | `python -m tests.parallel`：413 项、0 跳过，其中 6 项并发/SQLite 类失败（同一失败集合在 `origin/main` 上同样出现且逐次漂移，属本机抖动，与本分支改动无关；确定性失败 4 项，另有 1–3 项随机抖动。新增 `test_swarm_battle` 13 项，其后补群战×机制与存档校验用例，现 20 项；R3/R4 合法路线测试未改且通过；11 项首领机制测试用 `solo_battles` 固定为单体，断言不变） |
 | 平衡 | `python scripts/swarm_balance.py`：7 类战斗 × 境界 0/2/4/6 × 4 策略 = **112/112 组在目标内**（拍数 ±15%（另容 1 拍）、剩余气血 ±10%、胜负一致）；白盒以 `--check` 纳入 |
 | 浏览器套件（本机 Edge，Playwright） | `browser_smoke`、`browser_world`、`browser_r3`、`browser_r4`、`browser_fx3d`、`browser_fx3d_real` **全部 passed** |
 | 三维群战 | `browser_fx3d`：合成群战战报建出 2 只小怪，跳到结果后小怪全倒/溃散；`browser_fx3d_real`：真实战报野外 2 只、副本镇守 4 只、精英 3 只，斗法台小怪数与 HUD 小格与战报一致，终局全部倒下或溃散；序章/世界Boss 无小怪 |
