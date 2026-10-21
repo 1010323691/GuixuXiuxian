@@ -10,7 +10,7 @@
   // 舞台坐标（viewBox 1000×340）
   const POINT = { player: [200, 190], main: [120, 100], guard: [130, 262], enemy: [800, 180], npc: [300, 280] };
   const FX_TYPES = new Set(["damage", "shield", "shield_absorb", "poison", "heal", "control", "buff", "defend", "mana"]);
-  let fx3d = null, fx3dToken = 0, report = null, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [];
+  let fx3d = null, fx3dToken = 0, report = null, context = {}, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [];
 
   const reduced = () => !!globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -51,21 +51,27 @@
     document.addEventListener("visibilitychange", () => { if (document.hidden && playing) pause(); });
   }
 
-  // 三维特效层：按需加载，失败/无 WebGL 时保持 null，沿用 SVG 演出
+  // 三维斗法台：按需加载，失败/无 WebGL/上下文丢失时回到 SVG 演出（信息层不依赖三维）
+  const fx3dOn = () => !!fx3d && !fx3d.lost;
+  function markFx3d(on) {
+    const host = $("replay-stage"); if (!host) return;
+    if (on) host.dataset.fx3d = "on"; else delete host.dataset.fx3d;
+    $("battle-replay")?.classList.toggle("immersive", on);
+  }
   function startFx3d() {
     stopFx3d();
     if (reduced()) return;
     const token = ++fx3dToken;
     import("/fx3d.js").then((mod) => {
       if (token !== fx3dToken || !report || !$("battle-replay") || $("battle-replay").hidden) return;
-      fx3d = mod.create($("replay-stage"));
-      if (fx3d) { fx3d.setSpeed(speed); $("replay-stage").dataset.fx3d = "on"; }
+      fx3d = mod.create($("replay-stage"), { ...context, report, onLost: () => markFx3d(false), onRestore: () => { markFx3d(true); render(false); } });
+      if (fx3d) { fx3d.setSpeed(speed); markFx3d(true); render(false); }
     }).catch(() => { fx3d = null; });
   }
   function stopFx3d() {
     fx3dToken += 1;
     if (fx3d) { fx3d.dispose(); fx3d = null; }
-    const host = $("replay-stage"); if (host) delete host.dataset.fx3d;
+    markFx3d(false);
   }
 
   function stage() {
@@ -91,10 +97,44 @@
       node.append(label);
     }
     root.append(enemy, player, main, guard, npc, layer);
-    host.append(root);
+    const floaters = make("div", "replay-floaters"); floaters.id = "replay-floaters";
+    host.append(root, floaters);
   }
 
   function pointOf(id) { return POINT[id] || POINT.enemy; }
+
+  // 三维开启时飘字改由 DOM 层按三维投影定位；actor 为角色 id
+  function floatAt(actor, text, cls, big = false) {
+    if (!fx3dOn()) return float(pointOf(actor), text, cls);
+    const spot = fx3d.project(actor), layer = $("replay-floaters");
+    if (!spot || !layer) return;
+    const node = make("span", `floater3d ${cls}${big ? " big" : ""}`, text);
+    node.style.left = `${(spot.x * 100).toFixed(2)}%`; node.style.top = `${(spot.y * 100).toFixed(2)}%`;
+    node.style.setProperty("--drift", `${Math.round((Math.random() - .5) * 40)}px`);
+    node.style.animationDuration = `${Math.round(1100 / speed)}ms`;
+    layer.append(node);
+    node.addEventListener("animationend", () => node.remove());
+  }
+
+  function intensityOf(event) {
+    const max = event.target === "player" ? report.player.max_hp : report.enemy.max_hp;
+    return Math.abs(event.amount || 0) / Math.max(1, max) * 3;
+  }
+
+  // 三维：事件交给斗法台演出，飘字在命中时机出现
+  function show3d(event, frame) {
+    const k = intensityOf(event);
+    fx3d.play(event, { intensity: ["damage", "shield", "poison"].includes(event.type) ? k : .45, action: frame.action });
+    const later = (ms, run) => { const token = generation; effectTimers.push(setTimeout(() => { if (token === generation) run(); }, ms / speed)); };
+    const hitDelay = event.source === "main" ? 620 : event.source === "enemy" ? (/重击/.test(event.label) ? 760 : 560) : /强攻/.test(frame.action || "") ? 760 : 520;
+    if (event.type === "damage" && event.amount > 0) later(hitDelay, () => floatAt(event.target, `−${event.amount}`, event.target === "enemy" ? "hit" : "hurt", k >= .35));
+    else if (event.type === "shield") later(hitDelay + 80, () => floatAt("enemy", `破盾 ${event.amount}`, "guard"));
+    else if (event.type === "shield_absorb") later(120, () => floatAt("player", `拦截 ${event.amount}`, "guard"));
+    else if (event.type === "heal" && event.amount > 0) later(200, () => floatAt("player", `+${event.amount}`, "heal"));
+    else if (event.type === "poison") later(200, () => floatAt("player", `毒 −${event.amount}`, "hurt"));
+    else if (event.type === "mana") later(300, () => floatAt("player", `灵力 ${event.amount}`, "guard"));
+    else if (["buff", "control", "defend"].includes(event.type)) later(300, () => floatAt(event.type === "control" ? "enemy" : "player", event.label.replace(/，.*/, ""), "note"));
+  }
 
   function float(point, text, cls) {
     const layer = $("replay-fx"); if (!layer) return;
@@ -142,10 +182,20 @@
     for (const id of effectTimers) clearTimeout(id);
     effectTimers = [];
     const layer = $("replay-fx"); layer.replaceChildren();
-    fx3d?.clear();
     document.querySelectorAll("#replay-stage .source-active").forEach((n) => n.classList.remove("source-active"));
     const events = (frame.events || []).filter((e) => FX_TYPES.has(e.type));
     if (!events.length) return;
+    if (fx3dOn()) {
+      if (!animate) return;
+      // 斗法台节奏：本方先手 → 法宝/同行追击 → 敌方反击，彼此错开以便看清每一招
+      const token = generation; let delay = 0;
+      events.forEach((event) => {
+        const run = () => { if (token === generation && !document.hidden && fx3dOn()) show3d(event, frame); };
+        if (!delay) run(); else effectTimers.push(setTimeout(run, delay / speed));
+        delay += event.source === "main" ? 420 : event.type === "shield_absorb" ? 120 : 330;
+      });
+      return;
+    }
     if (!animate || reduced()) { show(events.find((e) => e.type === "shield_absorb") || events.find((e) => e.source === "main") || events[0], false); return; }
     const token = generation, gap = Math.min(260, 1000 / events.length) / speed;
     events.forEach((event, index) => { const run = () => { if (token === generation && !document.hidden) show(event, true); }; if (!index) run(); else effectTimers.push(setTimeout(run, index * gap)); });
@@ -194,6 +244,10 @@
       $("replay-result-text").textContent = `共 ${report.rounds} 拍，策略：${report.strategy_label}。战果与损耗已在本次提交时结算并保存；回放只是复盘，不会重复结算。`;
     }
     $("replay-play").textContent = playing ? "暂停播放" : last ? "重新播放" : "继续播放";
+    if (fx3dOn()) {
+      if (!animate) { fx3d.clear(); $("replay-floaters")?.replaceChildren(); }
+      fx3d.setFrame(frame, { last, outcome: report.outcome, animate });
+    }
     sceneEffects(frame, animate);
   }
 
@@ -203,15 +257,15 @@
     timer = setTimeout(() => {
       if (!playing || token !== generation) return;
       if (cursor < report.frames.length - 1) { cursor += 1; render(true); schedule(); } else pause();
-    }, 1300 / speed);
+    }, (fx3dOn() ? (cursor === 0 ? 2300 : 1750) : 1300) / speed);   // 三维入场镜头与连招需要更长一拍
   }
 
   function play() { if (cursor >= report.frames.length - 1) cursor = 0; playing = true; render(false); schedule(); }
   function pause() { playing = false; clearTimeout(timer); for (const id of effectTimers) clearTimeout(id); effectTimers = []; if (report) $("replay-play").textContent = cursor >= report.frames.length - 1 ? "重新播放" : "继续播放"; }
 
-  function open(data) {
+  function open(data, ctx = {}) {
     if (!data?.frames?.length) return;
-    build(); generation += 1; report = data; cursor = 0; speed = 1;
+    build(); generation += 1; report = data; context = ctx || {}; cursor = 0; speed = 1;
     $("replay-speed").textContent = "速度 1×";
     $("replay-title").textContent = `${data.enemy.name} · ${OUTCOME[data.outcome] || ""}`;
     $("replay-timeline").max = String(data.frames.length - 1);

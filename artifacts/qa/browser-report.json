@@ -1,9 +1,9 @@
 {
   "checks": [
-    "real-page exact 53-action no-upgrade completion",
-    "manual save/load confirmation cancel/focus and refresh restore",
+    "real-page no-upgrade completion with click-free auto-battle replay",
+    "automatic sync: refresh restores progress",
     "two real pages: stale request rejected without mutation",
-    "response lost after commit + independent tab write + reload + identical-ID retry preserves latest state and counts once",
+    "response lost after commit -> automatic same-ID replay counts once + independent tab write + reload keeps latest state",
     "confirmed new game clears slot; 320px layout and keyboard action"
   ],
   "console_errors": [
@@ -19,7 +19,7 @@
   "page_errors": [],
   "failed_requests": [
     {
-      "url": "http://127.0.0.1:42821/api/action",
+      "url": "http://127.0.0.1:51430/api/action",
       "failure": "net::ERR_FAILED",
       "injected": true
     }
@@ -27,7 +27,7 @@
   "http_errors": [
     {
       "status": 409,
-      "url": "http://127.0.0.1:42821/api/action",
+      "url": "http://127.0.0.1:51430/api/action",
       "injected": true
     }
   ],

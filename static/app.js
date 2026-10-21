@@ -485,10 +485,22 @@
     spirit: '<path class="ep-flame" d="M60 16 C72 36 90 44 90 74 C90 100 76 116 60 116 C44 116 30 100 30 74 C30 54 44 50 48 30 C54 42 58 40 60 16Z"/><circle class="ep-core" cx="60" cy="82" r="18"/><circle class="ep-eye" cx="53" cy="80" r="3"/><circle class="ep-eye" cx="67" cy="80" r="3"/>'
   };
 
-  function enemyPortrait(name) {
+  // 敌人外形与首领判定：立绘与三维斗法台共用
+  function enemyLook(name) {
     const text = String(name || "");
     const kind = /猿|猴|猩/.test(text) ? "ape" : /傀|石|岩|铁|甲/.test(text) ? "golem" : /影|魂|鬼|魅|灵体|怨/.test(text) ? "shade" : /狼|犬|虎|豹|熊|兽|彘|猪/.test(text) ? "beast" : /蛟|龙|蛇|蟒|虺/.test(text) ? "serpent" : /狐|妖|魅/.test(text) ? "fox" : /修|客|弟子|长老|魔|贼|匪|人|士|师|将|使|尊|王|主/.test(text) ? "human" : "spirit";
-    const boss = /王|尊|主|守|首领|精英|劫|归墟/.test(text);
+    return { kind, boss: /王|尊|主|守|首领|精英|劫|归墟/.test(text) };
+  }
+
+  // 战报回放的外观线索：只取展示用的境界、灵根、功法与敌人外形，不参与任何结算
+  function battleLook(data) {
+    const report = data.battle_report, world = report.enemy.kind === "prelude" ? null : data.state?.world;
+    const look = enemyLook(report.enemy.name);
+    return { tier: realmTier($("realm")?.textContent), root: world?.root?.id || null, skill: world?.skill || "origin", form: look.kind, boss: look.boss };
+  }
+
+  function enemyPortrait(name) {
+    const { kind, boss } = enemyLook(name);
     return `<svg class="portrait enemy-art" data-kind="${kind}" viewBox="0 0 120 140" focusable="false"><ellipse class="ep-ground" cx="60" cy="134" rx="44" ry="6"/>${boss ? '<circle class="ep-boss" cx="60" cy="70" r="56"/>' : ""}${enemyShapes[kind]}</svg>`;
   }
 
@@ -2304,7 +2316,7 @@
           setSync("synced");
           pending = null;
           if (persistPending(null)) notice(data.duplicate ? "该操作已处理，已同步最新进度。" : data.battle_report ? data.events.slice(0, 2).join(" · ") : data.events?.length ? data.events.join(" · ") : "进度已同步。", "success");
-          if (data.battle_report && !data.duplicate) globalThis.BattleReplay?.open(data.battle_report);
+          if (data.battle_report && !data.duplicate) globalThis.BattleReplay?.open(data.battle_report, battleLook(data));
           else if (!data.duplicate) celebrateWrite(writeSource);
           break;
         }
