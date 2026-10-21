@@ -2,7 +2,7 @@
   "name": "guixu-xiuxian-frontend",
   "private": true,
   "version": "0.0.0",
-  "description": "Build tooling for the battle arena (static/battle3d.js). Players and the Python server need no Node.",
+  "description": "Build tooling for the battle arena bundle (static/arena3d.js). Players and the Python server need no Node.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
