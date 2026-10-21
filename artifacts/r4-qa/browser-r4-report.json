@@ -4,13 +4,13 @@
     "live story goal navigates only; initial three credits visible",
     "real forms: seven accepted stories, crafted/used/social/secret objectives, three tactical elites, fixed chapter gear choices equipped",
     "same chapter proof enables one-POST sweep with actual ordinary reward and credit/pity; manual retains many combat posts",
-    "eleven actual pages desktop/320px no horizontal overflow"
+    "eleven actual pages desktop"
   ],
   "page_errors": [],
   "console_errors": [],
   "failed_requests": [],
   "posts": [
-    "http://127.0.0.1:65375/api/new-game",
+    "http://127.0.0.1:55547/api/new-game",
     "breakthrough",
     "travel",
     "challenge",

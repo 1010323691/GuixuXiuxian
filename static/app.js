@@ -241,7 +241,9 @@
     let mod = null, loading = null, failed = false;
     const load = () => loading || (loading = import("/fx3d.js").then((m) => { mod = m; return m; }).catch(() => { failed = true; return null; }));
     function mount(host, tier, page, estate) {
-      if (failed || reducedMotion() || !host) { mod?.unmountStage(); return; }
+      // 三维宗门主界面在场时，卷首氛围只在小窗显示卷目时挂载，小窗合上或切到卷宗/潜修即释放
+      const sectHidden = document.body.classList.contains("sect-mode") && (!document.body.classList.contains("sect-panel-open") || $("world-workbench").dataset.sectView !== "page");
+      if (failed || reducedMotion() || !host || sectHidden) { mod?.unmountStage(); return; }
       const spec = { host, tier, color: token(`--aura-${Math.max(0, Math.min(8, tier))}`), page, estate };
       if (!mod) { load().then((m) => { if (m && host.isConnected) m.mountStage(spec); }); return; }
       if (!mod.mountStage(spec)) failed = !document.body.classList.contains("stage3d-on");
@@ -728,7 +730,9 @@
 
   function placeAside() {
     const aside = document.querySelector(".world-aside");
-    const host = narrowLayout?.matches ? document.querySelector(".side-host") : $("world-content").parentElement;
+    // 三维宗门模式下卷宗另开小窗（sect_hub.js），不并入窄屏的“卷宗”页签
+    const narrow = narrowLayout?.matches && !document.body.classList.contains("sect-mode");
+    const host = narrow ? document.querySelector(".side-host") : $("world-content").parentElement;
     if (aside.parentElement !== host) host.append(aside);
     schedulePaginate(pagers.get("side"));
   }
@@ -756,7 +760,7 @@
       return tab;
     }));
     const stored = stageTabs.get(selectedWorldPage);
-    applyStageTab(tabs.some(([key]) => key === stored) && !(stored === "side" && !narrowLayout?.matches) ? stored : "actions");
+    applyStageTab(tabs.some(([key]) => key === stored) && !(stored === "side" && (!narrowLayout?.matches || document.body.classList.contains("sect-mode"))) ? stored : "actions");
   }
 
   function applyStageTab(key, focusNode) {
@@ -801,6 +805,30 @@
     if (pager) paginate(pager, node);
   }
   document.addEventListener("guixu:reveal", (event) => revealNode(event.target));
+  document.addEventListener("guixu:panel", (event) => {
+    if (!snapshot?.view.world?.active) return;
+    placeAside();
+    stage3d.mount(event.detail?.open ? document.querySelector(".world-page-heading") : null, realmTier($("realm").textContent), selectedWorldPage, snapshot.view.world.estate);
+  });
+  // 三维宗门的建筑与菜单入口：打开同一卷目，按事项或段落定位；submit 仅代为按下原事项卡的提交按钮（确认框与写入流程不变）
+  document.addEventListener("guixu:open", (event) => {
+    const { page, action, section, submit } = event.detail || {};
+    if (!snapshot?.view.world?.pages.some((entry) => entry.id === page)) return;
+    selectWorldPage(page);
+    let node = null;
+    if (action) {
+      const key = typeof action === "string" ? `${page}:${action}:` : worldActionKey(page, { id: action.id, params: action.params || {} });
+      node = [...document.querySelectorAll(".world-action")].find((entry) => typeof action === "string" ? entry.dataset.actionKey?.startsWith(key) : entry.dataset.actionKey === key) || null;
+    }
+    if (!node && section) node = [...document.querySelectorAll("[data-section-key]")].find((entry) => entry.dataset.sectionKey.includes(section)) || null;
+    if (!node) return;
+    revealNode(node);
+    node.classList.add("guided");
+    setTimeout(() => node.classList.remove("guided"), 2400);
+    const button = node.querySelector(".world-submit:not(:disabled)");
+    if (submit && button && !node.querySelector("select, input")) button.click();
+    else (button || node.querySelector("summary") || node.querySelector("h3"))?.focus({ preventScroll: true });
+  });
   document.addEventListener("scroll", (event) => {
     const target = event.target === document ? document.scrollingElement : event.target;
     if (!target || target.matches?.("input, textarea, select")) return;
@@ -1078,6 +1106,7 @@
     $("growth-sync-status").textContent = newRevisionObserved ? "其他页面已改变进度，请重新读取后办理事项。" : growthAnchor.clock_rewound || waiting > elapsed ? "系统时间早于结算水位；已结算修为保留，未结算预估按服务端时间校正，显示不继续外推。" : pending ? "操作结果待确认，暂保留最后校正值；使用原操作编号重试。" : elapsed > 35 ? "暂未取得最新校正，当前数字按上次速率估算；提交以服务端为准。" : "按服务端锚点平滑显示，每15秒只读校正；提交以服务端结算为准。";
     const resource = document.querySelector('.resource[data-id="world_xp"] .resource-value');
     if (resource?.firstChild?.nodeType === Node.TEXT_NODE) resource.firstChild.textContent = growthNumber(available);
+    document.dispatchEvent(new CustomEvent("guixu:growth", { detail: { available, target, perHour, text: growthNumber(available), progress: progress || null, held: !!(growthAnchor.clock_rewound || pending) } }));
   }
 
   function contextSection(title, intro, short) {
@@ -1793,6 +1822,8 @@
     anchorGrowth(view.growth);
     updateControls();
     syncHudHeight();
+    // 三维宗门主界面（sect_hub.js）只读这份快照，不发请求；先于舞台挂载派发，宗门模式下不再另占三维上下文
+    document.dispatchEvent(new CustomEvent("guixu:render", { detail: snapshot }));
     const auraHost = view.phase === "creation" ? $("creation") : worldActive ? document.querySelector(".world-page-heading") : document.querySelector(".journey > .scene");
     const auraTier = realmTier($("realm").textContent);
     aura.mount(auraHost, auraTier);

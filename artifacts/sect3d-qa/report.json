@@ -1,0 +1,1272 @@
+{
+ "checks": [
+  {
+   "name": "三维宗门已初始化",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "HUD 数值与 /api/state 一致",
+   "ok": true,
+   "detail": {
+    "hud": {
+     "sh-name": "持续修炼QA",
+     "sh-realm": "筑基初期",
+     "sh-stone": "60",
+     "sh-herb": "6",
+     "sh-attack": "攻击 40",
+     "sh-mp-text": "60/60",
+     "sh-hp-text": "200/200",
+     "sh-contrib": "0"
+    },
+    "expected": {
+     "sh-name": "持续修炼QA",
+     "sh-realm": "筑基初期",
+     "sh-stone": "60",
+     "sh-herb": "6",
+     "sh-attack": "攻击 40",
+     "sh-mp-text": "60/60",
+     "sh-hp-text": "200/200"
+    }
+   }
+  },
+  {
+   "name": "视角 south-default 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 421.74630700074744,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 south-default 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 12,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 east-side 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 322.878644094751,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 east-side 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 10,
+    "occluded": 2,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 west-side 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 322.878644094751,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 west-side 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 11,
+    "occluded": 1,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 back-north 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 394.65627183574213,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 back-north 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 8,
+    "occluded": 2,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 high-aerial 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 968.8351773705036,
+    "ground": -50.90336382838396,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 high-aerial 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 8,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 main-hall-close 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 289.1040413322679,
+    "ground": 108.9398726903828,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 main-hall-close 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 1,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 gate-close 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 131.58463348072365,
+    "ground": 74.89868757960548,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 gate-close 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 5,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 west-zone 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 251.24876900024913,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 west-zone 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 4,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 east-zone 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 251.24876900024913,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 east-zone 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 3,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "视角 grand-stairs 镜头不入云/山/建筑",
+   "ok": true,
+   "detail": {
+    "y": 129.60079923851836,
+    "ground": -70,
+    "inBox": false
+   }
+  },
+  {
+   "name": "视角 grand-stairs 标记不重叠、不压 HUD、不出屏",
+   "ok": true,
+   "detail": {
+    "visible": 6,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  {
+   "name": "镜头约束 极限近低",
+   "ok": true,
+   "detail": {
+    "y": 247.88023977155552,
+    "ground": 182,
+    "inBox": false
+   }
+  },
+  {
+   "name": "镜头约束 极限近低-台地",
+   "ok": true,
+   "detail": {
+    "y": 167.88023977155552,
+    "ground": 88.12997693823866,
+    "inBox": false
+   }
+  },
+  {
+   "name": "镜头约束 极限高",
+   "ok": true,
+   "detail": {
+    "y": 1060.0049269684746,
+    "ground": 56,
+    "inBox": false
+   }
+  },
+  {
+   "name": "HUD 图标 18–36px",
+   "ok": true,
+   "detail": [
+    18,
+    24,
+    30,
+    32
+   ]
+  },
+  {
+   "name": "HUD 文字 11–20px（正文 14–16）",
+   "ok": true,
+   "detail": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    18,
+    20
+   ]
+  },
+  {
+   "name": "HUD 面板均在 1920×1080 内",
+   "ok": true,
+   "detail": [
+    [
+     ".sh-player",
+     24,
+     18,
+     354,
+     157
+    ],
+    [
+     ".sh-top",
+     794,
+     14,
+     1126,
+     91
+    ],
+    [
+     ".sh-corner",
+     1620,
+     14,
+     1896,
+     80
+    ],
+    [
+     ".sh-tracker",
+     24,
+     150,
+     284,
+     328
+    ],
+    [
+     ".sh-plays",
+     1740,
+     376,
+     1896,
+     732
+    ],
+    [
+     ".sh-cultivate",
+     680,
+     906,
+     1240,
+     984
+    ],
+    [
+     ".sh-dock",
+     651,
+     994,
+     1269,
+     1064
+    ],
+    [
+     ".sh-view",
+     1716,
+     997,
+     1896,
+     1062
+    ]
+   ]
+  },
+  {
+   "name": "拖拽旋转场景且不打开面板",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "主殿可被画布拾取",
+   "ok": true,
+   "detail": [
+    960,
+    161.20071040779413
+   ]
+  },
+  {
+   "name": "点击主殿 → 聚焦并打开宗门卷",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "sects"
+   }
+  },
+  {
+   "name": "功能面板不超出 1080p 视口",
+   "ok": true,
+   "detail": [
+    844,
+    104,
+    1724,
+    894
+   ]
+  },
+  {
+   "name": "面板内拖拽不穿透到场景",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Esc 返回宗门",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "标记 试剑台 → arena",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "arena"
+   }
+  },
+  {
+   "name": "Dock 洞府 → estate",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "estate"
+   }
+  },
+  {
+   "name": "快捷键 L → craft",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "craft"
+   }
+  },
+  {
+   "name": "右侧 世界首领 → exploration",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "exploration"
+   }
+  },
+  {
+   "name": "右上 名录 → achievements",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "achievements"
+   }
+  },
+  {
+   "name": "任务 前往 → quests",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "quests"
+   }
+  },
+  {
+   "name": "小窗在 1080p 内且不压任何 HUD 面板",
+   "ok": true,
+   "detail": {
+    "win": [
+     844,
+     104,
+     1724,
+     894
+    ],
+    "overlaps": []
+   }
+  },
+  {
+   "name": "小窗内不再有原卷目导航与卷宗栏",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "page",
+    "win": [
+     844,
+     104,
+     1724,
+     894
+    ],
+    "title": "人物",
+    "nav": false,
+    "aside": false,
+    "growth": false,
+    "sources": false,
+    "legacy": false,
+    "side": "quests",
+    "hud": [
+     [
+      ".sh-player",
+      [
+       24,
+       18,
+       354,
+       157.359375
+      ]
+     ],
+     [
+      ".sh-top",
+      [
+       793.71875,
+       14,
+       1126.28125,
+       91
+      ]
+     ],
+     [
+      ".sh-corner",
+      [
+       1620,
+       14,
+       1896,
+       79.6875
+      ]
+     ],
+     [
+      ".sh-tracker",
+      [
+       24,
+       150,
+       284,
+       328.328125
+      ]
+     ],
+     [
+      ".sh-plays",
+      [
+       1740,
+       376.239990234375,
+       1896,
+       732.239990234375
+      ]
+     ],
+     [
+      ".sh-cultivate",
+      [
+       680,
+       905.96875,
+       1240,
+       984
+      ]
+     ],
+     [
+      ".sh-dock",
+      [
+       651,
+       994,
+       1269,
+       1064
+      ]
+     ],
+     [
+      ".sh-view",
+      [
+       1716.015625,
+       997.40625,
+       1896,
+       1062
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "name": "小窗打开时画面让开：聚焦的藏经阁在小窗左侧",
+   "ok": true,
+   "detail": {
+    "x": 572,
+    "win_left": 844
+   }
+  },
+  {
+   "name": "小窗打开时点场景标记直接切换卷目",
+   "ok": true,
+   "detail": {
+    "want": "exploration",
+    "got": {
+     "panel": true,
+     "page": "exploration"
+    }
+   }
+  },
+  {
+   "name": "小窗打开时 Dock 仍可切换卷目",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "character"
+   }
+  },
+  {
+   "name": "追踪 任务簿 → 小窗 dossier",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "dossier",
+    "title": "卷宗",
+    "aside": true,
+    "side": "quests",
+    "growth": false,
+    "sources": false,
+    "legacy": false,
+    "win": [
+     844,
+     104,
+     1724,
+     894
+    ]
+   }
+  },
+  {
+   "name": "追踪 任务簿 一次 Esc 合上",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "追踪 回执 → 小窗 dossier",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "dossier",
+    "title": "卷宗",
+    "aside": true,
+    "side": "recent",
+    "growth": false,
+    "sources": false,
+    "legacy": false,
+    "win": [
+     844,
+     104,
+     1724,
+     894
+    ]
+   }
+  },
+  {
+   "name": "追踪 回执 一次 Esc 合上",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "设置 本卷进度 → 小窗 dossier",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "dossier",
+    "title": "卷宗",
+    "aside": true,
+    "side": "progress",
+    "growth": false,
+    "sources": false,
+    "legacy": false,
+    "win": [
+     844,
+     104,
+     1724,
+     894
+    ]
+   }
+  },
+  {
+   "name": "设置 本卷进度 一次 Esc 合上",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "潜修 详情 → 小窗 growth",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "growth",
+    "title": "潜修",
+    "aside": false,
+    "side": "progress",
+    "growth": true,
+    "sources": true,
+    "legacy": false,
+    "win": [
+     844,
+     104,
+     1724,
+     482.78125
+    ]
+   }
+  },
+  {
+   "name": "潜修 详情 一次 Esc 合上",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "设置 序章旧事 → 小窗 legacy",
+   "ok": true,
+   "detail": {
+    "open": true,
+    "view": "legacy",
+    "title": "序章旧事",
+    "aside": false,
+    "side": "progress",
+    "growth": false,
+    "sources": false,
+    "legacy": true,
+    "win": [
+     844,
+     104,
+     1724,
+     351.46875
+    ]
+   }
+  },
+  {
+   "name": "设置 序章旧事 一次 Esc 合上",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "HUD 突破按钮与服务端 world_advance 一致",
+   "ok": true,
+   "detail": {
+    "hud": {
+     "disabled": true,
+     "title": "需先挑战并战胜本阶段劫影（秘境副本页）。",
+     "bar": "100"
+    },
+    "server": {
+     "enabled": false,
+     "reason": "需先挑战并战胜本阶段劫影（秘境副本页）。"
+    }
+   }
+  },
+  {
+   "name": "标记 山门 → world",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "world"
+   }
+  },
+  {
+   "name": "面板内原事项卡写入成功，HUD 药草与同步状态更新",
+   "ok": true,
+   "detail": {
+    "herb": [
+     6,
+     11,
+     "11"
+    ],
+    "sync": [
+     "synced",
+     "synced"
+    ]
+   }
+  },
+  {
+   "name": "写入后提示不压「返回宗门」与面板，按钮可点",
+   "ok": true,
+   "detail": {
+    "toasts": 3,
+    "onClose": 0,
+    "onPanel": 0,
+    "noticeOnClose": false,
+    "closeOnTop": true
+   }
+  },
+  {
+   "name": "dispose 后几何与贴图释放",
+   "ok": true,
+   "detail": {
+    "before": {
+     "geometries": 136,
+     "textures": 23
+    },
+    "after": {
+     "geometries": 0,
+     "textures": 0
+    }
+   }
+  },
+  {
+   "name": "降级图录可见",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "降级图录打开洞府卷",
+   "ok": true,
+   "detail": {
+    "panel": true,
+    "page": "estate"
+   }
+  },
+  {
+   "name": "页面无脚本错误",
+   "ok": true,
+   "detail": []
+  }
+ ],
+ "views": {
+  "south-default": {
+   "stats": {
+    "fps": 164.3,
+    "calls": 246,
+    "triangles": 483995,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 421.74630700074744,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     0,
+     422,
+     670
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 12,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "east-side": {
+   "stats": {
+    "fps": 163.4,
+    "calls": 240,
+    "triangles": 483983,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 322.878644094751,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     523,
+     323,
+     -60
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 10,
+    "occluded": 2,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "west-side": {
+   "stats": {
+    "fps": 142.4,
+    "calls": 239,
+    "triangles": 483981,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 322.878644094751,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     -523,
+     323,
+     -60
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 11,
+    "occluded": 1,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "back-north": {
+   "stats": {
+    "fps": 160.7,
+    "calls": 242,
+    "triangles": 483987,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 394.65627183574213,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     -0.0,
+     395,
+     -628
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 8,
+    "occluded": 2,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "high-aerial": {
+   "stats": {
+    "fps": 119.5,
+    "calls": 244,
+    "triangles": 483991,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 968.8351773705036,
+     "ground": -50.90336382838396,
+     "inBox": false
+    },
+    "cameraPosition": [
+     127,
+     969,
+     240
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 8,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "main-hall-close": {
+   "stats": {
+    "fps": 170.3,
+    "calls": 51,
+    "triangles": 392213,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 289.1040413322679,
+     "ground": 108.9398726903828,
+     "inBox": false
+    },
+    "cameraPosition": [
+     56,
+     289,
+     -107
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 1,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "gate-close": {
+   "stats": {
+    "fps": 162.4,
+    "calls": 162,
+    "triangles": 434587,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 131.58463348072365,
+     "ground": 74.89868757960548,
+     "inBox": false
+    },
+    "cameraPosition": [
+     74,
+     132,
+     276
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 5,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "west-zone": {
+   "stats": {
+    "fps": 228.1,
+    "calls": 156,
+    "triangles": 442743,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 251.24876900024913,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     -320,
+     251,
+     158
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 4,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "east-zone": {
+   "stats": {
+    "fps": 215.1,
+    "calls": 164,
+    "triangles": 449359,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 251.24876900024913,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     339,
+     251,
+     143
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 3,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  },
+  "grand-stairs": {
+   "stats": {
+    "fps": 202,
+    "calls": 201,
+    "triangles": 461129,
+    "geometries": 136,
+    "textures": 23,
+    "pines": 775,
+    "camera": {
+     "y": 129.60079923851836,
+     "ground": -70,
+     "inBox": false
+    },
+    "cameraPosition": [
+     166,
+     130,
+     523
+    ],
+    "quality": 2
+   },
+   "markers": {
+    "visible": 6,
+    "occluded": 0,
+    "overlaps": [],
+    "onHud": [],
+    "offscreen": []
+   }
+  }
+ },
+ "errors": [],
+ "hud_sizes": {
+  "icons": [
+   18,
+   18,
+   18,
+   18,
+   30,
+   30,
+   30,
+   24,
+   18,
+   18,
+   18,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   32,
+   30,
+   30,
+   30,
+   30,
+   30,
+   30,
+   24
+  ],
+  "text": [
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   16,
+   12,
+   14,
+   18,
+   13,
+   14,
+   14,
+   12,
+   12,
+   12,
+   12,
+   12,
+   12,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   20,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   18,
+   13,
+   15,
+   15,
+   13,
+   15,
+   15,
+   13,
+   13,
+   13,
+   13,
+   13,
+   13,
+   13,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   12,
+   14,
+   14,
+   14,
+   14,
+   12,
+   14,
+   14,
+   12,
+   14,
+   18,
+   14,
+   13,
+   14,
+   18,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   14,
+   12,
+   14,
+   14
+  ],
+  "panels": [
+   [
+    ".sh-player",
+    24,
+    18,
+    354,
+    157
+   ],
+   [
+    ".sh-top",
+    794,
+    14,
+    1126,
+    91
+   ],
+   [
+    ".sh-corner",
+    1620,
+    14,
+    1896,
+    80
+   ],
+   [
+    ".sh-tracker",
+    24,
+    150,
+    284,
+    328
+   ],
+   [
+    ".sh-plays",
+    1740,
+    376,
+    1896,
+    732
+   ],
+   [
+    ".sh-cultivate",
+    680,
+    906,
+    1240,
+    984
+   ],
+   [
+    ".sh-dock",
+    651,
+    994,
+    1269,
+    1064
+   ],
+   [
+    ".sh-view",
+    1716,
+    997,
+    1896,
+    1062
+   ]
+  ]
+ },
+ "dispose": {
+  "before": {
+   "geometries": 136,
+   "textures": 23
+  },
+  "after": {
+   "geometries": 0,
+   "textures": 0
+  }
+ },
+ "passed": true
+}
