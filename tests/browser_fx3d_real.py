@@ -1,4 +1,4 @@
-"""云海御空阶段二验收：用规则层真实生成的战报（序章/野外/秘境副本/支线精英/世界Boss）在三维斗法台回放并截图。
+"""云海御空阶段二/三验收：用规则层真实生成的战报（序章/野外/秘境副本/支线精英/世界Boss）在三维斗法台回放并截图。
 
 战报由真实 HTTP 服务按合法公开动作路线（R4Planner）打出，回放走游戏内 BattleReplay → fx3d → arena3d；
 断言每场都启用三维、终局状态与战报一致（胜局敌方消散、败局才倒下）、无页面异常。截图在 artifacts/fx3d-qa/real/（不入库）。
@@ -97,9 +97,15 @@ def main():
                 assert stats and stats['form'] == lk['form'], stats
                 assert stats['foeGone'] == (last['enemy']['hp'] <= 0), (kind, stats)
                 assert (stats['heroFall'] > 0) == (report['outcome'] == 'defeat' and last['player']['hp'] <= 0), (kind, stats)
+                # 群战：斗法台小怪数与战报一致；首领败亡后小怪全部倒下或溃散，HUD 小格与之对应
+                assert stats['units'] == len(report['enemy'].get('units', [])), (kind, stats)
+                if last['enemy']['hp'] <= 0:
+                    assert stats['unitsUp'] == 0, (kind, stats)
+                pips = page.evaluate("document.querySelectorAll('#replay-units .unit-pip').length")
+                assert pips == stats['units'], (kind, pips, stats)
                 result['fights'].append({'kind': kind, 'enemy': report['enemy']['name'], 'outcome': report['outcome'], 'rounds': report['rounds'],
                                          'events': sorted({e['type'] + ':' + e['source'] for f in report['frames'] for e in f['events']}),
-                                         'fps': stats['fps'], 'drawCalls': stats['drawCalls'], 'geometries': stats['geometries']})
+                                         'units': stats['units'], 'fps': stats['fps'], 'drawCalls': stats['drawCalls'], 'geometries': stats['geometries']})
                 page.locator('#replay-close').click()
                 page.wait_for_timeout(300)
                 assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0

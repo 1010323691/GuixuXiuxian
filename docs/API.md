@@ -21,7 +21,7 @@ UTF-8，同源；前端根据投影渲染，不自算玩法。所有 POST 须 `C
 | POST `/api/password` | 是 | `{"old_password","new_password"}` | 200 `{"ok":true}`；该账号的其他会话立即失效，当前会话保留 |
 | GET `/api/state` | 是 | 无 | 200 成功快照（见下） |
 | POST `/api/new-game` | 是 | 写信封 + `name`（凡界另可含 `mode`） | 新局完整快照 |
-| POST `/api/action` | 是 | 写信封 + `action`、`params` | 一次行动后的完整快照，自动斗法另带不入库的 `battle_report`；无参数时 params 为 {} |
+| POST `/api/action` | 是 | 写信封 + `action`、`params` | 一次行动后的完整快照，自动斗法另带不入库的 `battle_report`（群战时含 `enemy.units`、每帧 `units`、事件 `unit`/`aoe` 与 `fall`/`scatter`，见 `docs/iterations/FB3_SWARM.md`）；无参数时 params 为 {} |
 
 **已删除**：POST `/api/save`、`/api/load` 两个旧端点及其手动操作语义。这两个路径现返回 404 `NOT_FOUND`，响应不含 `save` 字段，`profile.load_policy` 亦已移除；`NO_SAVE`、`INCOMPATIBLE_SAVE` 错误码退役。进度由服务端在每次写操作成功提交后自动同步，没有“手动同步”操作。
 

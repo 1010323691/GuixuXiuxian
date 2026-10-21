@@ -26,6 +26,12 @@ COMBAT = {'power_mp': 24, 'defend_mp': 6, 'defend_multiplier': 0.5,
           'mob_hp_base': 110, 'mob_hp_stage': 60, 'mob_hit_base': 20, 'mob_hit_stage': 10,
           'mob_heavy_base': 35, 'mob_heavy_stage': 15,
           'intent_cycle': ['attack', 'charge', 'heavy'], 'defeat_hp': 1}
+# 群战小怪（长线进度）：按境界 lo + min(hi-lo, stage//2) 只。首领保留原气血；每只小怪另有原气血的 minion_hp_pct；
+# 每拍期望伤害中 minion_hit_pct 划给小怪（各自固定小击）——无视小怪时拍数与承伤同旧单体，见 docs/iterations/FB3_SWARM.md
+SWARMS = {'minion_hp_pct': 12, 'minion_hit_pct': 30,
+          'counts': {'wild': (2, 3), 'escort': (3, 4), 'secret': (2, 3), 'guard': (3, 5), 'dungeon': (2, 3), 'dungeon_boss': (4, 6), 'elite': (3, 4)},
+          'names': {'wild': '荒野小妖', 'escort': '劫道山匪', 'secret': '地宫傀卫', 'guard': '劫影分身', 'dungeon': '巢穴幼兽', 'dungeon_boss': '镇守亲卫', 'elite': '精英随从'},
+          'ordinals': '甲乙丙丁戊己'}
 PROGRESSION = {'cultivate_base': 12, 'cultivate_stage': 4, 'rest_hp': 80, 'rest_mp': 30,
                'gather': 3, 'condense': 1, 'art_xp': 5, 'art_thresholds': [0, 20, 50],
                'root_cost': {'herb': 6, 'crystal': 1}, 'body_cost': {'ore': 4, 'crystal': 1},

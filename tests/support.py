@@ -499,6 +499,19 @@ class Server:
 
 
 
+def solo_battles(case):
+    """Pin a test case to single-enemy world battles (no swarm minions) for its duration.
+
+    Mechanic tests (poison, drain, furnace shield, treasure cooldowns) assert exact single-enemy numbers;
+    the swarm split and its interaction with those mechanics are covered by tests/test_swarm_battle.py.
+    """
+    from unittest import mock
+    from game import world_config
+    patcher = mock.patch.dict(world_config.SWARMS['counts'], clear=True)
+    patcher.start()
+    case.addCleanup(patcher.stop)
+
+
 def battle_round(state, action, context=None):
     """White-box access to the internal single-round resolver (no public click action exists any more).
 

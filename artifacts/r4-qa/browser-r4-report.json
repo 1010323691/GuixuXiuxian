@@ -10,7 +10,7 @@
   "console_errors": [],
   "failed_requests": [],
   "posts": [
-    "http://127.0.0.1:59907/api/new-game",
+    "http://127.0.0.1:65375/api/new-game",
     "breakthrough",
     "travel",
     "challenge",
@@ -285,6 +285,7 @@
     "world_story_accept",
     "world_craft",
     "world_travel",
+    "world_rest",
     "world_rest",
     "world_rest",
     "world_dungeon_enter",

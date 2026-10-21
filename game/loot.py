@@ -650,6 +650,8 @@ def project(state,view,context=None):
             if battle['mechanic']=='venom':statuses.extend([{'label':'残留毒','value':'%d次，每次%d固定伤害'%(battle['poison_turns'],battle['poison_damage'])}])
             if battle['mechanic']=='furnace_shield':statuses.append({'label':'熔炉护盾','value':str(battle['barrier'])})
             if battle['mechanic']=='mana_seal':statuses.append({'label':'常击汲灵','value':'未防/未镇魂扣最多6MP；零MP仍可普攻'})
+        pack=[m for m in battle.get('minions',()) if m['hp']>0]
+        if pack:statuses.append({'label':'随行小怪','value':'%d只（每只气血%d、每拍扑击%d）；首领败亡即溃散，焚火符与本命法宝可群攻'%(len(pack),pack[0]['max_hp'],pack[0]['attack'])})
         if battle['kind']=='world_boss':statuses.append({'label':'个人评分','value':'%d伤害；%d / 12回合'%(battle['player_damage'],battle['commands'])});counterplay='只计玩家本场有效伤害，同行不计；提前退出或败退也按实际成绩比较best。'
         view['battle']['statuses']=statuses;view['battle']['counterplay']=counterplay
     for resource in view['resources']:

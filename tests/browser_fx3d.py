@@ -38,6 +38,10 @@ ARENA = {'outcome': 'victory', 'rounds': 5, 'strategy': 'balanced', 'strategy_la
                     _frame(3, 290, 250, 0, '镇魂符', [_ev('control', 'player', 'enemy', '镇魂符')]),
                     _frame(4, 290, 120, 0, '防御', [_ev('defend', 'player', 'player', '防御回灵', 6), _ev('damage', 'main', 'enemy', '本命法宝出击', 130)]),
                     _frame(5, 290, 0, 0, '焚火符', [_ev('damage', 'player', 'enemy', '焚火符', 120), _ev('victory', 'player', 'enemy', '战斗胜利')])]}
+# 群战战报（FB3）：首领 + 两只小怪，第二拍群攻扫倒一只
+SWARM = {**ARENA, 'enemy': {**ARENA['enemy'], 'units': [{'id': 'm1', 'name': '荒野小妖甲', 'max_hp': 40}, {'id': 'm2', 'name': '荒野小妖乙', 'max_hp': 40}]},
+         'frames': [{**f, 'units': [{'id': 'm1', 'hp': 40 if i < 4 else 0}, {'id': 'm2', 'hp': 40}]} for i, f in enumerate(ARENA['frames'])]}
+SWARM['frames'][4] = {**SWARM['frames'][4], 'events': SWARM['frames'][4]['events'] + [_ev('damage', 'main', 'enemy', '本命法宝出击', 40) | {'unit': 'm1', 'aoe': True}, _ev('fall', 'main', 'enemy', '荒野小妖甲伏诛') | {'unit': 'm1'}]}
 LOOKS = [{'tier': 7, 'root': 'fire', 'skill': 'flame', 'form': 'beast', 'boss': True},
          {'tier': 2, 'root': 'wood', 'skill': 'origin', 'form': 'serpent', 'boss': False},
          {'tier': 4, 'root': 'earth', 'skill': 'mountain', 'form': 'golem', 'boss': False},
@@ -144,6 +148,17 @@ def main():
                 expect(page.locator('#battle-replay')).to_be_hidden()
                 assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0
             report['checks'].append('3D arena: four enemy forms x four sky tiers play, skip/close work, canvas released; screenshots in artifacts/fx3d-qa')
+            page.evaluate("(r) => BattleReplay.open(r, {tier: 3, root: 'wood', skill: 'origin', form: 'beast', boss: false})", SWARM)
+            wait_fx3d(page)
+            battle = page.evaluate(STATS)['battle']
+            assert battle['units'] == 2 and battle['unitsUp'] == 2, battle
+            page.locator('#replay-skip').click()
+            page.wait_for_timeout(600)
+            battle = page.evaluate(STATS)['battle']
+            assert battle['unitsUp'] == 0 and battle['foeGone'], battle
+            page.screenshot(path=str(ARTIFACTS / 'arena-swarm-result.png'))
+            page.locator('#replay-close').click()
+            report['checks'].append('3D swarm: minion roster built from the report; skip lands with the pack fallen/scattered')
 
             # 窄屏：斗法台与 HUD 在 375x812 下可见且不出横向滚动
             page.set_viewport_size({'width': 375, 'height': 812})
@@ -182,6 +197,16 @@ def main():
             expect(page.locator('#replay-result')).to_be_visible()
             page.evaluate("() => BattleReplay.close()")
             report['checks'].append('without WebGL: no 3D canvas, replay and pages still work (SVG/Canvas2D fallback)')
+            page.evaluate("(r) => BattleReplay.open(r, {tier: 3, root: 'fire', skill: 'flame', form: 'beast', boss: false})", SWARM)
+            expect(page.locator('#battle-replay')).to_be_visible()
+            assert page.evaluate("document.querySelectorAll('#replay-stage .actor.unit').length") == 2
+            page.locator('#replay-timeline').evaluate("(n) => { n.value = '4'; n.dispatchEvent(new Event('input')); }")
+            assert page.evaluate("document.querySelectorAll('#replay-units .unit-pip.down').length") == 1
+            assert page.evaluate("document.querySelector('#replay-stage [data-actor=\"m1\"]').classList.contains('down')")
+            page.locator('#replay-skip').click()
+            assert page.evaluate("document.querySelectorAll('#replay-units .unit-pip.down').length") == 2, 'the pack scatters with the leader'
+            page.evaluate("() => BattleReplay.close()")
+            report['checks'].append('without WebGL: swarm report shows minions on the SVG stage and HUD pips; fallen and scattered minions dim')
             browser.close()
         assert not [e for e in report['errors'] if 'Failed to load resource' not in e], report['errors']
         report['passed'] = True

@@ -5,17 +5,19 @@
 import * as THREE from 'three';
 import { LION_COLOR, disposeTextures, loadArt, loadLionArt, makeArtCultivator, makeArtLion } from './art';
 import { CameraRig, type ShotName } from './camera';
+import type { Actor } from './actors';
 import { buildEnvironment } from './env';
 import { FxSystem } from './fx';
 import { buildPost } from './post';
 import { C, V, clamp, disposeOutlines, disposeShared, easeInOut, easeOut, lerp } from './util';
 
-export interface ReportEvent { type: string; source: string; target: string; label?: string; amount?: number }
-export interface ReportFrame { round: number; player: { hp: number; mp: number }; enemy: { hp: number; barrier?: number }; action?: string; events?: ReportEvent[] }
+/** unit: the minion hit (target enemy) or striking (source enemy); absent = the leader. aoe: part of a group attack. */
+export interface ReportEvent { type: string; source: string; target: string; label?: string; amount?: number; unit?: string; aoe?: boolean }
+export interface ReportFrame { round: number; player: { hp: number; mp: number }; enemy: { hp: number; barrier?: number }; units?: { id: string; hp: number }[]; action?: string; events?: ReportEvent[] }
 interface Treasure { name: string; quality: string }
 export interface BattleReport {
   outcome: string; rounds: number; frames: ReportFrame[];
-  enemy: { name: string; max_hp: number; kind: string }; player: { max_hp: number; max_mp: number };
+  enemy: { name: string; max_hp: number; kind: string; units?: { id: string; name: string; max_hp: number }[] }; player: { max_hp: number; max_mp: number };
   treasures?: { main?: Treasure | null; guard?: Treasure | null };
 }
 /** Presentation hints from the page (realm tier, spirit root, technique, enemy form); never used to settle anything. */
@@ -30,6 +32,8 @@ const P = { mist: 0x8a7ab8, ember: 0xd8b0ff, roar: 0xc890ff, claw: 0xb46cff, dea
 const GOLD = 0xffc860, HEAL = 0x7dffb0, POISON = 0x7adf4a, MANA = 0x7ab8ff, NPC = 0xbfe8ff;
 const HERO_HOME = V(0, 0, 6);
 const HERO_FROM = V(-16, 5, 20);
+/** Minion slots around the leader: [side, rank]; rank 0 flanks it, later ranks step toward the hero. */
+const SLOTS = [[-1, 0], [1, 0], [-1, 1], [1, 1], [-.45, 2], [.45, 2]];
 
 /** Seconds from play() until the blow lands; mirrors the floater delays in battle_replay.js show3d(). */
 export function hitDelay(event: ReportEvent, action = '') {
@@ -96,6 +100,19 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   fx.attachAura(foe.root, { color: LION_COLOR, rate: boss ? 30 : 18, radius: 3.4, rise: 4, size: [.15, .4], offset: V(0, 3.5, 0) });
   fx.attachAura(hero.root, { color, rate: 10 + tier * 2, radius: .5, rise: -.5, size: [.08, .2], offset: V(-.6, -1.5, 0) });
 
+  // 随行小怪: the report's minions, each a small painted lion in a fan before the leader (all forms share the lion art for now)
+  interface Minion { id: string; actor: Actor; home: THREE.Vector3; side: number; lunge: number; flee: number; gone: boolean; armed: boolean; pending: number }
+  const minions: Minion[] = (report.enemy.units || []).map((u, i) => {
+    const actor = makeArtLion(lionArt);
+    actor.root.scale.setScalar(.3);
+    const [side, rank] = SLOTS[i] ?? [0, 0];
+    const home = foeHome.clone().add(V(side * (5.5 + rank * 1.5) * foeScale, -1.4 + rank * .5, 3 + rank * 2.4));
+    actor.root.position.copy(home);
+    scene.add(actor.root);
+    return { id: u.id, actor, home, side, lunge: 0, flee: 0, gone: false, armed: false, pending: 0 };
+  });
+  const unitOf = (id?: string) => (id ? minions.find((m) => m.id === id) ?? null : null);
+
   // the foe's 护体 barrier: a crystal shell that cracks as the report's barrier drains
   const barrierMat = new THREE.ShaderMaterial({
     uniforms: { color: { value: C(LION_COLOR).multiplyScalar(1.5) }, alpha: { value: 0 }, crack: { value: 0 }, time: { value: 0 } },
@@ -121,7 +138,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   let wardUntil = -1, ward: ReturnType<FxSystem['baguaWard']> | null = null;
   let shotToken = 0;
   const lungeTo = () => V().lerpVectors(foeHome, HERO_HOME, .55).setY(foeHome.y - .5);
-  const foeChest = () => foe.anchor('chest');
+  const foeChest = () => foe.anchor('chest'), leaderChest = foeChest;
   const npcAt = () => hero.root.position.clone().add(V(-3.4, -.4, 2.6));
   const jitter = (p: THREE.Vector3, k: number) => p.add(V(Math.sin(k * 7.3), Math.cos(k * 3.1) * 1.2, Math.sin(k * 2.2) * .6).multiplyScalar(foeScale));
 
@@ -144,14 +161,32 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     foeHit(power, tint);
     if (foeDeathArmed && --pendingFoe <= 0) killFoe();
   }
+  function landOnUnit(m: Minion, power: number, tint: number) {
+    const p = m.actor.anchor('chest');
+    fx.sparks(p, tint, .5 + power * .5); fx.glowBurst(p, tint, 2.4, .35); fx.shockwave(p, tint, 1.6 + power, .4);
+    m.actor.flash(0xffffff, .9);
+    if (!m.gone) m.actor.moves.play('hit', .45);
+    if (m.armed && --m.pending <= 0) killUnit(m);
+  }
+  function killUnit(m: Minion) {
+    if (m.gone) return;
+    m.gone = true; m.armed = false;
+    m.actor.moves.play('die', 1.4, { hold: true });
+    fx.embers(m.actor.anchor('chest'), P.death, .9);
+  }
   function landOnHero() {
     if (heroFallArmed && --pendingHero <= 0) felled();
   }
 
-  function heroStrike(event: ReportEvent, k: number, action: string, after?: () => void) {
+  /** m: a single-target hit on that minion instead of the leader. */
+  function heroStrike(event: ReportEvent, k: number, action: string, after?: () => void, m?: Minion) {
     const T = hitDelay(event, action), strong = /强攻/.test(action), talisman = /符/.test(event.label || '');
-    const n = Math.round(clamp(2 + k * 4 + tier / 3 + (strong ? 2 : 0), 2, 9));
-    const land = (i: number) => { if (i) foeHit(.35 + k * .3, color, i); else { landOnFoe(.5 + k * .6, color); after?.(); } };
+    const n = Math.round(clamp(2 + k * 4 + tier / 3 + (strong ? 2 : 0), 2, m ? 4 : 9));
+    const foeChest = m ? () => m.actor.anchor('chest') : leaderChest;
+    const land = (i: number) => {
+      if (m) { if (!i) landOnUnit(m, .5 + k * .5, color); return; }
+      if (i) foeHit(.35 + k * .3, color, i); else { landOnFoe(.5 + k * .6, color); after?.(); }
+    };
     direct(strong ? 'heroClose' : talisman || style === 'flame' ? 'side' : 'shoulder', strong ? 0 : .3, T + .5);
     if (strong) { hero.moves.play('charge', T * .7); fx.gather(() => hero.anchor('hand'), color, T * .6, 3); sched.after(T * .45, () => rig.go('shoulder', .25)); }
     const hand = () => hero.anchor('hand');
@@ -196,6 +231,31 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     fx.swordSwarm(npcAt, () => npcAt().add(V(0, 1, 0)), foeChest, NPC, 2, (i) => { if (i) foeHit(.3, NPC, i); else { landOnFoe(.45, NPC); after?.(); } }, { form: .2, fly: T - .2, stagger: .06 });
   }
 
+  /** One sword (or talisman) of a group attack peeling off to a minion, landing with its floater. */
+  function sweep(event: ReportEvent, m: Minion, action: string) {
+    const T = hitDelay(event, action), aim = () => m.actor.anchor('chest');
+    const from = event.source === 'main' ? () => hero.anchor('back') : () => hero.anchor('hand');
+    const land = (i: number) => { if (!i) landOnUnit(m, .4, color); };
+    if (/符/.test(event.label || '')) fx.talismans(from, aim, 1, (i) => { land(i); fx.embers(aim(), 0xff7a2e, .4); }, { fly: T, stagger: 0 });
+    else fx.swordSwarm(from, () => hero.anchor('back'), aim, color, 1, land, { form: T * .3, fly: T * .7, stagger: 0 });
+  }
+
+  function minionStrike(event: ReportEvent, m: Minion) {
+    const T = hitDelay(event);
+    m.actor.moves.play('windup', T * .5, { attack: .5 });
+    sched.after(T * .4, () => m.actor.moves.play('strike', .6));
+    sched.tween(T * .35, T * .65, (u) => { m.lunge = Math.max(m.lunge, easeOut(u)); });
+    sched.after(T, () => {
+      const contact = hero.anchor('chest').addScaledVector(V().subVectors(m.actor.root.position, hero.root.position).normalize(), 1.4);
+      fx.clawSlash(contact, camera.position, P.claw, 1.3);
+      if (ward && sched.t < wardUntil) ward.strike(contact);
+      fx.sparks(contact, LION_COLOR, .6);
+      hero.flash(0xffc0c8, .15); hero.moves.play('hit', .4);
+      landOnHero();
+    });
+    sched.tween(T + .1, .6, (u) => { m.lunge = Math.min(m.lunge, 1 - easeInOut(u)); });
+  }
+
   function foeStrike(event: ReportEvent, k: number) {
     const heavy = /重击/.test(event.label || ''), T = hitDelay(event);
     direct(heavy ? 'demonClose' : 'side', heavy ? 0 : .25, T + .5);
@@ -208,7 +268,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
       const contact = hero.anchor('chest').addScaledVector(V().subVectors(foe.root.position, hero.root.position).normalize(), 2.2);
       fx.clawSlash(contact, camera.position, P.claw, heavy ? 3.6 : 2.6);
       if (ward && sched.t < wardUntil) { ward.strike(contact); fx.impact(contact, GOLD, .5 + k * .4); }
-      else { fx.impact(contact, P.claw, .4 + k * .5); hero.flash(0xff6080, .8); }
+      else { fx.impact(contact, P.claw, .4 + k * .5); hero.flash(0xff9aa8, .45); }
       fx.sparks(contact, LION_COLOR, 1 + k);
       hero.moves.play(heavy ? 'recoil' : 'hit', .7);
       landOnHero();
@@ -238,7 +298,9 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     switch (event.type) {
       case 'damage': case 'shield': {
         const after = event.type === 'shield' ? () => sched.after(.08, breakBarrier) : undefined;
-        if (event.source === 'enemy') foeStrike(event, k);
+        const m = unitOf(event.unit);
+        if (event.source === 'enemy') { if (m) minionStrike(event, m); else if (!event.unit) foeStrike(event, k); }
+        else if (event.unit) { if (m && event.aoe) sweep(event, m, action); else if (m) heroStrike(event, k, action, undefined, m); }
         else if (event.source === 'main') treasureStrike(k, after);
         else if (event.source === 'npc') companionStrike(after);
         else heroStrike(event, k, action, after);
@@ -301,6 +363,12 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     rig.go('impact', .3);
     for (const k of [0, 1, 2]) sched.after(.5 + k * .4, () => { const q = foeChest().add(V(0, k - 1, 0)); fx.embers(q, P.death, 1.4); fx.smoke(q, P.deathSmoke, 1); });
     sched.after(1.5, () => { rig.go('heroClose', 1.6); hero.moves.play('rise', 2.4); });
+    // the leader is down: whatever is left of the pack scatters into the clouds
+    for (const m of minions) if (!m.gone) {
+      m.armed = false;
+      sched.tween(.3 + Math.abs(m.side) * .2, 1.6, (u) => { m.flee = u * u; });
+      sched.after(2, () => { m.gone = true; m.actor.root.visible = false; });
+    }
   }
   function felled() {
     if (heroFall) return;
@@ -323,6 +391,11 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
       lunge = 0; foeFrozen = 0; hitstop = 0; ward = null; wardUntil = -1;
       foeDeathArmed = heroFallArmed = false;
       foeGone = foeDown; foe.root.visible = !foeDown;
+      for (const m of minions) {
+        const hp = frame.units?.find((u) => u.id === m.id)?.hp ?? 1;
+        m.actor.reset(); m.lunge = 0; m.flee = 0; m.armed = false;
+        m.gone = hp <= 0 || foeDown; m.actor.root.visible = !m.gone;
+      }
       heroFall = heroDown ? 1 : 0; post.desaturate(heroFall * .7);
       barrierTarget = bar > 0 ? 1 : 0; barrierMat.uniforms.alpha.value = barrierTarget * .6;
       foe.root.position.copy(foeHome);
@@ -336,8 +409,15 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     else sched.after(1.6, () => { barrierTarget = 0; });
     if (foeDown && !foeGone && !foeDeathArmed) {
       foeDeathArmed = true;
-      pendingFoe = events.filter((e) => e.target === 'enemy' && (e.type === 'damage' || e.type === 'shield') && e.source !== 'enemy').length;
+      pendingFoe = events.filter((e) => e.target === 'enemy' && !e.unit && (e.type === 'damage' || e.type === 'shield') && e.source !== 'enemy').length;
       sched.after(2.6, () => { if (foeDeathArmed) killFoe(); });
+    }
+    for (const m of minions) {
+      const hp = frame.units?.find((u) => u.id === m.id)?.hp ?? 1;
+      if (hp > 0 || m.gone || m.armed) continue;
+      m.armed = true;
+      m.pending = events.filter((e) => e.unit === m.id && e.type === 'damage' && e.target === 'enemy').length;
+      sched.after(2.6, () => { if (m.armed) killUnit(m); });
     }
     if (heroDown && !heroFall && !heroFallArmed) {
       heroFallArmed = true;
@@ -364,7 +444,9 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
 
   /** Where the DOM floaters go: 0..1 viewport fractions, top-left origin. */
   function project(id: string) {
-    const p = id === 'enemy' ? foe.anchor('head').add(V(0, .8 * foeScale, 0))
+    const m = unitOf(id);
+    const p = m ? m.actor.anchor('head').add(V(0, .3, 0))
+      : id === 'enemy' ? foe.anchor('head').add(V(0, .8 * foeScale, 0))
       : id === 'npc' ? npcAt().add(V(0, 1, 0))
       : id === 'main' ? hero.anchor('back')
       : hero.anchor('head').add(V(0, .5, 0));
@@ -413,6 +495,12 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     wind.subVectors(hero.root.position, foe.root.position).setY(0).normalize().multiplyScalar(5).add(V(0, .6, 0));
     hero.update({ camera, wind, time: simTime, dt: actorDt });
     foe.update({ camera, wind, time: simTime, dt: foeFrozen > 0 ? actorDt * .12 : actorDt });
+    for (const m of minions) {
+      if (!m.actor.root.visible) continue;
+      m.actor.root.position.lerpVectors(m.home, hero.root.position, m.lunge * .55).add(V(m.side * m.flee * 14, m.flee * 9, -m.flee * 10));
+      m.actor.face(hero.root.position, .1);
+      m.actor.update({ camera, wind, time: simTime + m.side, dt: foeFrozen > 0 ? actorDt * .12 : actorDt });
+    }
     const bTarget = foeGone ? 0 : barrierTarget * .6, ba = barrierMat.uniforms.alpha;
     ba.value += (bTarget - ba.value) * Math.min(1, dt * 6);
     barrier.visible = ba.value > .01;
@@ -454,6 +542,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
       fps: avg ? Math.round(1000 / avg) : 0, frameMs: Math.round(avg * 10) / 10, quality, ratio, size: [width, height],
       form, boss, style, tier, drawCalls: counters.calls, triangles: counters.triangles,
       geometries: info.memory.geometries, textures: info.memory.textures, effects: fx.count, shot: rig.shot, foeGone, heroFall,
+      units: minions.length, unitsUp: minions.filter((m) => !m.gone).length,
     };
   }
 

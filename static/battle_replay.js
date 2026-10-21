@@ -8,8 +8,9 @@
   const OUTCOME = { victory: "胜势已定", defeat: "此战暂退", window: "十二拍 · 试锋已毕", stalemate: "交锋至限，自行撤离", retreat: "撤离战斗" };
   // 舞台坐标（viewBox 1000×340）
   const POINT = { player: [200, 190], main: [120, 100], guard: [130, 262], enemy: [800, 180], npc: [300, 280] };
+  const UNIT_OFFSET = [[-96, 92], [96, 96], [-150, 28], [150, 32], [-60, 142], [60, 146]];   // 随行小怪围在首领身侧（m1…m6）
   const FX_TYPES = new Set(["damage", "shield", "shield_absorb", "poison", "heal", "control", "buff", "defend", "mana"]);
-  let fx3d = null, fx3dToken = 0, report = null, context = {}, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [];
+  let fx3d = null, fx3dToken = 0, report = null, context = {}, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [], beatTail = 0;
 
   const reduced = () => !!globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -25,7 +26,7 @@
         <div class="replay-meters">
           <div class="replay-meter"><span id="replay-player-hp-text">气血</span><div class="meter hp" role="meter" id="replay-player-hp" aria-label="本方气血"><span></span></div></div>
           <div class="replay-meter"><span id="replay-player-mp-text">灵力</span><div class="meter mp" role="meter" id="replay-player-mp" aria-label="本方灵力"><span></span></div></div>
-          <div class="replay-meter"><span id="replay-enemy-hp-text">敌方气血</span><div class="meter enemy-meter" role="meter" id="replay-enemy-hp" aria-label="敌方气血"><span></span></div></div>
+          <div class="replay-meter"><span id="replay-enemy-hp-text">敌方气血</span><div class="meter enemy-meter" role="meter" id="replay-enemy-hp" aria-label="敌方气血"><span></span></div><div class="replay-units" id="replay-units" hidden></div></div>
         </div>
         <div class="replay-controls">
           <button type="button" class="small-button" id="replay-play">暂停播放</button>
@@ -92,12 +93,25 @@
       const label = svg("text", { y: id === "enemy" ? 76 : id === "player" ? 58 : 30, "text-anchor": "middle", class: "caption", "data-for": id });
       node.append(label);
     }
-    root.append(enemy, player, main, guard, npc, layer);
+    const units = (report?.enemy?.units || []).map((u, i) => {
+      const [dx, dy] = UNIT_OFFSET[i] || [0, 0];
+      const g = svg("g", { "data-actor": u.id, class: "actor unit", transform: `translate(${POINT.enemy[0] + dx} ${POINT.enemy[1] + dy})` });
+      g.append(svg("path", { d: "M0 -18 L15 0 L0 18 L-15 0z", class: "body" }));
+      return g;
+    });
+    root.append(...units, enemy, player, main, guard, npc, layer);
     const floaters = make("div", "replay-floaters"); floaters.id = "replay-floaters";
     host.append(root, floaters);
   }
 
-  function pointOf(id) { return POINT[id] || POINT.enemy; }
+  function pointOf(id) {
+    const index = (report?.enemy?.units || []).findIndex((u) => u.id === id);
+    if (index >= 0) { const [dx, dy] = UNIT_OFFSET[index] || [0, 0]; return [POINT.enemy[0] + dx, POINT.enemy[1] + dy]; }
+    return POINT[id] || POINT.enemy;
+  }
+  // 小怪事件：被打的小怪在 target=enemy 时由 unit 指出；小怪出手时 unit 是出手者
+  const hitOn = (event) => (event.target === "enemy" && event.unit ? event.unit : event.target);
+  const fromOf = (event) => (event.source === "enemy" && event.unit ? event.unit : event.source);
 
   // 三维开启时飘字改由 DOM 层按三维投影定位；actor 为角色 id
   function floatAt(actor, text, cls, big = false) {
@@ -113,7 +127,8 @@
   }
 
   function intensityOf(event) {
-    const max = event.target === "player" ? report.player.max_hp : report.enemy.max_hp;
+    const unit = event.target === "enemy" && event.unit ? (report.enemy.units || []).find((u) => u.id === event.unit) : null;
+    const max = event.target === "player" ? report.player.max_hp : unit ? unit.max_hp : report.enemy.max_hp;
     return Math.abs(event.amount || 0) / Math.max(1, max) * 3;
   }
 
@@ -123,7 +138,7 @@
     fx3d.play(event, { intensity: ["damage", "shield", "poison"].includes(event.type) ? k : .45, action: frame.action });
     const later = (ms, run) => { const token = generation; effectTimers.push(setTimeout(() => { if (token === generation) run(); }, ms / speed)); };
     const hitDelay = event.source === "main" ? 620 : event.source === "enemy" ? (/重击/.test(event.label) ? 760 : 560) : /强攻/.test(frame.action || "") ? 760 : 520;
-    if (event.type === "damage" && event.amount > 0) later(hitDelay, () => floatAt(event.target, `−${event.amount}`, event.target === "enemy" ? "hit" : "hurt", k >= .35));
+    if (event.type === "damage" && event.amount > 0) later(hitDelay, () => floatAt(hitOn(event), `−${event.amount}`, event.target === "enemy" ? "hit" : "hurt", k >= .35 && !event.unit));
     else if (event.type === "shield") later(hitDelay + 80, () => floatAt("enemy", `破盾 ${event.amount}`, "guard"));
     else if (event.type === "shield_absorb") later(120, () => floatAt("player", `拦截 ${event.amount}`, "guard"));
     else if (event.type === "heal" && event.amount > 0) later(200, () => floatAt("player", `+${event.amount}`, "heal"));
@@ -141,9 +156,9 @@
   }
 
   function show(event, animate) {
-    const from = pointOf(event.source), to = pointOf(event.target);
+    const from = pointOf(fromOf(event)), to = pointOf(hitOn(event));
     const layer = $("replay-fx");
-    const actorNode = document.querySelector(`#replay-stage [data-actor="${event.source}"]`);
+    const actorNode = document.querySelector(`#replay-stage [data-actor="${fromOf(event)}"]`);
     document.querySelectorAll("#replay-stage .source-active").forEach((n) => n.classList.remove("source-active"));
     actorNode?.classList.add("source-active");
     if (event.type === "damage" || event.type === "shield") {
@@ -176,7 +191,7 @@
 
   function sceneEffects(frame, animate) {
     for (const id of effectTimers) clearTimeout(id);
-    effectTimers = [];
+    effectTimers = []; beatTail = 0;
     const layer = $("replay-fx"); layer.replaceChildren();
     document.querySelectorAll("#replay-stage .source-active").forEach((n) => n.classList.remove("source-active"));
     const events = (frame.events || []).filter((e) => FX_TYPES.has(e.type));
@@ -184,12 +199,15 @@
     if (fx3dOn()) {
       if (!animate) return;
       // 斗法台节奏：本方先手 → 法宝/同行追击 → 敌方反击，彼此错开以便看清每一招
+      // 群攻扫过小怪、小怪合击时只错开一点点，整拍不被拉得过长
       const token = generation; let delay = 0;
-      events.forEach((event) => {
+      events.forEach((event, i) => {
         const run = () => { if (token === generation && !document.hidden && fx3dOn()) show3d(event, frame); };
         if (!delay) run(); else effectTimers.push(setTimeout(run, delay / speed));
-        delay += event.source === "main" ? 420 : event.type === "shield_absorb" ? 120 : 330;
+        const next = events[i + 1];
+        delay += next?.aoe && next?.unit ? 90 : next?.unit && next?.source === "enemy" && event.unit ? 140 : event.source === "main" ? 420 : event.type === "shield_absorb" ? 120 : 330;
       });
+      beatTail = delay;
       return;
     }
     if (!animate || reduced()) { show(events.find((e) => e.type === "shield_absorb") || events.find((e) => e.source === "main") || events[0], false); return; }
@@ -202,6 +220,25 @@
     const node = $(id); node.firstElementChild.style.width = pct + "%";
     node.setAttribute("aria-valuemin", "0"); node.setAttribute("aria-valuemax", String(safe)); node.setAttribute("aria-valuenow", String(Math.max(0, Number(value || 0))));
     $(id + "-text").textContent = `${text} ${Math.max(0, value)} / ${max}`;
+  }
+
+  // 随行小怪：敌方气血条下一排小格（剩余气血比例），SVG 舞台上倒下的小怪变淡；首领败亡后全体溃散
+  function units(frame) {
+    const roster = report.enemy.units || [], box = $("replay-units");
+    box.hidden = !roster.length;
+    if (!roster.length) { box.replaceChildren(); return; }
+    const scattered = frame.enemy.hp <= 0;
+    const pips = roster.map((u) => {
+      const hp = scattered ? 0 : (frame.units || []).find((x) => x.id === u.id)?.hp ?? u.max_hp;
+      const pip = make("span", `unit-pip${hp <= 0 ? " down" : ""}`);
+      pip.style.setProperty("--hp", String(Math.max(0, hp) / Math.max(1, u.max_hp)));
+      pip.title = `${u.name} ${Math.max(0, hp)} / ${u.max_hp}`;
+      document.querySelector(`#replay-stage [data-actor="${u.id}"]`)?.classList.toggle("down", hp <= 0);
+      return pip;
+    });
+    box.replaceChildren(...pips);
+    const alive = pips.filter((pip) => !pip.classList.contains("down")).length;
+    box.setAttribute("aria-label", `随行小怪 ${alive} / ${roster.length} 存活`);
   }
 
   function render(animate = true) {
@@ -221,6 +258,7 @@
     meter("replay-player-hp", frame.player.hp, report.player.max_hp, "本方气血");
     meter("replay-player-mp", frame.player.mp, report.player.max_mp, "本方灵力");
     meter("replay-enemy-hp", frame.enemy.hp, report.enemy.max_hp, "敌方气血");
+    units(frame);
     $("replay-round").textContent = `第 ${frame.round} / ${report.rounds} 拍`;
     $("replay-timeline").value = String(cursor);
     const last = cursor === report.frames.length - 1;
@@ -243,7 +281,7 @@
     timer = setTimeout(() => {
       if (!playing || token !== generation) return;
       if (cursor < report.frames.length - 1) { cursor += 1; render(true); schedule(); } else pause();
-    }, (fx3dOn() ? (cursor === 0 ? 2300 : 1750) : 1300) / speed);   // 三维入场镜头与连招需要更长一拍
+    }, (fx3dOn() ? (cursor === 0 ? 2300 : Math.max(1750, beatTail + 1100)) : 1300) / speed);   // 三维入场镜头与连招需要更长一拍；群战招式多时按本拍错峰总长顺延
   }
 
   function play() { if (cursor >= report.frames.length - 1) cursor = 0; playing = true; render(false); schedule(); }

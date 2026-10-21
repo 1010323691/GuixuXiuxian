@@ -1260,6 +1260,12 @@ dialog h2 { font-family: var(--font-display); font-weight: 400; font-size: var(-
 .replay-svg .actor.enemy .barrier { fill: none; stroke: var(--gold-500); stroke-width: 4; stroke-dasharray: 8 6; }
 .replay-svg .actor.npc .body { fill: var(--jade-50); stroke: var(--jade-300); }
 .replay-svg .actor.down .body { opacity: .3; }
+.replay-svg .actor.unit .body { fill: var(--enemy-shade); stroke: var(--enemy-robe); stroke-width: 2; opacity: .85; }
+.replay-svg .actor.unit.down .body { opacity: .2; }
+.replay-units { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.replay-meter:last-child .replay-units { justify-content: flex-end; }
+.unit-pip { width: 18px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--cin-500) calc(var(--hp, 1) * 100%), rgba(128, 128, 128, .25) 0); box-shadow: 0 0 0 1px rgba(255, 255, 255, .25); }
+.unit-pip.down { opacity: .35; }
 .replay-svg .caption { font: 14px var(--font-sans); fill: var(--dai-900); }
 .replay-svg .source-active .body { filter: drop-shadow(0 0 6px var(--gold-500)); }
 .replay-svg .actor.main, .replay-svg .actor.guard { animation: replay-bob 3.2s ease-in-out infinite; }
