@@ -53,7 +53,7 @@ class R4Planner(R3Planner):
         assert id in self.world()['r3']['journey']['elite_wins']
 
     def first_week(self,clock):
-        start=clock();checkpoints=[]
+        start=clock();milestones=[]
         self.accept('first_forge');self.prepare();self.dungeon(difficulty=1)
         self.claim('first_forge')
         self.accept('allied_roads');self.perform('world_sect_join',sect='sword')
@@ -69,7 +69,7 @@ class R4Planner(R3Planner):
         self.craft('fire_talisman');self.craft('guard_talisman')
         self.perform('world_array_toggle',array='spirit');self.perform('world_array_toggle',array='spirit')
         self.claim('arts_in_concert')
-        checkpoints.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':4})
+        milestones.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':4})
         self.advance(clock,48*3600,start)
         self.accept('venom_medicine');self.travel('xuanchao');self.rest()
         self.perform('world_elite_enter',elite='venom_keeper')
@@ -78,16 +78,16 @@ class R4Planner(R3Planner):
         self.claim('venom_medicine','armor')
         self.accept('dangerous_proof');self.craft('pendant');self.dungeon(difficulty=2)
         self.claim('dangerous_proof')
-        checkpoints.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':6})
+        milestones.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':6})
         self.advance(clock,120*3600,start)
         self.accept('astral_bridge');self.elite('astral_warden','xuanchao')
         self.rest();self.perform('world_boss_enter');self.perform('world_auto_battle',strategy='frugal')
         self.claim('astral_bridge','pendant')
-        checkpoints.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':7})
+        milestones.append({'hours':(clock()-start)/3600,'stage':self.world()['stage'],'claimed':7})
         assert len(self.world()['r3']['journey']['elite_wins'])==3
-        return checkpoints
+        return milestones
 
-    def finish_month(self,clock,checkpoint=None):
+    def finish_month(self,clock,restart=None):
         while self.world()['sect_earned'].get('sword',0)<40:
             self.cost({'herb':3});self.perform('world_sect_daily',item='herb')
         while self.world()['relations'].get('healer',0)<30:
@@ -102,11 +102,10 @@ class R4Planner(R3Planner):
             self.perform('world_quest_accept',quest=quest);self.perform('world_quest_claim',quest=quest)
         for s in range(self.world()['stage'],7):
             self.stage_gate();self.wait_for(clock,COSTS[s])
-            if checkpoint:checkpoint('save')
             before=self.world()['xp'];self.perform('world_advance')
             assert self.world()['xp']==before-COSTS[s]
-            if checkpoint:
-                after=self.world();checkpoint('load');assert self.world()==after,'checkpoint refunded breakthrough cost'
+            if restart:
+                after=self.world();restart();assert self.world()==after,'restart refunded breakthrough cost'
         self.stage_gate();self.wait_for(clock,COSTS[7])
         for secret,region in [('mist','qinglan'),('desert','chisha'),('tide','xuanchao')]:
             if secret not in self.world()['secret_wins']:self.secret(secret,region)

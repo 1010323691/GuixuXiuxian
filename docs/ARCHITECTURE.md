@@ -1,4 +1,4 @@
-> 序章历史文档：本文件保留原v0.1.0范围与证据；完整凡界的当前契约和验收见 `docs/iterations/`，不能用本文件代替W1结论。
+> 序章历史文档：本文件保留原v0.1.0范围与证据；完整凡界的当前契约和验收见 `docs/iterations/`，不能用本文件代替W1结论。多用户在线化之后的存储与并发架构见文末“多用户在线化增量”一节及 `docs/iterations/MU_DESIGN.md`，正文中关于单文件单角色、手动 slot 与“不支持公网多用户部署”的描述属升级前行为。
 
 # 首版架构实施契约
 
@@ -33,3 +33,23 @@ rules 返回新状态和本次事件，不读磁盘/真实时间。投影函数�
 
 ## 必须验证
 纯规则完整通关及防卡死、确定性战斗/奖励一次性；SQLite事务失败回滚、重启续玩、损坏拒绝覆盖；同ID重试/异载荷冲突、并发revision冲突、载入后旧页冲突、重复新局不丢进度；真实浏览器主流程、中文窄屏、键盘与错误恢复。尚无实现或测试通过声明。
+
+---
+
+# 多用户在线化增量（现行）
+
+权威设计：`docs/iterations/MU_DESIGN.md`（v2，方案B）；序列图与类图 `MU_sequence.mermaid`、`MU_class.mermaid`；接口 `docs/API.md`。以下概括现行架构，实现完成度与测试结果以 QA 记录为准。
+
+**单库布局**：所有账号共用一个 `data/game.db`（运行期含 `game.db-wal`、`-shm`），表：`meta`、`accounts`、`sessions`、`login_attempts`、`current(user_id 主键)`、`requests(主键 (user_id, request_id))`、待认领区 `legacy_progress`/`legacy_requests`。库布局版本用 `PRAGMA user_version`（首版1），进度 JSON 版本仍为 `config.SCHEMA_VERSION=2`，二者独立。启动检查 `integrity_check`、`journal_mode=wal`（网络盘不支持，拒绝启动）、`foreign_keys=ON`；旧格式库、未知版本或损坏文件拒绝启动并保留原件。
+
+**数据访问层**：`game/storage.py` 的 `Database`（连接、布局、备份）、`ProgressRepo`（进度表 SQL 的唯一所在，每条带 `user_id` 谓词，并有运行时断言、AST 静态扫描与全量 SQL 采集三重兜底）、`Store(db, user_id, clock)`（面向业务的用户作用域门面，方法签名里没有 user_id，业务代码无法传错用户）。身份只来自会话 Cookie → `Principal.account_id` → `App.store_for()`，请求中的任何用户参数一律拒绝。
+
+**写事务协议**：事务外读状态与账本并完成规则/成长/冷却计算（`now` 取在读取之后）；事务内 `BEGIN IMMEDIATE` 只做三步——复核请求账本、`UPDATE current … WHERE user_id=? AND revision=?` 乐观比较并交换、`INSERT INTO requests`——然后 COMMIT，`synchronous=FULL`。COMMIT 成功后才返回成功；失败回滚并返回 503，同 `request_id` 重试幂等。同账号并发不同请求由版本比较裁决，后到者 409 `STALE_STATE`，不丢更新、不自动重放；正确性来自 SQLite 的 CAS 与复合主键，不依赖进程内锁，多进程共享同一数据目录同样成立。`database is locked` 在 5 秒忙等耗尽后至多重试 2 次，仍失败则 503。
+
+**认证**：`game/auth.py`（scrypt 加盐哈希在任何数据库事务之外计算、会话 Cookie、登录/注册/改密限流）、`game/settings.py`（允许主机、Secure Cookie、注册开关、反代信任等部署参数）、`game/admin.py`（`--create-user`、`--reset-password`、`--legacy-status`、`--backup` 等一次性运维命令）。
+
+**迁移**：`game/legacy.py`。`--migrate-multiuser` 先 `sqlite3.backup` 校验备份旧库，再建新布局库、把旧进度导入待认领区并原子换位；`--claim-legacy` 在单个事务内认领给已存在的账号，并在此时才套用内容升级。严禁自动继承，任何网络路径都读不到待认领区。
+
+**备份与容量**：`--backup` 对单个库做 WAL 在线备份，是整库快照而非按用户；`requests` 账本随操作线性增长，本版不裁剪。规模假设为单机单库、数十到数百活跃账号；写吞吐上限约为一次 WAL 同步的速率，`synchronous=FULL` 的目标机 P99 须由 QA 实测，不得为性能私自降级。
+
+**已知风险**：漏写 `user_id` 串号（三重兜底）、单写锁与磁盘延迟、单文件损坏影响全站（在线备份+启动检查）、并发写重构引入的竞态（并发测试最高优先级）、开放注册公网部署需 HTTPS 反代与限流、scrypt 在目标机耗时待实测。

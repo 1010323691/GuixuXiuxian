@@ -49,7 +49,7 @@ def _int(value,lo=0,hi=CAP):return type(value) is int and lo<=value<=hi
 
 
 def _validate_state(state):
-    if not isinstance(state,dict) or not isinstance(state.get('world'),dict):raise ValueError('缺少世界存档')
+    if not isinstance(state,dict) or not isinstance(state.get('world'),dict):raise ValueError('缺少世界进度数据')
     w=state['world'];template=initial_state()
     if set(w)!=(set(template)|({'r3'} if 'r3' in w else set())) or type(w['version']) is not int or w['version']!=2:raise ValueError('世界字段或版本不受支持')
     for k in ['active','ending']:
@@ -95,7 +95,7 @@ def _validate_state(state):
     if type(w['last_teach']) is not int or w['last_teach'] < -3 or w['last_teach']>CAP:raise ValueError('请教回合无效')
     if w['battle'] is not None:
         b=w['battle']
-        if b.get('kind') in {'world_boss','elite'} and 'r3' not in w:raise ValueError('旧档不支持长线专属挑战')
+        if b.get('kind') in {'world_boss','elite'} and 'r3' not in w:raise ValueError('旧版进度不支持长线专属挑战')
         if set(b)!=({'name','hp','max_hp','attack','heavy','turn','kind','target','stage','shield','heals','snapshot','start_tick','growth'}|({'r3_day','r3_attempt','player_damage','commands'} if b.get('kind')=='world_boss' and 'r3' in w else {'mechanic','poison_turns','poison_damage','barrier'} if 'r3' in w and b.get('kind')=='elite' else {'mechanic','poison_turns','poison_damage','barrier'} if 'r3' in w and b.get('kind')=='dungeon' and w.get('dungeon') and w['dungeon'].get('difficulty',0)>=2 and w['dungeon'].get('round')==2 else set())) or not all(_int(b[k],0,R.BOSS['hp'] if b.get('kind')=='world_boss' and k in {'hp','max_hp'} else CAP) for k in ['hp','max_hp','attack','heavy','turn','stage','shield','heals']) or not 1<=b['hp']<=b['max_hp'] or b['kind'] not in {'wild','guard','secret','dungeon','arena','regional','escort','world_boss','elite'}:raise ValueError('世界战斗无效')
     if not isinstance(w['arena'],dict) or set(w['arena'])!={'points','claims','wins','season','regional_points','growth','current'} or any(not _int(w['arena'][k]) for k in ['points','wins','season','regional_points']) or not isinstance(w['arena']['claims'],list):raise ValueError('演武记录无效')
     if 'r3' in w:loot.validate({'world':w})
@@ -859,7 +859,7 @@ def _explore(w,action,p,events):
         _params(p,['secret']);definition=_catalog(C.SECRETS,p['secret'])
         if w['exploration'] or w['dungeon']:_error('已有探索进度，请先撤离。')
         if definition['region']!=w['region']:_error('请先前往该秘境所在地域。')
-        w['exploration']={'id':p['secret'],'node':0};events.append('进入'+definition['name']+'，三节点进度会随存档保留。');return True
+        w['exploration']={'id':p['secret'],'node':0};events.append('进入'+definition['name']+'，三节点进度会随账号保留。');return True
     if action=='world_secret_step':
         _params(p,['choice']);ex=w['exploration']
         if not ex:_error('尚未进入秘境。')
@@ -1009,7 +1009,7 @@ def _quests(w,action,p,events):
         _params(p,['opponent','mode']);_catalog(C.ARENA_OPPONENTS,p['opponent'])
         if p['mode']!='local':_bad('跨域赛请使用正式报名与赛程入口。')
         if w['exploration'] or w['dungeon']:_error('请先结束当前探索。')
-        _start(w,'regional' if p['mode']=='regional' else 'arena',p['opponent']);events.append('开始本地NPC模拟演武，丹符消耗只影响本次演练，战后恢复真实背包。');return True
+        _start(w,'regional' if p['mode']=='regional' else 'arena',p['opponent']);events.append('开始NPC模拟演武，丹符消耗只影响本次演练，战后恢复真实背包。');return True
     return False
 
 
@@ -1293,7 +1293,7 @@ def project(state,context=None):
     def number(name,label,lo,hi):return dict(name=name,label=label,type='number',required=True,min=lo,max=hi)
     def text(name,label,maximum):return dict(name=name,label=label,type='text',required=True,maxLength=maximum)
     for page in pages:
-        page['description']='单人本地凡界；规则AI与NPC模拟，无真人、无真实跨服。'
+        page['description']='凡界；规则AI与NPC模拟，无真人、无跨账号互动、无真实跨服。'
     by['world']['stats']=[{'label':'世界行动','value':str(w['tick'])},{'label':'境界','value':stage},{'label':'凡界终章','value':'已完成' if w['ending'] else '尚未封界'}]
     section('world','三洲与势力',[(v['name'],v['description']+' 势力：'+v['faction']+'；声望%d / 100。'%w['factions'].get(k,0)) for k,v in C.REGIONS.items()])
     for id,region in C.REGIONS.items():add('world','world_travel','前往'+region['name'],'免费，不推进世界行动','到达'+region['name'],{'region':id})
@@ -1366,7 +1366,7 @@ def project(state,context=None):
         definition=C.EVENTS[w['encounter']['id']];section('exploration','奇遇：'+definition['name'],[('有效期','剩%d世界行动'%(w['encounter']['end']-w['tick']))],definition['description'])
         for id,c in definition['choices'].items():add('exploration','world_encounter',c['name'],_cost_text(c.get('cost',{})),'战斗护送' if c.get('battle') else '结果：'+_cost_text(c.get('reward',{})),{'choice':id})
         add('exploration','world_encounter','放弃当前奇遇','无惩罚','清除本次奇遇',{'choice':'leave'})
-    section('market','NPC商会与资产',[('凡界灵石',w['wallet']),('活跃订单',sum(not a['settled'] and not a['cancelled'] for a in w['auctions']))],body='全部为本地NPC模拟。每件单价由服务端决定；数量表单的实际总价按每件×数量原子扣除。卖价不高于同条件买价，无真实货币。')
+    section('market','NPC商会与资产',[('凡界灵石',w['wallet']),('活跃订单',sum(not a['settled'] and not a['cancelled'] for a in w['auctions']))],body='全部为NPC模拟。每件单价由服务端决定；数量表单的实际总价按每件×数量原子扣除。卖价不高于同条件买价，无真实货币。')
     for item in ['herb','ore','wood','crystal','pill','fire_talisman']:
         for action,buy,label in [('world_buy',True,'购买'),('world_sell',False,'出售')]:add('market',action,label+item_name(item),'单价%d灵石；数量1–20'%_price(w,item,buy),'库存与钱包同一次结算',{'item':item},[number('quantity','数量',1,20)],{'quantity':1})
     add('market','world_auction_list','寄售至NPC拍卖','托管所选物品；成交抽5%费用','6世界行动到期，无人出价可撤单',fields=[select('item','物品',[(k,item_name(k)) for k in ['herb','ore','wood','crystal','pill']]),number('quantity','数量',1,20),number('price','底价（灵石）',1,1000)],probe={'item':next((k for k in ['herb','ore','wood','crystal','pill'] if count(w,k)>0),'herb'),'quantity':1,'price':8},confirm='寄售将托管物品。有人出价后不能撤单，成交后系统收取5%手续费。')
@@ -1392,11 +1392,11 @@ def project(state,context=None):
         for tier,target in enumerate(d['tiers']):add('achievements','world_achievement',d['name']+' %d次'%target,'达到对应计数','奖励：'+_cost_text(d['rewards'][tier]),{'kind':kind,'tier':tier})
     for title,d in C.TITLES.items():add('achievements','world_title','佩戴'+d['name'],'条件%d'%d['threshold'],'单一槽位：'+{'attack':'攻击','cultivate':'修炼收益','rest_hp':'静养气血恢复'}[d['effect']]+' +%d'%d['amount'],{'title':title})
     scores=[(state['name']+'（玩家）',w['stage']*1000000+w['xp'],w['arena']['points']+w['arena']['regional_points'],sum(w['arts'].values()))]+[(C.NPCS[k]['name']+'（规则NPC）',a['turns']*10,a['turns'],a['turns']*5) for k,a in w['npc_agents'].items()]
-    for index,label in [(1,'境界成长（NPC行为经验折算）'),(3,'四艺历练（NPC行为经验折算）')]:section('achievements','本地NPC模拟榜 · '+label,[(str(i+1)+' '+row[0],row[index]) for i,row in enumerate(sorted(scores,key=lambda row:(-row[index],row[0])))],body='单人本地统计；NPC数据由实际行动状态派生，不代表真人或全球榜。')
+    for index,label in [(1,'境界成长（NPC行为经验折算）'),(3,'四艺历练（NPC行为经验折算）')]:section('achievements','NPC模拟榜 · '+label,[(str(i+1)+' '+row[0],row[index]) for i,row in enumerate(sorted(scores,key=lambda row:(-row[index],row[0])))],body='账号内统计；NPC数据由实际行动状态派生，不代表真人或全球榜。')
     season=w['arena']['current']
     season_scores=[(state['name']+'（玩家）',season['round']*10 if season else 0)]+[(v['name'],season['npc_scores'][k] if season else 0) for k,v in C.ARENA_OPPONENTS.items()]
-    section('achievements','本地NPC模拟榜 · 跨域本季真实赛果',sorted(season_scores,key=lambda row:(-row[1],row[0])),body='仅计本季实际胜败；未交手NPC为0分，不将生产行为冒充竞技。')
-    section('arena','本地NPC模拟演武',[('演武积分',w['arena']['points']),('跨域总分',w['arena']['regional_points']),('NPC成长级',w['arena']['growth'])],body='普通演武按挑战开始tick所属20行动周期，每模板首胜一次奖励；同周期重试只练习。演武丹符与HP/MP从开场快照恢复，赛果奖励留在真实世界。')
+    section('achievements','NPC模拟榜 · 跨域本季真实赛果',sorted(season_scores,key=lambda row:(-row[1],row[0])),body='仅计本季实际胜败；未交手NPC为0分，不将生产行为冒充竞技。')
+    section('arena','NPC模拟演武',[('演武积分',w['arena']['points']),('跨域总分',w['arena']['regional_points']),('NPC成长级',w['arena']['growth'])],body='普通演武按挑战开始tick所属20行动周期，每模板首胜一次奖励；同周期重试只练习。演武丹符与HP/MP从开场快照恢复，赛果奖励留在真实世界。')
     for id,d in C.ARENA_OPPONENTS.items():add('arena','world_arena','演武：'+d['name'],'模拟消耗，无真人匹配','本周期首胜积分10及灵石10；'+d['description'],{'opponent':id,'mode':'local'})
     current=w['arena']['current'];section('arena','三域NPC模拟跨域赛',[('赛季',w['arena']['season']),('晋级进度',str(current['round'])+' / 3' if current else '尚未报名'),('赛季状态','已领取冠军奖励' if current and current['claimed'] else '进行中' if current else '未报名')],body='青岚剑会 → 赤砂武会 → 玄潮丹会；报名锁定对手境界及成长快照，胜一场晋一级，失败可重试。')
     if current:section('arena','本季NPC模拟榜',sorted([(state['name']+'（玩家）',current['round']*10)]+[(C.ARENA_OPPONENTS[k]['name'],v) for k,v in current['npc_scores'].items()],key=lambda row:(-row[1],row[0])))
@@ -1427,4 +1427,4 @@ def validate(state):
     try:
         _validate_state(state)
     except (KeyError,TypeError,AttributeError,IndexError) as exc:
-        raise ValueError('世界嵌套存档结构无效') from exc
+        raise ValueError('世界嵌套进度结构无效') from exc

@@ -20,8 +20,11 @@ class R3GrowthHTTPTests(unittest.TestCase):
         return self.server.action('world_enter')
 
     def db_dump(self):
+        # Progress rows of the default account only; session bookkeeping legitimately changes with the clock.
         with open_db(self.server.data / 'game.db') as db:
-            return tuple(db.iterdump())
+            uid = self.server.user_id
+            return (db.execute('SELECT * FROM current WHERE user_id=?', (uid,)).fetchall(),
+                    db.execute('SELECT * FROM requests WHERE user_id=? ORDER BY request_id', (uid,)).fetchall())
 
     def test_before_world_entry_no_whole_day_pack_or_offline_world_progress(self):
         initial = self.server.create()
@@ -117,14 +120,11 @@ class R3GrowthHTTPTests(unittest.TestCase):
         entered = self.enter()
         before = self.db_dump()
         self.server.clock.advance(160)
-        with open_db(self.server.data / 'game.db') as db:
-            db.execute("CREATE TRIGGER r3_qa_fail BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'qa-after-update'); END")
         payload = {'request_id': 'r3-rollback-after-state', 'expected_revision': entered['revision'],
                    'action': 'world_gather', 'params': {'item': 'ore'}}
-        status, body = self.server.request('POST', '/api/action', payload)
+        with self.server.fail_commit('before'):
+            status, body = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 503, body)
-        with open_db(self.server.data / 'game.db') as db:
-            db.execute('DROP TRIGGER r3_qa_fail')
         self.assertEqual(self.db_dump(), before, 'failed commit advanced growth watermark or ownership')
         status, committed = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 200, committed)
@@ -147,35 +147,36 @@ class R3GrowthHTTPTests(unittest.TestCase):
 
     def test_corrupt_growth_rate_or_balance_refuses_without_overwriting_database(self):
         import json
-        from game.storage import Store
+        from game.storage import Database, Store
         self.enter()
         self.server.stop()
+        uid = self.server.user_id
         with open_db(self.server.data / 'game.db') as db:
-            original = db.execute('SELECT state FROM current WHERE id=1').fetchone()[0]
+            original = db.execute('SELECT state FROM current WHERE user_id=?', (uid,)).fetchone()[0]
         for field, value in [('rate_num', 10**60), ('balance_micro', 7_000_000)]:
             with self.subTest(field=field):
                 state = json.loads(original)
                 state['world']['r3']['growth'][field] = value
                 with open_db(self.server.data / 'game.db') as db:
-                    db.execute('UPDATE current SET state=? WHERE id=1', (json.dumps(state),))
+                    db.execute('UPDATE current SET state=? WHERE user_id=?', (json.dumps(state), uid))
                 digest = hashlib.sha256((self.server.data / 'game.db').read_bytes()).hexdigest()
                 with self.assertRaises(ValueError):
-                    Store(self.server.data, clock=self.server.clock)
+                    Store(Database(self.server.data, clock=self.server.clock), uid, clock=self.server.clock).snapshot()
                 self.assertEqual(hashlib.sha256((self.server.data / 'game.db').read_bytes()).hexdigest(), digest)
         # Restore fixture solely so cleanup never leaves a misleading corrupt test archive.
         with open_db(self.server.data / 'game.db') as db:
-            db.execute('UPDATE current SET state=? WHERE id=1', (original,))
+            db.execute('UPDATE current SET state=? WHERE user_id=?', (original, uid))
 
     def test_equipping_then_unequipping_treasure_settles_old_rate_without_retroactive_bonus(self):
         import json
         self.enter()
         # Boundary fixture grants an owned, unequipped item; public acquisition has a separate route.
         with open_db(self.server.data / 'game.db') as db:
-            state=json.loads(db.execute('SELECT state FROM current WHERE id=1').fetchone()[0])
+            state=json.loads(db.execute('SELECT state FROM current WHERE user_id=?',(self.server.user_id,)).fetchone()[0])
             uid='fixture-rate-main'
             state['world']['r3']['instances'][uid]=dict(uid=uid,template_id='main_treasure',
                 chapter=0,quality=0,enhance=0,effect_type='cultivation',source_receipt='fixture-rate')
-            db.execute('UPDATE current SET state=? WHERE id=1',(json.dumps(state),))
+            db.execute('UPDATE current SET state=? WHERE user_id=?',(json.dumps(state),self.server.user_id))
         self.server.clock.advance(86400)
         equipped=self.server.action('world_loot_equip',uid=uid)
         self.assertEqual(equipped['view']['growth']['available_micro'],'540000000')

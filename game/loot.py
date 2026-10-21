@@ -189,7 +189,7 @@ def complete_run(w,run_id,events):
         from . import cadence
         cadence.finish(w,run_id,True)
     difficulty=run['difficulty'];key=str(difficulty)
-    if run['planned_seq']!=r['drop_seq']+1 or run['pity_next']!=r['pity'][key]+1:_fail('副本掉落权益序号不一致，请保留存档检查。')
+    if run['planned_seq']!=r['drop_seq']+1 or run['pity_next']!=r['pity'][key]+1:_fail('副本掉落权益序号不一致，请联系管理员检查服务日志。')
     r['pity'][key]=run['pity_next'];q=run['quality'];template=run['template'];r['drop_seq']+=1;r['daily'][run['day']]=r['daily'].get(run['day'],0)+1
     _new_instance(w,template,run['chapter'],q,run_id)
     _grant_materials(w,R.DIFFICULTIES[difficulty]['materials'],run_id)
@@ -524,7 +524,7 @@ def project(state,view,context=None):
         else:
             target=item['enhance']+1;costs=R.FORGE_COSTS.get(target,{})
             add('character','world_loot_enhance','强化'+name,_cost_label(costs),'只强化该uid；品质与强化加法计算，不重复叠乘',{'uid':uid},'强化已满三级。' if target>3 else affordability(costs))
-        add('character','world_loot_dismantle','分解'+name,'消费该实例，不可找回','返还强化材%d、宝尘%d'%(1+item['quality'],1+item['quality']//2),{'uid':uid},'请先卸下该实例。' if equipped else '',confirm='分解会消费该uid，只留下材料，旧检查点也不会复活原物。')
+        add('character','world_loot_dismantle','分解'+name,'消费该实例，不可找回','返还强化材%d、宝尘%d'%(1+item['quality'],1+item['quality']//2),{'uid':uid},'请先卸下该实例。' if equipped else '',confirm='分解会消费该uid，只留下材料，原物无法找回。')
     for slot,uid in r['equipped'].items():add('character','world_loot_unequip','卸下'+{'weapon':'武器','armor':'护甲','pendant':'灵佩','main':'本命法宝','guard':'护持法宝'}[slot],'免费','只改变未来速率/当前合法战力',{'slot':slot},'' if uid else '槽位为空。')
     for slot in ['main','guard']:
         costs=R.TREASURES[slot+'_treasure']['cost'];add('craft','world_loot_craft_treasure','保底制作'+item_name(slot+'_treasure'),_cost_label(costs),'凡品法宝，方向固定；无需高难稀有掉落',{'slot':slot},affordability(costs),fields=[{'name':'effect_type','label':'法宝方向','type':'select','required':True,'options':[{'value':'cultivation','label':'修炼型'},{'value':'combat','label':'战力型'}]}])
@@ -571,7 +571,7 @@ def project(state,view,context=None):
     for date,record in r['boss'].items():
         coins,dust=boss_entitlement(record);delta=(coins-record['paid_coin'],dust-record['paid_dust'])
         if any(delta):add('exploration','world_boss_claim','领取'+date+'Boss新差额','不消耗','只补币%d、宝尘%d；重复无新权益不再发'%delta,{'day':date})
-    section('exploration','世界Boss · 本地NPC模拟',[(k,v) for k,v in [('本次有效伤害',boss['current_damage']),('本期最高',boss['best']),('已领',boss['paid']),('下一进展',boss['next']),('尝试',boss['attempts'])]],body=boss['status'])
+    section('exploration','世界Boss · NPC模拟',[(k,v) for k,v in [('本次有效伤害',boss['current_damage']),('本期最高',boss['best']),('已领',boss['paid']),('下一进展',boss['next']),('尝试',boss['attempts'])]],body=boss['status'])
     phase=100 if balance>=required*1_000_000 else 75 if balance*4>=required*3_000_000 else 50 if balance*2>=required*1_000_000 else 25 if balance*4>=required*1_000_000 else 0
     for stage in range(w['stage']+1):
         for tier,definition in R.MILESTONES.items():

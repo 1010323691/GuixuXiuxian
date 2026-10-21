@@ -40,7 +40,7 @@ def main():
     try:
         server.create();baseline_route(server.snapshot,server.action);server.action('world_enter')
         with open_db(server.data/'game.db') as db:
-            state=json.loads(db.execute('SELECT state FROM current WHERE id=1').fetchone()[0]);w=state['world'];r=w['r3']
+            state=json.loads(db.execute('SELECT state FROM current WHERE user_id=?',(server.user_id,)).fetchone()[0]);w=state['world'];r=w['r3']
             def item(uid,t,path):return dict(uid=uid,template_id=t,chapter=0,quality=0,enhance=0,effect_type=path,source_receipt='fixture:'+uid)
             r['instances']={'blade':item('blade','blade','combat'),
                 'main':item('main','main_treasure','cultivation'),
@@ -50,7 +50,7 @@ def main():
             r['materials'].update(dust=20,enhance_material=20,boss_coin=2)
             w['inventory'].update(ore=30,wood=30,herb=30,crystal=30)
             w['xp']=405;r['growth']['balance_micro']=405000000;r['growth']['total_micro']=405000000
-            db.execute('UPDATE current SET state=? WHERE id=1',(json.dumps(state),))
+            db.execute('UPDATE current SET state=? WHERE user_id=?',(json.dumps(state),server.user_id))
         collect('owned-equipped-unselected-pending + 25percent')
         previews=server.snapshot()['view']['world']['loot']['dungeons']
         for entry in previews:

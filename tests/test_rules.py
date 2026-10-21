@@ -21,7 +21,7 @@ class RuleBoundaryTests(unittest.TestCase):
         self.assertEqual(state, original)
 
     def test_resource_caps_and_full_action_rejection(self):
-        for resource, action, initial in [('cultivation', 'cultivate', 9998), ('herbs', 'gather', 9998)]:
+        for resource, action, initial in [('herbs', 'gather', 9998)]:
             with self.subTest(resource=resource):
                 state = new_game('上限道友')
                 state[resource] = initial
@@ -48,8 +48,7 @@ class RuleBoundaryTests(unittest.TestCase):
         self.assertEqual((state['hp'], state['mp']), (60, 12))
         self.reject(state, 'rest')
         state = self.apply(state, 'gather')
-        state = self.apply(state, 'cultivate')
-        self.assertEqual((state['herbs'], state['cultivation'], state['stones']), (2, 6, 0))
+        self.assertEqual((state['herbs'], state['cultivation'], state['stones']), (2, 0, 0))
 
     def step(self, state, action):
         """序章单拍内部 resolver（对外不再开放点击）。"""

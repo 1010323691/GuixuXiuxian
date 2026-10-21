@@ -184,7 +184,7 @@ ARENA_OPPONENTS = {
 }
 ARENA_RULES = {'cycle_ticks': 20, 'first_win_score': 10, 'first_win_stone': 10,
                'season_rounds': 3, 'season_win_stone': 30, 'season_champion_crystal': 3,
-               'description': '单机NPC模拟演武与跨域赛；没有真人、真实服务器或在线玩家。'}
+               'description': 'NPC模拟演武与跨域赛；没有真人、无跨账号互动、真实服务器或在线玩家。'}
 STORIES = {
     'enter': '筑基之后，你才察觉自己的灵根与体质。青岚不再是修行的终点，三洲的来信带来界门将开的消息。',
     'breakthrough': '灵息越过旧日关隘，你的道基更加稳固；但凡界的裂隙仍需众人共同守望。',

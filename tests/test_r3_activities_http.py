@@ -19,7 +19,7 @@ class R3ActivityHTTPTests(unittest.TestCase):
     def entries(self):
         return self.p.world()['r3']['activities']['entries']
 
-    def test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_restart_load(self):
+    def test_daily_two_objectives_after_accept_and_completed_right_survives_midnight_and_restart(self):
         import uuid
         self.p.perform('world_sect_join',sect='sword')
         self.p.perform('world_chat',npc='healer')
@@ -31,11 +31,10 @@ class R3ActivityHTTPTests(unittest.TestCase):
         self.assertFalse(self.entries()[key]['completed'])
         self.p.perform('world_chat',npc='healer')
         self.assertTrue(self.entries()[key]['completed'])
-        self.server.write('/api/save')
         self.server.clock.advance(86400)
-        self.server.stop();self.server.start()
+        self.server.restart()
         self.p.perform('world_activity_accept',project='artisan')
-        self.server.write('/api/load')
+        self.server.restart()
         self.assertTrue(self.entries()[key]['completed'])
         before=copy.deepcopy(self.p.world())
         payload=dict(request_id='daily-claim-once',expected_revision=self.server.snapshot()['revision'],
@@ -51,7 +50,7 @@ class R3ActivityHTTPTests(unittest.TestCase):
         self.assertEqual(status,200,replay)
         self.assertTrue(replay['duplicate'])
         self.assertEqual(replay['state'],claimed['state'])
-        self.server.write('/api/load')
+        self.server.restart()
         self.assertTrue(self.entries()[key]['claimed'])
         status,denied=self.server.request('POST','/api/action',dict(request_id=str(uuid.uuid4()),
             expected_revision=self.server.snapshot()['revision'],action='world_activity_claim',params={'key':key}))

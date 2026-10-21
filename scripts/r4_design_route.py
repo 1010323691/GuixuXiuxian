@@ -81,8 +81,8 @@ class Designer(R3Planner):
 
 def prologue(server):
     server.create(name='R4策划独立路线')
-    for n,region,enemy in [(6,'forest','ape'),(8,'ruins','sentinel'),(10,None,'shadow')]:
-        for _ in range(n):server.action('cultivate')
+    for threshold,region,enemy in [(32,'forest','ape'),(64,'ruins','sentinel'),(96,None,'shadow')]:
+        server.clock.advance(threshold*5)  # 序章吐纳随服务端时间自动累积
         server.action('breakthrough')
         if region:server.action('travel',region=region)
         server.action('challenge',enemy=enemy)

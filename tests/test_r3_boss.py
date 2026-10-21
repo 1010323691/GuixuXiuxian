@@ -56,17 +56,16 @@ class R3BossHTTPTests(unittest.TestCase):
         self.assertEqual(self.p.world()['r3']['boss'][self.day]['attempts'],3)
         self.reject('world_boss_enter')
 
-    def test_open_boss_cursor_survives_restart_and_checkpoint_never_replays_a_finished_attempt(self):
+    def test_open_boss_cursor_survives_restart_and_never_replays_a_finished_attempt(self):
         self.p.perform('world_boss_enter')
         cursor=self.p.world()['battle']
-        self.server.stop();self.server.start()
+        self.server.restart()
         self.assertEqual(self.p.world()['battle'],cursor)
-        self.server.write('/api/save')
         self.p.perform('world_auto_battle',strategy='frugal')
         self.assertIsNone(self.p.world()['battle'])
         best=self.p.world()['r3']['boss'][self.day]['best']
-        self.server.write('/api/load')
-        self.assertIsNone(self.p.world()['battle'],'checkpoint resurrected an already settled formal boss attempt')
+        self.server.restart()
+        self.assertIsNone(self.p.world()['battle'],'restart resurrected an already settled formal boss attempt')
         self.assertEqual(self.p.world()['r3']['boss'][self.day]['attempts'],1)
         self.assertEqual(self.p.world()['r3']['boss'][self.day]['best'],best)
 

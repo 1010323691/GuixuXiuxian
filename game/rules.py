@@ -39,8 +39,10 @@ def legacy_new_game(name):
 def validate_legacy_state(s):
     if s is None:
         return
-    if not isinstance(s, dict) or set(s) != set(legacy_new_game('归墟客')):
-        raise ValueError('存档字段不完整或不受支持')
+    if not isinstance(s, dict) or set(s) - {'qi_at'} != set(legacy_new_game('归墟客')):
+        raise ValueError('进度数据字段不完整或不受支持')
+    if s.get('qi_at') is not None and not valid_int(s['qi_at'],0,2**63-1):
+        raise ValueError('吐纳时间水位无效')
     try:
         stored_name=validate_name(s['name'])
     except GameError as exc:
@@ -49,7 +51,7 @@ def validate_legacy_state(s):
         raise ValueError('姓名无效')
     for key, hi in [('realm',3),('technique',2),('cultivation',9999),('stones',9999),('herbs',9999),('pills',9999),('actions_taken',2**63-1)]:
         if not valid_int(s[key],0,hi):
-            raise ValueError('存档数值无效：'+key)
+            raise ValueError('进度数据数值无效：'+key)
     if not valid_int(s['hp'],1,C.HP[s['realm']]) or not valid_int(s['mp'],0,C.MP[s['realm']]):
         raise ValueError('气血或灵力无效')
     if not isinstance(s['region'],str) or s['region'] not in C.REGIONS or C.REGIONS[s['region']]['realm'] > s['realm']:
@@ -85,7 +87,7 @@ def validate_state(s):
     if s is None:
         return
     if not isinstance(s,dict) or 'world' not in s:
-        raise ValueError('存档缺少完整世界数据')
+        raise ValueError('进度数据缺少完整世界数据')
     legacy={k:v for k,v in s.items() if k!='world'}
     validate_legacy_state(legacy)
     world.validate(s)
@@ -100,7 +102,7 @@ def check(s, action, params):
         raise GameError('NO_GAME','请先创建角色。')
     if not isinstance(action,str) or not isinstance(params,dict):
         raise GameError('BAD_REQUEST','行动和参数格式不正确。',400)
-    known={'cultivate','rest','gather','alchemy','explore','upgrade','buy_pill','sell_herbs','breakthrough','challenge','travel','attack','power_attack','defend','use_pill','flee','auto_battle'}
+    known={'rest','gather','alchemy','explore','upgrade','buy_pill','sell_herbs','breakthrough','challenge','travel','attack','power_attack','defend','use_pill','flee','auto_battle'}
     if action not in known:
         raise GameError('BAD_REQUEST','未知行动。',400)
     expected={'region'} if action=='travel' else {'enemy'} if action=='challenge' else set()
@@ -122,7 +124,6 @@ def check(s, action, params):
         if e['region'] != s['region']: fail('敌人不在当前区域。')
         if e['realm']>r: fail('需要筑基后方可挑战。')
         if target=='shadow' and s['completed']: fail('归墟已平，无需再战。')
-    elif action=='cultivate' and s['cultivation']==9999: fail('修为已达上限。')
     elif action=='rest' and s['hp']==C.HP[r] and s['mp']==C.MP[r]: fail('气血和灵力均已充盈。')
     elif action=='gather' and s['herbs']==9999: fail('药草已达上限。')
     elif action in {'alchemy','buy_pill'}:
@@ -156,10 +157,29 @@ def apply_action(state, action, params, context=None):
         fail('已进入完整修仙界，请使用世界行动。')
     if action in MANUAL_STEPS:
         raise GameError('BAD_REQUEST','点击式战斗已退役，请使用自动斗法。',400)
+    if action=='cultivate':
+        raise GameError('BAD_REQUEST','吐纳已改为随时间自动进行，无需点击。',400)
+    now=(context or {}).get('now')
+    if now is not None:state=settle_qi(state,now)
     if action=='auto_battle':
         check(state,action,params)
         return _auto_battle(state,context)
     return _step(state,action,params)
+
+
+def settle_qi(state,now):
+    """序章吐纳随服务端时间自动结算：每 QI_SECONDS 秒 +1 修为，只补到当前境界瓶颈，不囤积离线时间。"""
+    if state is None or state['world']['active'] or not valid_int(now,0,2**63-1):return state
+    s=clone(state);last=s.get('qi_at')
+    if last is None or now<=last:
+        s['qi_at']=now;return s
+    r=s['realm'];room=C.BREAKTHROUGH[r]-s['cultivation'] if r<3 else 0
+    if room<=0:
+        s['qi_at']=now;return s
+    ticks=(now-last)//C.QI_SECONDS;gain=min(ticks,room)
+    s['cultivation']+=gain
+    s['qi_at']=now if gain==room else last+ticks*C.QI_SECONDS
+    return s
 
 
 def _choose(s):
@@ -207,8 +227,7 @@ def _step(state,action,params):
         s['region']=params['region'];events.append('前往'+C.REGIONS[s['region']]['name']+'。')
     else:
         s['actions_taken']+=1
-        if action=='cultivate': events.append('吐纳归元，修为 +%d。'%add('cultivation',6+2*r))
-        elif action=='rest': events.append('静养调息，气血 +%d，灵力 +%d。'%(add('hp',30,C.HP[r]),add('mp',8,C.MP[r])))
+        if action=='rest': events.append('静养调息，气血 +%d，灵力 +%d。'%(add('hp',30,C.HP[r]),add('mp',8,C.MP[r])))
         elif action=='gather': events.append('采得药草 +%d。'%add('herbs',2))
         elif action=='alchemy': s['herbs']-=3;add('pills',1);events.append('药草 −3，炼成回春丹 +1。')
         elif action=='explore':
@@ -251,7 +270,7 @@ def objective(s):
     r=s['realm']
     if s['completed']:return '归墟已平，修行未止。你可以继续游历，或另启新篇。'
     if r==3:return '前往归墟古境，战胜归墟之影，平息古境。'
-    text='下一目标：突破至%s；修为 %d / %d。'%(C.REALMS[r+1],s['cultivation'],C.BREAKTHROUGH[r])
+    text='下一目标：突破至%s；修为 %d / %d，'%(C.REALMS[r+1],s['cultivation'],C.BREAKTHROUGH[r])+('灵气每%d秒自行汲取1点。'%C.QI_SECONDS if s['cultivation']<C.BREAKTHROUGH[r] else '已圆满，可以突破。')
     required={1:'ape',2:'sentinel'}.get(r)
     if required:text+=' '+C.ENEMIES[required]['name']+'首胜：'+('已完成。' if required in s['victories'] else '未完成。')
     return text
@@ -260,10 +279,15 @@ def objective(s):
 def project(s,context=None):
     view=dict(title=C.TITLE,phase='creation',character=None,location=None,objective='创建角色，开始修行',resources=[],battle=None,actions=[],logs=[],ending=None)
     if s is None:return view
+    now=(context or {}).get('now')
+    if now is not None:s=settle_qi(s,now)
     view["world"]=world.project(s,context=context)
     r=s['realm'];b=s['battle'];area=C.REGIONS[s['region']]
     view.update(phase='battle' if b else 'ending' if s['completed'] else 'exploration',character={'name':s['name'],'realm':C.REALMS[r]},location={'id':s['region'],'name':area['name'],'description':area['description']},objective=objective(s),logs=s['logs'])
     view['resources']=[dict(id=k,label=label,value=s[k],max=maximum) for k,label,maximum in [('hp','气血',C.HP[r]),('mp','灵力',C.MP[r]),('cultivation','修为',C.BREAKTHROUGH[r] if r<3 else 9999),('stones','灵石',9999),('herbs','药草',9999),('pills','回春丹',9999),('technique','归元诀',2)]]
+    if s['realm']<3 and not s['world']['active']:
+        qi_at=s.get('qi_at')
+        view['qi']=dict(seconds=C.QI_SECONDS,cap=C.BREAKTHROUGH[s['realm']],value=s['cultivation'],next_in=None if qi_at is None or s['cultivation']>=C.BREAKTHROUGH[s['realm']] else max(0,C.QI_SECONDS-(now-qi_at)) if now is not None else None)
     if s['completed']:view['ending']={'title':'归墟已平，修行未止','text':C.ENDING}
     def action(id,label,cost,effect,group,params=None):
         params=params or {};reason=''
@@ -277,10 +301,10 @@ def project(s,context=None):
         view['battle']={'name':e['name'],'hp':b['hp'],'max_hp':e['hp'],'intent':intent}
         action('auto_battle','自动斗法','按战况消耗灵力与回春丹','自动强攻、防重击、必要时服丹，直至分出胜负；败退返回青岚村','battle')
     else:
-        for args in [('cultivate','吐纳修炼','免费','修为 +%d'%(6+2*r),'cultivation'),('breakthrough','突破境界','修为 −%d'%C.BREAKTHROUGH[r] if r<3 else '已筑基','突破保证成功，气血灵力恢复全满','cultivation'),('rest','静养调息','免费','气血 +30、灵力 +8','cultivation'),('gather','采集药草','免费','药草 +2','exploration'),('alchemy','炼制回春丹','药草 −3','回春丹 +1','cultivation'),('explore','探索此地','免费','灵石 +%d、药草 +%d'%(area['stones'],area['herbs']),'exploration'),('upgrade','研习归元诀','灵石 −%d'%([12,24][s['technique']] if s['technique']<2 else 0),'功法 +1级，攻击 +2','cultivation'),('buy_pill','购买回春丹','灵石 −8','回春丹 +1','trade'),('sell_herbs','出售药草','药草 −2','灵石 +3','trade')]:action(*args)
+        for args in [('breakthrough','突破境界','修为 −%d'%C.BREAKTHROUGH[r] if r<3 else '已筑基','突破保证成功，气血灵力恢复全满','cultivation'),('rest','静养调息','免费','气血 +30、灵力 +8','cultivation'),('gather','采集药草','免费','药草 +2','exploration'),('alchemy','炼制回春丹','药草 −3','回春丹 +1','cultivation'),('explore','探索此地','免费','灵石 +%d、药草 +%d'%(area['stones'],area['herbs']),'exploration'),('upgrade','研习归元诀','灵石 −%d'%([12,24][s['technique']] if s['technique']<2 else 0),'功法 +1级，攻击 +2','cultivation'),('buy_pill','购买回春丹','灵石 −8','回春丹 +1','trade'),('sell_herbs','出售药草','药草 −2','灵石 +3','trade')]:action(*args)
         for id,region in C.REGIONS.items():action('travel','前往'+region['name'],'免费','切换区域，不计行动','travel',{'region':id})
         for id,e in C.ENEMIES.items():
-            if e['region']==s['region']:action('challenge','挑战'+e['name'],'免费','胜利最多：灵石 +%d、修为 +%d（按上限截断）'%(e['stones'],e['cultivation']),'exploration',{'enemy':id})
+            if e['region']==s['region']:action('challenge','挑战'+e['name'],'免费','胜利最多：灵石 +%d、修为 +%d（按上限截断）'%(e['stones'],e['cultivation']),'challenge',{'enemy':id})
     if not s['world']['active']:
         reason='' if s['completed'] else '需先完成序章，平息归墟之影。'
         view['actions'].append(dict(id='world_enter',label='进入完整修仙界',detail='序章之后，开启九州长线修行。',cost='免费',effect='解锁世界、宗门、四艺与长线成长',params={},group='exploration',enabled=not reason,reason=reason,primary=False))
@@ -292,7 +316,7 @@ def project(s,context=None):
         view['ending']=None
     if s['completed'] and not s['world']['active']:
         view['ending']['text']+=' 序章告成，可进入完整修仙界，继续九州修行。'
-    preferred=['world_enter','auto_battle','breakthrough','cultivate','explore']
+    preferred=['world_enter','auto_battle','breakthrough','explore']
     for id in preferred:
         chosen=next((a for a in view['actions'] if a['id']==id and a['enabled']),None)
         if chosen:chosen['primary']=True;break

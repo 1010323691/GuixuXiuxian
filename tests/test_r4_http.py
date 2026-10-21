@@ -20,7 +20,11 @@ class R4HTTPTests(unittest.TestCase):
     def credits(self):return self.server.snapshot()['view']['world']['loot']['credits']
 
     def dump(self):
-        with open_db(self.server.data/'game.db') as db:return tuple(db.iterdump())
+        # Progress rows of the default account only; session bookkeeping legitimately changes with the clock.
+        with open_db(self.server.data/'game.db') as db:
+            uid=self.server.user_id
+            return (db.execute('SELECT * FROM current WHERE user_id=?',(uid,)).fetchall(),
+                    db.execute('SELECT * FROM requests WHERE user_id=? ORDER BY request_id',(uid,)).fetchall())
 
     def reject(self,command,**params):
         before=self.server.snapshot();payload=dict(request_id=str(uuid.uuid4()),expected_revision=before['revision'],action=command,params=params)
@@ -50,13 +54,12 @@ class R4HTTPTests(unittest.TestCase):
         self.assertEqual(self.p.world()['r3']['drop_seq'],before_r['drop_seq']+1)
         self.assertEqual(self.credits()['available'],0)
 
-    def test_full_occupied_run_restart_load_refund_and_success_do_not_hide_eight_hours(self):
+    def test_full_occupied_run_restart_refund_and_success_do_not_hide_eight_hours(self):
         self.p.perform('world_dungeon_enter',dungeon='den',chapter=0,difficulty=1)
         run=self.p.world()['dungeon']['run_id']
         self.assertEqual((self.credits()['available'],self.credits()['reserved']),(2,1))
-        self.server.write('/api/save');self.server.clock.advance(28800)
-        self.server.stop();self.server.start()
-        self.server.write('/api/load')
+        self.server.clock.advance(28800)
+        self.server.restart()
         self.assertEqual(self.p.world()['dungeon']['run_id'],run)
         self.assertEqual((self.credits()['available'],self.credits()['reserved']),(2,1))
         self.p.perform('world_dungeon_leave')
@@ -93,12 +96,10 @@ class R4HTTPTests(unittest.TestCase):
     def test_sweep_commit_failure_rolls_back_credit_item_pity_and_can_retry_same_id(self):
         self.p.dungeon(difficulty=1)
         before=self.dump();snap=self.server.snapshot()
-        with open_db(self.server.data/'game.db') as db:
-            db.execute("CREATE TRIGGER r4_fail BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'r4-after-state'); END")
         payload=dict(request_id='r4-sweep-transaction',expected_revision=snap['revision'],action='world_dungeon_sweep',params=dict(dungeon='den',chapter=0,difficulty=1))
-        status,body=self.server.request('POST','/api/action',payload)
+        with self.server.fail_commit('before'):
+            status,body=self.server.request('POST','/api/action',payload)
         self.assertEqual(status,503,body)
-        with open_db(self.server.data/'game.db') as db:db.execute('DROP TRIGGER r4_fail')
         self.assertEqual(self.dump(),before)
         status,body=self.server.request('POST','/api/action',payload)
         self.assertEqual(status,200,body)

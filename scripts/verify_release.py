@@ -70,8 +70,15 @@ with tempfile.TemporaryDirectory(prefix='guixu-release-verify-') as temp:
         created=write('new-game',name='归档验收')
         assert created['view']['profile']['mode']=='longline'
         sys.path.insert(0,str(root))
-        from tests.support import baseline_route
-        baseline_route(get,action)
+        # 序章吐纳随服务端时间自动累积；归档验收用注入时钟的同一 Store 预走序章，再交还真实服务器继续。
+        stop()
+        from game.storage import Store
+        from tests.support import baseline_route, TestClock
+        clock=TestClock(int(time.time())-3600);store=Store(root/'isolated-data',clock=clock)
+        def store_action(name,**params):
+            return store.write('action',dict(request_id=str(uuid.uuid4()),expected_revision=store.snapshot()['revision'],action=name,params=params))
+        baseline_route(store.snapshot,store_action)
+        start()
         entered=action('world_enter')
         assert entered['state']['world']['active']
         assert entered['state']['world']['r3']['growth']['curve_version']==2
@@ -112,8 +119,11 @@ with tempfile.TemporaryDirectory(prefix='guixu-release-verify-') as temp:
         report['checks'].append('stop/restart restores real save and continuous entitlement without any injected HTTP time')
         free=write('new-game',name='旧制验收',mode='free')
         assert 'r3' not in free['state']['world']
-        assert action('cultivate')['state']['cultivation']==6
-        report['checks'].append('explicit free profile retains old immediate growth')
+        assert free['state'].get('qi_at') is not None
+        try:action('cultivate');retired=False
+        except AssertionError:retired=True
+        assert retired
+        report['checks'].append('explicit free profile also cultivates over time; click cultivation is retired')
         fixture_check=subprocess.run([sys.executable,'-m','unittest','tests.test_r4_architecture','-q'],
             cwd=root,capture_output=True,text=True,timeout=60)
         assert fixture_check.returncode==0, fixture_check.stdout+fixture_check.stderr

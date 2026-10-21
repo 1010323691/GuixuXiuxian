@@ -6,8 +6,8 @@ from pathlib import Path
 
 from game import loot, rules, world
 from game import r3_config as R
-from server import dispatch
-from tests.support import baseline_route, battle_round, fast_store
+from server import App, dispatch
+from tests.support import baseline_route, battle_round, test_settings
 
 
 class AutoBattleTreasureTests(unittest.TestCase):
@@ -155,13 +155,13 @@ class AutoBattlePolicyTests(unittest.TestCase):
 class ReplayAssetTests(unittest.TestCase):
     def test_replay_script_is_served_and_loaded_before_the_app(self):
         with tempfile.TemporaryDirectory() as folder:
-            store = fast_store(Path(folder))
+            app = App(Path(folder), settings=test_settings())
             address = ('127.0.0.1', 8000)
-            status, body, ctype = dispatch(store, 'GET', '/battle_replay.js', {'Host': '127.0.0.1:8000'}, b'', address)
+            status, body, ctype = dispatch(app, 'GET', '/battle_replay.js', {'Host': '127.0.0.1:8000'}, b'', address)
             self.assertEqual(status, 200)
             self.assertTrue(ctype.startswith('text/javascript'))
             self.assertIn(b'BattleReplay', body)
-            status, page, _ = dispatch(store, 'GET', '/', {'Host': '127.0.0.1:8000'}, b'', address)
+            status, page, _ = dispatch(app, 'GET', '/', {'Host': '127.0.0.1:8000'}, b'', address)
             html = page.decode('utf-8')
             self.assertLess(html.index('/battle_replay.js'), html.index('/app.js'))
             for retired in ['world_attack', 'world_flee']:

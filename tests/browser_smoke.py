@@ -64,7 +64,7 @@ def main():
 
             click_write('#create-button', '/api/new-game')
             expect(page.locator('#character-name')).to_have_text('问道QA')
-            expect(page.locator('.group-button')).to_have_count(4)
+            expect(page.locator('.group-button')).to_have_count(5)
             expect(page.locator('.action-group:visible')).to_have_count(1)
 
             def action(command, **params):
@@ -175,17 +175,18 @@ def main():
             assert created['state']['actions_taken'] == 0 and not created['save']['exists']
             expect(page.locator('#load-button')).to_be_disabled()
             page.set_viewport_size({'width': 320, 'height': 740})
-            action('cultivate')
+            herbs = server.snapshot()['state']['herbs']
+            action('gather')
             page.screenshot(path=str(artifacts / 'mobile-320.png'), full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), 'horizontal overflow at 320px'
             assert_one_screen(page, 'prologue 320px')
             buttons = page.locator('button:visible').evaluate_all('(buttons) => buttons.map(b => ({text:b.textContent,height:b.getBoundingClientRect().height}))')
             assert all(button['height'] >= 44 for button in buttons), buttons
-            page.locator('[data-action-key="cultivate:{}"]').focus()
+            page.locator('[data-action-key="gather:{}"]').focus()
             with page.expect_response(lambda response: response.url.endswith('/api/action')):
                 page.keyboard.press('Enter')
             expect(page.locator('#main')).to_have_attribute('aria-busy', 'false')
-            assert server.snapshot()['state']['cultivation'] == 12
+            assert server.snapshot()['state']['herbs'] == herbs + 4
             report['checks'].append('confirmed new game clears slot; 320px layout and keyboard action')
 
             unexpected_console = [error for error in report['console_errors'] if not error['injected']]

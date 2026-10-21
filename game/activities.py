@@ -166,4 +166,4 @@ def _validate(state):
 def validate(state):
     try:_validate(state)
     except (KeyError,TypeError,AttributeError,IndexError) as exc:
-        raise ValueError("活动嵌套存档结构无效") from exc
+        raise ValueError("活动嵌套进度结构无效") from exc
