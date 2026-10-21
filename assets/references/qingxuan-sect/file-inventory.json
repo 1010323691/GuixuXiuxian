@@ -1,0 +1,618 @@
+[
+  {
+    "path": "00-art-direction/sect-overview-aerial.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3529159,
+    "sha256": "4d2956b8cabb6adabb552472989c6b7476a328fb4fdd6573729365c5211d53eb"
+  },
+  {
+    "path": "01-master-layout/sect-front-distant-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3301263,
+    "sha256": "9d29e44a266bc34771a43970ade88d5fc38c584589b99d1187ffc90f8e70d249"
+  },
+  {
+    "path": "01-master-layout/sect-front-distant-v3-access-road.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3063706,
+    "sha256": "251cd5f919f2234616ede8c76b6986bb37b5feff256880149df013d5f58afcc2"
+  },
+  {
+    "path": "01-master-layout/sect-front-distant-v4-grand-stairs.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2935932,
+    "sha256": "7e95041853c67a08dbfcab378711c5fea12aee9ba534cd06b7d629b48196df2c"
+  },
+  {
+    "path": "01-master-layout/sect-front-distant.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3491240,
+    "sha256": "75d741955f7e9dd12d5f62831289958ceacaf493de96b7afe230218177ecd31b"
+  },
+  {
+    "path": "01-master-layout/sect-gate-to-main-hall-ground-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2791509,
+    "sha256": "dde6bf1fcfb876cf4bb282683b7f3a9d28e3a305bf0f9fffab3271f5cc534291"
+  },
+  {
+    "path": "01-master-layout/sect-gate-to-main-hall-ground-v3.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2727742,
+    "sha256": "8cc5ba50310dce91122c8f5ef79de08fbb2251a266cf7a6e9b96e287e9a2fb25"
+  },
+  {
+    "path": "01-master-layout/sect-gate-to-main-hall-ground.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2958029,
+    "sha256": "284080a64ca90d8431957b9c1153e4977ea4e8f90f1722a74472946a5b81e0e1"
+  },
+  {
+    "path": "01-master-layout/sect-layout-top-ortho-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3934439,
+    "sha256": "f8c146f27a2d843dadd34dff3a38ef7cb7ad8214bddb6fbb3b298addf2480c08"
+  },
+  {
+    "path": "01-master-layout/sect-layout-top-ortho-v3.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3258746,
+    "sha256": "c93710c80af888bb90e4da7a0871f04e53df84d717e57f9365b9be23582d7d73"
+  },
+  {
+    "path": "01-master-layout/sect-layout-top-ortho-v4-grand-stairs.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2775531,
+    "sha256": "e7bf4903eb92414b0eaf3e134bae5296805c9ff0180d7b432783210a84d15ce3"
+  },
+  {
+    "path": "01-master-layout/sect-layout-top-ortho.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2933288,
+    "sha256": "2cee9da98065895f9e10122fc265dbdf92d5dc0174c9c9f161b60b2fdbf18ed5"
+  },
+  {
+    "path": "01-master-layout/sect-main-hall-to-gate-ground-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3021564,
+    "sha256": "f0d9711a5a01392767b16a85a9c4d036b365e83349a7b1c6e7d29f5031388318"
+  },
+  {
+    "path": "01-master-layout/sect-main-hall-to-gate-ground.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3226887,
+    "sha256": "d86dd4c337ccba92c2ad3a98808aca5d06ec4cf61d11230584bb0e7cbe32e38d"
+  },
+  {
+    "path": "01-master-layout/sect-sword-flight-aerial-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3198921,
+    "sha256": "3bcf5966b2017b1329e707e486d22eb2c80cfafdd3a9fab5b1b8edf29176464f"
+  },
+  {
+    "path": "01-master-layout/sect-sword-flight-aerial-v3-grand-stairs.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3095570,
+    "sha256": "60fcba8bbae313442a672277a339d48dcb32b4a15564f6928733cca3976dcd0d"
+  },
+  {
+    "path": "01-master-layout/sect-sword-flight-aerial.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3396607,
+    "sha256": "7ecd266a8f767f68a3f9fde10469520891b7afe58311511bd1ffc6d57fdfaf60"
+  },
+  {
+    "path": "01-master-layout/sect-terrain-section-draft.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 2568981,
+    "sha256": "fa2cc76cdb3dd0f8b15fb59ed52afd2e901b8bd680582ad7225a652837356cc0"
+  },
+  {
+    "path": "01-master-layout/sect-terrain-section-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2908484,
+    "sha256": "2e8c0d8b4fa740da86e8f2695f1b6e31e8d1a7ab722982fdcddd1f4383d0be28"
+  },
+  {
+    "path": "01-master-layout/sect-terrain-section-v3.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3131839,
+    "sha256": "88d09bda962698a9e57432feb4b38f969553d1d138b5c4faa05220014412bd74"
+  },
+  {
+    "path": "01-master-layout/sect-terrain-section.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2498140,
+    "sha256": "4d799dedb16560238200ba0a2a3e70e86048b57bf18eb42d0a35e7bcb9b196be"
+  },
+  {
+    "path": "01-master-layout/sect-west-to-east-cross-view-v2.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 3034539,
+    "sha256": "a88096bf6769f4447b87d5aa7a57ab33fd41df1e2d051ff84eaf635bc28de52f"
+  },
+  {
+    "path": "01-master-layout/sect-west-to-east-cross-view.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 3238952,
+    "sha256": "759b8ae390a45af811b4dd02aa2ca2502568f7ffbc430cfecd1b904391a1948b"
+  },
+  {
+    "path": "02-architecture/alchemy-hall/alchemy-hall-back-ortho.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2657364,
+    "sha256": "8240bce5221a35f9efeb4b9b03f0d652594df08e10c63918e280bde1db0d1320"
+  },
+  {
+    "path": "02-architecture/alchemy-hall/alchemy-hall-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2852259,
+    "sha256": "3c36a7318189105d84e2685a8eceb564f31603609a46e78125955f19029736cf"
+  },
+  {
+    "path": "02-architecture/cultivation-cave/cave-entrance-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3232444,
+    "sha256": "3891f0e7e9a93477a94384d10f25c9160b05e2708166081939475937678d2260"
+  },
+  {
+    "path": "02-architecture/cultivation-cave/cave-interior-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2942869,
+    "sha256": "65c3e07246d06c580170e0319fd5b42b6005211ff714d61000b5c6dd7af28a90"
+  },
+  {
+    "path": "02-architecture/disciple-residence/disciple-residence-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2784873,
+    "sha256": "675dfccd30ea2c0407ba1282b1339419a91cf7338da7437303f1987f377e4749"
+  },
+  {
+    "path": "02-architecture/disciple-residence/disciple-residence-top-ortho.png",
+    "width": 1312,
+    "height": 1199,
+    "bytes": 2916855,
+    "sha256": "451f7e4f82109bf681bbd8ae45a81a18866b3f9ecdcccb3bfab31b669e80a93c"
+  },
+  {
+    "path": "02-architecture/elder-residence/elder-residence-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2908447,
+    "sha256": "f2766a22d13fc57b05d5a143113a3d04980e605cb0d76d59f3ed73f91462e53d"
+  },
+  {
+    "path": "02-architecture/elder-residence/elder-residence-top-ortho-v2.png",
+    "width": 1211,
+    "height": 1299,
+    "bytes": 2638570,
+    "sha256": "5d9a224f38fbdb631ef4ddc384c9ab937c4ffa4f076a19530c677d9b4f01b260"
+  },
+  {
+    "path": "02-architecture/elder-residence/elder-residence-top-ortho.png",
+    "width": 1212,
+    "height": 1298,
+    "bytes": 2851847,
+    "sha256": "9953e7353aed8860df173b01f7c5a708ab1e9bcbc6142d1b501cb2098df506d7"
+  },
+  {
+    "path": "02-architecture/forging-hall/forging-hall-back-ortho.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2810765,
+    "sha256": "73e410450699e8e9f3fc58f77e56cd682838aca48b6aeebb601d5b693fea5207"
+  },
+  {
+    "path": "02-architecture/forging-hall/forging-hall-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2884231,
+    "sha256": "8994fe7f058ce22ccf4d70d158bb5dd5fa29a64997c7f2fa1ffb52b081dbce99"
+  },
+  {
+    "path": "02-architecture/main-hall/main-hall-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3062191,
+    "sha256": "2d8d4127829013b1b5b4612b252c89cebcd73dda9b5b99db6d3547709078482b"
+  },
+  {
+    "path": "02-architecture/scripture-pavilion/scripture-pavilion-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2584134,
+    "sha256": "56ac3a26697d4c487c7d1e9af8e27ab571d8c860c4989b26e3332c9445105b3a"
+  },
+  {
+    "path": "02-architecture/sect-gate/sect-gate-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2464988,
+    "sha256": "bf55cc207f69ade22aa961a8eb8e9b9905dd092185da67c521f471abec3fd6db"
+  },
+  {
+    "path": "02-architecture/sword-pavilion/simple-pavilion-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2349982,
+    "sha256": "ff069e0817557828636b1c8b4300ed8ab91c5842b9fdc383a74f3cdcb19e5bb5"
+  },
+  {
+    "path": "02-architecture/sword-pavilion/sword-pavilion-structure-sheet.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2519439,
+    "sha256": "ce61fa831377850b52e31a04099e0cc3f97bdc695d6348506f2a397b9da0a96b"
+  },
+  {
+    "path": "03-environment/ascension-stairs-structure-v2.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2257867,
+    "sha256": "82dfd8997902e482a530ffb380df23b2247a6797ffed1c32c76aaf82850b2ae5"
+  },
+  {
+    "path": "03-environment/ascension-stairs-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2384916,
+    "sha256": "c293c43ec182e506322494bbba72767b4f591f5f04cbe77548e7aa97dc8e2227"
+  },
+  {
+    "path": "03-environment/cliff-boardwalk-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3228374,
+    "sha256": "f224288648c15cfb1f45c5fcbaca839ce4acfe0d987886965bd596a65fd3845d"
+  },
+  {
+    "path": "03-environment/curved-cloud-bridge-structure-v2.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2281705,
+    "sha256": "25a26b7665957904635d763ecb8373cd341b4018b2f7a31be0f231f0df3617a9"
+  },
+  {
+    "path": "03-environment/curved-cloud-bridge-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2424385,
+    "sha256": "3bfb71eef2c3426d2de859f9cd90e6acd3a8ef21bf1304af2c509feac0343e36"
+  },
+  {
+    "path": "03-environment/path-rail-lamp-modules.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2277903,
+    "sha256": "fa709c40aa15875f7e81beda7c744d0d4575ec8ba6618c6bf6ea55e0cb306cb2"
+  },
+  {
+    "path": "03-environment/spirit-fields-herb-garden-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2930365,
+    "sha256": "51a9ef29455600afcd5e1ef0713de011005b67afd938f075fc4001bf79c8159c"
+  },
+  {
+    "path": "03-environment/spiritual-spring-pool-structure-v2.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2585542,
+    "sha256": "19718829879d9acedabbe2c9bbd542e44906e354f3ed17514d129e89a8d2e601"
+  },
+  {
+    "path": "03-environment/spiritual-spring-pool-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2807833,
+    "sha256": "134f3d9ed495f21f5aafd3496f34f6d572ae678ec1a3ede1267cb31073e97211"
+  },
+  {
+    "path": "03-environment/straight-jade-bridge-connected-approaches.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2986745,
+    "sha256": "0fe5d42744c875465178cac0189bd9a4461fb3fa5117fc495f1476bac1416b25"
+  },
+  {
+    "path": "03-environment/straight-jade-bridge-open-endpoints.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2438763,
+    "sha256": "f0e709850a44ce44d13c962a620f3ac771637c81a401c0db3ccfc70d0afeb806"
+  },
+  {
+    "path": "03-environment/straight-jade-bridge-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2638693,
+    "sha256": "d45cc753b1e2a7e22d5e7e904674677690b4a7861b50087130447c26e9874d8a"
+  },
+  {
+    "path": "03-environment/straight-jade-bridge-top-ortho.png",
+    "width": 2172,
+    "height": 724,
+    "bytes": 2042429,
+    "sha256": "91bedaadfcb49a46152d7c8ed88b87da331f7dd84dc9606fd1c5cefc0aff4661"
+  },
+  {
+    "path": "03-environment/sword-platform-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2569897,
+    "sha256": "04cd66764de2fb08f903d64ee862ba9ff32207cc04dbb0094b45ed184965e9c9"
+  },
+  {
+    "path": "03-environment/training-courtyard-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2598545,
+    "sha256": "e444c0bf156d103b65dc6c096893518758d8d19140cb960e72f55a09bfc359bf"
+  },
+  {
+    "path": "03-environment/welcome-plaza-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2365307,
+    "sha256": "bcdddacded575f7e02df2a5a7dbf2d2181c8bc632a656e226aa55cb3e647de48"
+  },
+  {
+    "path": "04-natural-assets/bamboo-common-vegetation.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2821424,
+    "sha256": "637e97e1e31d26567e390461a7b9396f027eacb3d932ccc251b5208afe25cae0"
+  },
+  {
+    "path": "04-natural-assets/cliff-wall-modules.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2834110,
+    "sha256": "1000aca31cbabd10f21900197637f01524de6a6a463cf71f7d18be381ff9dae6"
+  },
+  {
+    "path": "04-natural-assets/distant-mountains-sky.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 2493766,
+    "sha256": "f0784c5b53772c174185d1ef699c032e0320acbfb7bd2ff66e045ca8bb9bacf1"
+  },
+  {
+    "path": "04-natural-assets/main-peak-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3249374,
+    "sha256": "d0cabf639b966539c42edfddb429452ce5931d0f590eb97855f8d620dad707e4"
+  },
+  {
+    "path": "04-natural-assets/mountain-mist-layers.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 1992968,
+    "sha256": "6efad462b9143ac032c6a4aa58f8a4f42eb365daf892f19627c6ca8ef6a3d4e4"
+  },
+  {
+    "path": "04-natural-assets/pine-tree-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3407034,
+    "sha256": "41a99d8faacc3e49dfe3ead6d53274119589c611c20ce44271921869caf7cbf1"
+  },
+  {
+    "path": "04-natural-assets/rocks-size-family.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2930786,
+    "sha256": "81f1102b7e94344db57689f89a6c6f2aced4b29414cd353ce50a8f9623add5d3"
+  },
+  {
+    "path": "04-natural-assets/secondary-peak-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2996099,
+    "sha256": "4a8055f01031bb0060ea982954a322c2deaabf6db80423f81226f9b0d38e98a1"
+  },
+  {
+    "path": "04-natural-assets/spirit-herbs-luminous-plants.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 2899156,
+    "sha256": "e8563fae5076c6f58f01e300ea3432e7d8d50751e9a5eb8874cd769ace763aa7"
+  },
+  {
+    "path": "04-natural-assets/waterfall-stream-structure.png",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 3357472,
+    "sha256": "f9b0ea86927335d1acc98edfbc3a36dd9fdbc24f7f61429b3d8ff5400557fbef"
+  },
+  {
+    "path": "05-materials/blue-gray-stone-bricks.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 4239463,
+    "sha256": "205916c4dd0441f69f1f2683ef5ea91d7c05e67356424999a8a00d9c39ab2e5b"
+  },
+  {
+    "path": "05-materials/dark-xuan-wood.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2912806,
+    "sha256": "a65ab1c542a4f6f58188a7ae3de01e24195bdbfc27d451ff4108e2df3842a18c"
+  },
+  {
+    "path": "05-materials/gilded-metal-decoration.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 3812573,
+    "sha256": "acdf346fb7b2b0ace650e4df555b7687d2f3c557b856874c3745593c5c3400e7"
+  },
+  {
+    "path": "05-materials/ink-teal-glazed-tiles.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 3382533,
+    "sha256": "a8233540a2ea98764515b8becc978446ecb826d98dbff651c79c8eee15758251"
+  },
+  {
+    "path": "05-materials/mountain-rock-surface.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 4494727,
+    "sha256": "7816f310beb5132425b337dcb19d071d6b10b3a20342b5eb4ca80433dbf1041d"
+  },
+  {
+    "path": "05-materials/soil-grass-ground.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 4742896,
+    "sha256": "595cc208315b9ef24cc41e945e0898a64f3a272cf3f913d4c6a7f208e74efffb"
+  },
+  {
+    "path": "05-materials/spiritual-water-surface.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2923965,
+    "sha256": "0f42184377e15bdca8886b97dc3255a435aa2dc2a1e4f908529a7797678ffdf6"
+  },
+  {
+    "path": "05-materials/white-jade-stone.png",
+    "width": 1254,
+    "height": 1254,
+    "bytes": 2171457,
+    "sha256": "6f3f62ccdb12feac1695e288a66beac7e4f91c2401d45bc9107b89d303b780cc"
+  },
+  {
+    "path": "06-vfx/architecture-spiritual-aura-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2152993,
+    "sha256": "e26c8318cc6ac85677afa900afacdac7387ba1dd14d00e9870312597eb9ea008"
+  },
+  {
+    "path": "06-vfx/flowing-spiritual-particles-states.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 2011414,
+    "sha256": "a5f5edfa43aa0d7f4b2b5f3f4be5bc892206bf2518e2823d21e0fd07bda89716"
+  },
+  {
+    "path": "06-vfx/orbiting-sword-array-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2099161,
+    "sha256": "17e7390f70a177d513c5b75f40d90f51feab8532fab8d63df0551b48f0a7120d"
+  },
+  {
+    "path": "06-vfx/sect-protection-barrier-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2271338,
+    "sha256": "931e998c7c962db19a9c76997d871bd0b55e776d2ed2ec6763a0aae31a8aef8d"
+  },
+  {
+    "path": "06-vfx/spirit-gathering-array-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2364929,
+    "sha256": "2577c7e4d87ac320209c89dc349c2929f7d5c735a883af822f40cbd259f0ab0e"
+  },
+  {
+    "path": "06-vfx/spiritual-spring-water-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2125897,
+    "sha256": "64b552cc6a18c8e26ad0fdde31bb5d14c34a220177200fbca5176241593d876d"
+  },
+  {
+    "path": "06-vfx/sword-flight-trail-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 1876467,
+    "sha256": "f58518a35fcdc9643dec7d3ee5d6b9841d3b0a844cd8c5ab713e12ee5b0a32e3"
+  },
+  {
+    "path": "06-vfx/volumetric-cloud-sea-states.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2067590,
+    "sha256": "8afd23b9c4fc94fc7b49b3b557baec0562c137c9796d5920b826f7390c1a27ea"
+  },
+  {
+    "path": "07-lighting/sect-dawn.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3177784,
+    "sha256": "e93a88683f28acc174427dc20b84b2d62307b295ac8a02e3a228821342f29ea3"
+  },
+  {
+    "path": "07-lighting/sect-dense-cloud-weather.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 2899984,
+    "sha256": "8698f70424a2ef9cb02020ab25766043520a92744804e7cb27a336ac83a3fd06"
+  },
+  {
+    "path": "07-lighting/sect-moonlit-night.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3117561,
+    "sha256": "b25c93d5d972f53c53d70e673846fa08eed8334c16cac6368970a44ae7f9b062"
+  },
+  {
+    "path": "07-lighting/sect-noon.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3452549,
+    "sha256": "bfea1543d7522c991f5a499f97a16b2cdb6ad0b73e563edff131d9043b7bb811"
+  },
+  {
+    "path": "07-lighting/sect-protection-barrier-active-v2.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3446991,
+    "sha256": "e7e6c2870edb3eb64d61fe7e5538bffbebf98e228fb10e3d67784771f6ac9e66"
+  },
+  {
+    "path": "07-lighting/sect-protection-barrier-active.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3437394,
+    "sha256": "641df37bbca10baf25f26f8ac11d0f9f9c2d0c84f08d6815e08cba01511a2c38"
+  },
+  {
+    "path": "07-lighting/sect-sunset.png",
+    "width": 1672,
+    "height": 941,
+    "bytes": 3222487,
+    "sha256": "27c7f5a914c1431cdb7d89dbc0799446e972147c6afa9e67fd5cd31af49420a3"
+  }
+]

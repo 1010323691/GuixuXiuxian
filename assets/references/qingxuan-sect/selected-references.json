@@ -1,0 +1,434 @@
+[
+  {
+    "id": "A01",
+    "title": "宗门整体鸟瞰",
+    "path": "00-art-direction/sect-overview-aerial.png",
+    "designConstraint": "场地目标800×800m；三主要平台80/140/220m",
+    "supplements": []
+  },
+  {
+    "id": "A02",
+    "title": "严格俯视总平面",
+    "path": "01-master-layout/sect-layout-top-ortho-v4-grand-stairs.png",
+    "designConstraint": "同A01；仅视觉占地，不从像素直接换算米制",
+    "supplements": []
+  },
+  {
+    "id": "A03",
+    "title": "南北地形侧剖",
+    "path": "01-master-layout/sect-terrain-section-v3.png",
+    "designConstraint": "南80m、中140m、北220m，数值为设计目标",
+    "supplements": []
+  },
+  {
+    "id": "A04",
+    "title": "宗门正面远景与南侧宽直阶",
+    "path": "01-master-layout/sect-front-distant-v4-grand-stairs.png",
+    "designConstraint": "南侧入口宽直长阶与主阶同轴同风格",
+    "supplements": []
+  },
+  {
+    "id": "A05",
+    "title": "山门向主殿地面视角",
+    "path": "01-master-layout/sect-gate-to-main-hall-ground-v3.png",
+    "designConstraint": "人眼视点约1.7m；正北观察",
+    "supplements": []
+  },
+  {
+    "id": "A06",
+    "title": "主殿向山门反向视角",
+    "path": "01-master-layout/sect-main-hall-to-gate-ground-v2.png",
+    "designConstraint": "主殿平台视点约1.7m；朝南",
+    "supplements": []
+  },
+  {
+    "id": "A07",
+    "title": "西向东横向观察",
+    "path": "01-master-layout/sect-west-to-east-cross-view-v2.png",
+    "designConstraint": "西向东，北在画面左",
+    "supplements": []
+  },
+  {
+    "id": "A08",
+    "title": "东南高空御剑视角",
+    "path": "01-master-layout/sect-sword-flight-aerial-v3-grand-stairs.png",
+    "designConstraint": "东南上空朝西北；透视",
+    "supplements": []
+  },
+  {
+    "id": "B01",
+    "title": "宗门山门",
+    "path": "02-architecture/sect-gate/sect-gate-structure-sheet.png",
+    "designConstraint": "宽36m、高22m；进深10m为本轮提案",
+    "supplements": []
+  },
+  {
+    "id": "B02",
+    "title": "宗门主殿",
+    "path": "02-architecture/main-hall/main-hall-structure-sheet.png",
+    "designConstraint": "宽60m、深40m、高36m；三重檐",
+    "supplements": []
+  },
+  {
+    "id": "B03",
+    "title": "藏经阁",
+    "path": "02-architecture/scripture-pavilion/scripture-pavilion-structure-sheet.png",
+    "designConstraint": "24×24×52m；七层、七重檐、方形平面",
+    "supplements": []
+  },
+  {
+    "id": "B04",
+    "title": "炼丹阁",
+    "path": "02-architecture/alchemy-hall/alchemy-hall-structure-sheet.png",
+    "designConstraint": "32×24×20m为提案；统一四排气管",
+    "supplements": [
+      "02-architecture/alchemy-hall/alchemy-hall-back-ortho.png"
+    ]
+  },
+  {
+    "id": "B05",
+    "title": "炼器阁",
+    "path": "02-architecture/forging-hall/forging-hall-structure-sheet.png",
+    "designConstraint": "36×28×22m为提案；一根后烟囱",
+    "supplements": [
+      "02-architecture/forging-hall/forging-hall-back-ortho.png"
+    ]
+  },
+  {
+    "id": "B06",
+    "title": "弟子居所",
+    "path": "02-architecture/disciple-residence/disciple-residence-structure-sheet.png",
+    "designConstraint": "18×20m、单层、约7m高为提案",
+    "supplements": [
+      "02-architecture/disciple-residence/disciple-residence-top-ortho.png"
+    ]
+  },
+  {
+    "id": "B07",
+    "title": "长老居所",
+    "path": "02-architecture/elder-residence/elder-residence-structure-sheet.png",
+    "designConstraint": "28×30m、主楼双层约14m高为提案",
+    "supplements": [
+      "02-architecture/elder-residence/elder-residence-top-ortho-v2.png"
+    ]
+  },
+  {
+    "id": "B08",
+    "title": "修炼洞府入口",
+    "path": "02-architecture/cultivation-cave/cave-entrance-structure-sheet.png",
+    "designConstraint": "局部岩壁与入口尺寸仍待推定",
+    "supplements": []
+  },
+  {
+    "id": "B09",
+    "title": "修炼洞府内部",
+    "path": "02-architecture/cultivation-cave/cave-interior-structure-sheet.png",
+    "designConstraint": "石室12×16×7m、入口通道6m为提案",
+    "supplements": []
+  },
+  {
+    "id": "B10",
+    "title": "观剑亭与普通亭台",
+    "path": "02-architecture/sword-pavilion/sword-pavilion-structure-sheet.png",
+    "designConstraint": "观剑亭六角双檐约12m跨/14m高；方亭6×6×6m",
+    "supplements": [
+      "02-architecture/sword-pavilion/simple-pavilion-structure-sheet.png"
+    ]
+  },
+  {
+    "id": "C01",
+    "title": "白玉登仙石阶",
+    "path": "03-environment/ascension-stairs-structure-v2.png",
+    "designConstraint": "宽12m；踏高0.16/踏深0.32m为设计提案",
+    "supplements": []
+  },
+  {
+    "id": "C02",
+    "title": "迎仙广场",
+    "path": "03-environment/welcome-plaza-structure.png",
+    "designConstraint": "广场直径64m为提案；南北连接开放",
+    "supplements": []
+  },
+  {
+    "id": "C03",
+    "title": "圆形试剑台",
+    "path": "03-environment/sword-platform-structure.png",
+    "designConstraint": "直径40m；露天；两向入口",
+    "supplements": []
+  },
+  {
+    "id": "C04",
+    "title": "大型练功场",
+    "path": "03-environment/training-courtyard-structure.png",
+    "designConstraint": "60×40m为提案；六练习纹样",
+    "supplements": []
+  },
+  {
+    "id": "C05",
+    "title": "山间直线石桥",
+    "path": "03-environment/straight-jade-bridge-connected-approaches.png",
+    "designConstraint": "桥长40m、净宽6m；两端各20m引道为提案",
+    "supplements": [
+      "03-environment/straight-jade-bridge-top-ortho.png"
+    ]
+  },
+  {
+    "id": "C06",
+    "title": "山间弧形云桥",
+    "path": "03-environment/curved-cloud-bridge-structure-v2.png",
+    "designConstraint": "净宽6m、平面曲线半径32m为提案",
+    "supplements": []
+  },
+  {
+    "id": "C07",
+    "title": "悬崖栈道",
+    "path": "03-environment/cliff-boardwalk-structure.png",
+    "designConstraint": "长24m、净宽3m；锚固与三角托架",
+    "supplements": []
+  },
+  {
+    "id": "C08",
+    "title": "道路护栏石灯模块",
+    "path": "03-environment/path-rail-lamp-modules.png",
+    "designConstraint": "路宽6m；栏板2m；栏高1.1m；灯高2.4m为提案",
+    "supplements": []
+  },
+  {
+    "id": "C09",
+    "title": "灵泉与水池",
+    "path": "03-environment/spiritual-spring-pool-structure-v2.png",
+    "designConstraint": "约12×8m、深1.2m为提案",
+    "supplements": []
+  },
+  {
+    "id": "C10",
+    "title": "灵田与药圃",
+    "path": "03-environment/spirit-fields-herb-garden-structure.png",
+    "designConstraint": "约32×24m、三级台地为提案",
+    "supplements": []
+  },
+  {
+    "id": "D01",
+    "title": "主峰山体",
+    "path": "04-natural-assets/main-peak-structure.png",
+    "designConstraint": "主峰目标平台220m；顶台约110×90m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D02",
+    "title": "次峰山体",
+    "path": "04-natural-assets/secondary-peak-structure.png",
+    "designConstraint": "次峰目标140m；台地约70×55m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D03",
+    "title": "悬崖岩壁",
+    "path": "04-natural-assets/cliff-wall-modules.png",
+    "designConstraint": "直壁/转角/凹壁模块；不按图量尺寸",
+    "supplements": []
+  },
+  {
+    "id": "D04",
+    "title": "大中小岩石",
+    "path": "04-natural-assets/rocks-size-family.png",
+    "designConstraint": "大8m、中2.5m、小0.2–0.6m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D05",
+    "title": "古松与普通松树",
+    "path": "04-natural-assets/pine-tree-structure.png",
+    "designConstraint": "古松约14m、普通松约10m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D06",
+    "title": "竹林与普通植被",
+    "path": "04-natural-assets/bamboo-common-vegetation.png",
+    "designConstraint": "竹约8m；草灌0.6–1.4m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D07",
+    "title": "灵草与发光植物",
+    "path": "04-natural-assets/spirit-herbs-luminous-plants.png",
+    "designConstraint": "灵草0.4–0.9m、灵树约2.5m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D08",
+    "title": "瀑布与溪流",
+    "path": "04-natural-assets/waterfall-stream-structure.png",
+    "designConstraint": "落差约24m、池12×8m为提案",
+    "supplements": []
+  },
+  {
+    "id": "D09",
+    "title": "山间云雾",
+    "path": "04-natural-assets/mountain-mist-layers.png",
+    "designConstraint": "低浓云/中薄雾/高云丝；密度待推定",
+    "supplements": []
+  },
+  {
+    "id": "D10",
+    "title": "远景群山与天空",
+    "path": "04-natural-assets/distant-mountains-sky.png",
+    "designConstraint": "远中近景层次；距离待推定",
+    "supplements": []
+  },
+  {
+    "id": "E01",
+    "title": "墨青琉璃瓦",
+    "path": "05-materials/ink-teal-glazed-tiles.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E02",
+    "title": "白玉石材",
+    "path": "05-materials/white-jade-stone.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E03",
+    "title": "青灰石砖",
+    "path": "05-materials/blue-gray-stone-bricks.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E04",
+    "title": "玄木梁柱",
+    "path": "05-materials/dark-xuan-wood.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E05",
+    "title": "金属与鎏金装饰",
+    "path": "05-materials/gilded-metal-decoration.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E06",
+    "title": "山体岩石",
+    "path": "05-materials/mountain-rock-surface.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E07",
+    "title": "地面泥土与草地",
+    "path": "05-materials/soil-grass-ground.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "E08",
+    "title": "水面与灵泉",
+    "path": "05-materials/spiritual-water-surface.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "F01",
+    "title": "聚灵阵",
+    "path": "06-vfx/spirit-gathering-array-states.png",
+    "designConstraint": "阵径约12m；三维厚度与时序待推定",
+    "supplements": []
+  },
+  {
+    "id": "F02",
+    "title": "护宗大阵",
+    "path": "06-vfx/sect-protection-barrier-states.png",
+    "designConstraint": "示意穹顶约120m；非整宗门定尺",
+    "supplements": []
+  },
+  {
+    "id": "F03",
+    "title": "环绕飞剑剑阵",
+    "path": "06-vfx/orbiting-sword-array-states.png",
+    "designConstraint": "实际统一七剑环；不要沿提示词自定八剑",
+    "supplements": []
+  },
+  {
+    "id": "F04",
+    "title": "御剑飞行拖尾",
+    "path": "06-vfx/sword-flight-trail-states.png",
+    "designConstraint": "单飞剑、青白曲线拖尾",
+    "supplements": []
+  },
+  {
+    "id": "F05",
+    "title": "流动灵气粒子",
+    "path": "06-vfx/flowing-spiritual-particles-states.png",
+    "designConstraint": "山体上升螺旋粒子；速度待推定",
+    "supplements": []
+  },
+  {
+    "id": "F06",
+    "title": "山间体积云海",
+    "path": "06-vfx/volumetric-cloud-sea-states.png",
+    "designConstraint": "三岩峰云层四状态；流速待推定",
+    "supplements": []
+  },
+  {
+    "id": "F07",
+    "title": "灵泉发光水流",
+    "path": "06-vfx/spiritual-spring-water-states.png",
+    "designConstraint": "约4×3m池体仅作发光示例",
+    "supplements": []
+  },
+  {
+    "id": "F08",
+    "title": "建筑环绕灵气",
+    "path": "06-vfx/architecture-spiritual-aura-states.png",
+    "designConstraint": "普通方亭周边独立灵气效果",
+    "supplements": []
+  },
+  {
+    "id": "G01",
+    "title": "清晨",
+    "path": "07-lighting/sect-dawn.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "G02",
+    "title": "正午",
+    "path": "07-lighting/sect-noon.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "G03",
+    "title": "黄昏",
+    "path": "07-lighting/sect-sunset.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "G04",
+    "title": "月夜",
+    "path": "07-lighting/sect-moonlit-night.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "G05",
+    "title": "浓雾天气",
+    "path": "07-lighting/sect-dense-cloud-weather.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  },
+  {
+    "id": "G06",
+    "title": "护宗阵启动",
+    "path": "07-lighting/sect-protection-barrier-active-v2.png",
+    "designConstraint": "见manifest.md",
+    "supplements": []
+  }
+]
