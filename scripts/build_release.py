@@ -12,7 +12,7 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ROOTS = ['README.md', 'VERSION', 'AGENTS.md', '.gitignore', 'server.py', '启动游戏.bat',
+ROOTS = ['README.md', 'VERSION', 'CLAUDE.md', '.gitignore', 'server.py', '启动游戏.bat',
          'game', 'static', 'tests', 'docs', 'scripts', 'artifacts']
 EXTERNAL_REPORTS = {
     'artifacts/r4-qa/package-build.json',

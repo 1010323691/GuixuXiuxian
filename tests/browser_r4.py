@@ -54,11 +54,8 @@ def main():
             report['checks'].append('same chapter proof enables one-POST sweep with actual ordinary reward and credit/pity; manual retains many combat posts')
             for p in server.snapshot()['view']['world']['pages']:driver.visit(p['id'])
             page.screenshot(path=str(out/'r4-desktop.png'),full_page=True)
-            page.set_viewport_size({'width':320,'height':780})
-            for p in server.snapshot()['view']['world']['pages']:
-                driver.visit(p['id']);assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),p['id']
-            page.screenshot(path=str(out/'r4-mobile.png'),full_page=True)
-            report['checks'].append('eleven actual pages desktop/320px no horizontal overflow')
+            # 手机宽度（320px）巡检已按 CLAUDE.md「不做手机端适配」规则移除
+            report['checks'].append('eleven actual pages desktop')
             assert not report['page_errors'] and not report['console_errors'] and not report['failed_requests'],report
             report['passed']=True;browser.close()
     finally:

@@ -1,5 +1,6 @@
 """True-browser world driver; gameplay uses visible forms/buttons only."""
 import json
+import re
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -69,9 +70,30 @@ class BrowserWorldDriver:
         reveal(button)
         return self.click_write(button)
 
+    def open_panel(self, page_id='world'):
+        """三维宗门主界面下，卷目在右侧小窗打开：像玩家一样从场景旁的 HUD 入口进入（已在该卷目则不动）。"""
+        nav = self.page.locator('[data-world-page=' + json.dumps(page_id) + ']')
+        if not self.page.evaluate("document.body.classList.contains('sect-mode')"):
+            nav.click()
+            return
+        if self.page.evaluate("document.body.classList.contains('sect-panel-open') && document.getElementById('world-workbench').dataset.sectView === 'page'") and nav.get_attribute('aria-pressed') == 'true':
+            return
+        entry = self.page.locator('#sect-hub [data-open=' + json.dumps(page_id) + ']:visible')
+        if not entry.count():
+            # 窄屏的小窗铺满屏幕、盖住 HUD：先合上小窗回到宗门，再从 HUD 进入
+            self.page.locator('#sect-panel-close').click()
+        entry.first.click()
+        expect(self.page.locator('body')).to_have_class(re.compile(r'(^|\s)sect-panel-open(\s|$)'))
+        expect(nav).to_have_attribute('aria-pressed', 'true')
+
+    def open_growth(self):
+        """潜修栏与潜修详情：从 HUD 潜修托盘的“详情”打开小窗。"""
+        self.page.locator('#sh-growth-open').click()
+        expect(self.page.locator('#growth-panel')).to_be_visible()
+
     def visit(self, page_id):
         before = self.server.snapshot()
-        self.page.locator('[data-world-page=' + json.dumps(page_id) + ']').click()
+        self.open_panel(page_id)
         expect(self.page.locator('[data-world-page=' + json.dumps(page_id) + ']')).to_have_attribute('aria-pressed', 'true')
         show_all = self.page.locator('#world-actions-show-all')
         if show_all.count() and show_all.is_visible():
@@ -82,7 +104,10 @@ class BrowserWorldDriver:
 
     def action(self, command, **params):
         if command == 'world_enter' and not self.server.snapshot()['state']['world']['active']:
-            return self.legacy(command, **params)
+            result = self.legacy(command, **params)
+            expect(self.page.locator('#sect-hub')).to_be_visible()
+            self.open_panel()
+            return result
         candidates = [(entry, action) for entry in self.server.snapshot()['view']['world']['pages']
                       for action in entry['actions'] if action['id'] == command
                       and all(params.get(key) == value for key, value in action['params'].items())
@@ -167,13 +192,12 @@ def main():
             world_before = server.snapshot()
             # 进度自动同步：刷新后从服务端恢复，状态与刷新前一致
             page.reload()
-            expect(page.locator('[data-world-page="world"]')).to_be_visible()
+            expect(page.locator('#sect-hub')).to_be_visible()
+            driver.open_panel('world')
+            expect(page.locator('#world-workbench')).to_be_visible()
+            expect(page.locator('[data-world-page="world"]')).to_have_attribute('aria-pressed', 'true')
             assert server.snapshot()['state'] == world_before['state']
-            page.set_viewport_size({'width': 320, 'height': 740})
-            for entry in server.snapshot()['view']['world']['pages']:
-                driver.visit(entry['id'])
-                assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), ('320px overflow', entry['id'])
-                save_screenshot(page, artifacts / ('mobile-' + entry['id'] + '.png'), full_page=True)
+            # 手机宽度（320px）巡检已按 CLAUDE.md「不做手机端适配」规则移除
             # Numeric constraints must prevent a malformed write from real form.
             driver.visit('market')
             forms = page.locator('form[data-world-action]')

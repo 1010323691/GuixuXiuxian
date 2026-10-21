@@ -1,4 +1,4 @@
-"""Terminology gate (AGENTS.md, MU_PRD 4.6, AC17/AC18): no stand-alone / manual-save vocabulary in anything a player or
+"""Terminology gate (CLAUDE.md, MU_PRD 4.6, AC17/AC18): no stand-alone / manual-save vocabulary in anything a player or
 operator can read: UI text, API messages, event logs, CLI help/output, launcher output and current documents.
 
 Scopes
@@ -13,7 +13,7 @@ Explicit whitelist (NOT scanned, with reason):
 * code comments and docstrings          not player visible, may describe the retired behaviour for maintainers
 * docs/history, docs/iterations/*, docs/studio/*, docs/ARCHITECTURE.md, docs/DELIVERY.md, docs/TESTING.md, docs/GDD.md,
   artifacts/, prototypes/               historical records, marked as such in docs/studio/README.md and their headers
-* AGENTS.md                             quotes the banned words in the rule itself
+* CLAUDE.md                             quotes the banned words in the rule itself
 * tests/                                tests must name the banned words to check for them
 """
 import ast
@@ -39,7 +39,7 @@ BANNED_RE = re.compile('|'.join(map(re.escape, BANNED)))
 CORE_RE = re.compile('存档|读档|载入|检查点|保存位置|单机|单人|本地')
 
 HISTORICAL_DOCS = ('docs/history', 'docs/iterations', 'docs/studio', 'docs/ARCHITECTURE.md', 'docs/DELIVERY.md',
-                   'docs/TESTING.md', 'docs/GDD.md', 'artifacts', 'prototypes', 'AGENTS.md', 'tests')
+                   'docs/TESTING.md', 'docs/GDD.md', 'artifacts', 'prototypes', 'CLAUDE.md', 'tests')
 CURRENT_DOCS = ('README.md', 'docs/API.md', 'docs/PLAYING.md', 'docs/R3_PLAYING.md', 'docs/R4_PLAYING.md', 'docs/UI.md')
 
 
@@ -206,7 +206,7 @@ class StaticFileTermsTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_javascript_sources_without_comments(self):
-        sources = [ROOT / 'static' / name for name in ('app.js', 'battle_replay.js', 'fx3d.js', 'battle_lab.js')]
+        sources = [ROOT / 'static' / name for name in ('app.js', 'battle_replay.js', 'fx3d.js', 'battle_lab.js', 'sect_hub.js')]
         sources += sorted((ROOT / 'src').rglob('*.ts'))  # TypeScript arena sources (the bundle itself is minified third-party code)
         for path in sources:
             name = path.relative_to(ROOT).as_posix()

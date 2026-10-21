@@ -84,7 +84,7 @@ def main():
             page.on('pageerror', lambda e: report['errors'].append(str(e)))
             page.on('console', lambda m: report['errors'].append(m.text) if m.type == 'error' else None)
             enter_world(page, server, '三维QA')
-            page.locator('[data-world-page="estate"]').click()
+            page.locator('#sect-hub .sh-slot[data-open="estate"]').click()
             page.wait_for_timeout(1500)
             first = page.evaluate(STATS)
             assert first['renderers'] == 1 and first['stage'], first
@@ -95,7 +95,7 @@ def main():
             page.evaluate("async () => { const m = await import('/fx3d.js'); m.mountStage({host: document.querySelector('.world-page-heading'), tier: 3, color: '#3FA585', page: 'estate', estate: {garden: 2, workshop: 2, chamber: 2}}); }")
             page.wait_for_timeout(800)
             assert page.evaluate(STATS)['stage']['lanterns'] == 6
-            page.locator('[data-world-page="market"]').click()
+            page.locator('#sect-hub .sh-play[data-open="market"]').click()
             page.wait_for_timeout(800)
             assert page.evaluate(STATS)['stage']['lanterns'] == 0
             report['checks'].append('estate levels drive lantern count; other pages show none')
@@ -183,8 +183,11 @@ def main():
                 HTMLCanvasElement.prototype.getContext = function (type, ...rest) { return /webgl/.test(type) ? null : orig.call(this, type, ...rest); };""")
             page.on('pageerror', lambda e: report['errors'].append('nogl:' + str(e)))
             page.goto(server.url)
-            expect(page.locator('#character-name')).to_be_visible()
-            page.locator('[data-world-page="estate"]').click()
+            expect(page.locator('#sect-fallback')).to_be_visible()      # 无 WebGL：三维宗门退为图录，HUD 照常
+            expect(page.locator('#sh-name')).to_be_visible()
+            page.locator('#sect-hub .sh-slot[data-open="estate"]').click()
+            expect(page.locator('[data-world-page="estate"]')).to_have_attribute('aria-pressed', 'true')
+            page.locator('#sect-hub .sh-slot[data-open="estate"]').click()
             page.wait_for_timeout(1200)
             assert not page.evaluate("document.body.classList.contains('stage3d-on')")
             page.evaluate("(r) => BattleReplay.open(r, {tier: 3, root: 'fire', skill: 'flame', form: 'beast', boss: true})", ARENA)

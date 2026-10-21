@@ -1395,3 +1395,232 @@ body.replay-open { overflow: hidden; }
 /* 三维舞台接管时隐藏 Canvas2D 灵气画布；三维画布沿用 .aura-canvas 的定位 */
 body.stage3d-on canvas.aura-canvas:not(.stage3d-canvas) { display: none; }
 .stage3d-canvas.lost { display: none; }
+
+/* ===================================================================
+   16. 三维宗门主界面（sect_hub.js + sect3d.js）：PC 1920×1080 · 100% 缩放基准
+   场景为主体，HUD 为细边半透明墨青面板；正文 14–16px，图标 24–36px。
+   工作台作为“功能面板”浮于场景之上，面板外的 HUD 与场景互不穿透。
+   =================================================================== */
+:root {
+  --sh-bg: rgba(10, 34, 36, .66);
+  --sh-bg-strong: rgba(8, 28, 30, .82);
+  --sh-edge: rgba(214, 169, 78, .5);
+  --sh-edge-soft: rgba(142, 197, 175, .28);
+  --sh-text: #EEF3EC;
+  --sh-dim: #B9CBC3;
+  --sh-gold: #E3C273;
+  --sh-gap: 24px;
+}
+.sect-hub { position: fixed; inset: 0; z-index: 1; color: var(--sh-text); font-family: var(--font-sans); font-size: 14px; pointer-events: none; overflow: hidden; background: radial-gradient(120% 90% at 50% 10%, #cfe4ef 0%, #a9c6d4 55%, #7f9fae 100%); }
+.sect-hub[hidden] { display: none; }
+.sect-hub > * { pointer-events: auto; }
+.sect-stage { position: absolute; inset: 0; }
+.sect3d-canvas { display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+.sect-markers { position: absolute; inset: 0; pointer-events: none !important; }
+.sect-marker { position: absolute; left: 0; top: 0; display: grid; justify-items: center; gap: 0; padding: 3px 10px 4px; border: 1px solid var(--sh-edge); border-radius: 4px; background: var(--sh-bg); color: var(--sh-text); font: inherit; line-height: 1.2; cursor: pointer; pointer-events: auto; white-space: nowrap; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); transition: opacity .2s, background .15s; }
+.sect-marker::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 1px; height: 7px; background: var(--sh-edge); }
+.sect-marker-name { font-family: var(--font-display); font-size: 16px; letter-spacing: .06em; }
+.sect-marker-func { font-size: 12px; color: var(--sh-gold); }
+.sect-marker:hover, .sect-marker.hot, .sect-marker:focus-visible { background: var(--sh-bg-strong); border-color: var(--sh-gold); }
+.sect-marker.occluded { opacity: .38; pointer-events: none; }
+.sect-marker[hidden] { display: none; }
+.sect-tip { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 5px 12px; border: 1px solid var(--sh-edge); border-radius: 4px; background: var(--sh-bg-strong); font-size: 14px; pointer-events: none !important; }
+.sect-tip[hidden] { display: none; }
+
+/* 降级图录：无 WebGL / 初始化失败 */
+.sect-fallback { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -54%); width: min(760px, calc(100vw - 48px)); padding: 24px 28px; border: 1px solid var(--sh-edge); border-radius: 8px; background: var(--sh-bg-strong); text-align: center; }
+.sect-fallback[hidden] { display: none; }
+.sect-fallback h2 { margin: 4px 0 6px; font-family: var(--font-display); font-weight: 400; font-size: 28px; color: var(--sh-text); }
+.sect-fallback .section-number { color: var(--sh-gold); }
+.sect-fallback .quiet-note { color: var(--sh-dim); font-size: 14px; }
+.sect-fallback-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+.sect-fallback-entry { display: grid; gap: 2px; padding: 10px 8px; border: 1px solid var(--sh-edge-soft); border-radius: 6px; background: rgba(255, 255, 255, .05); color: var(--sh-text); font: inherit; cursor: pointer; }
+.sect-fallback-entry strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.sect-fallback-entry span { font-size: 13px; color: var(--sh-gold); }
+.sect-fallback-entry:hover, .sect-fallback-entry:focus-visible { border-color: var(--sh-gold); background: rgba(227, 194, 115, .12); }
+
+/* 通用 HUD 面板 */
+.sh-player, .sh-resources, .sh-tracker, .sh-play, .sh-cultivate, .sh-dock, .sh-settings-menu, .sh-home, .sh-event, .sh-gear { border: 1px solid var(--sh-edge-soft); background: var(--sh-bg); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 4px 16px rgba(4, 18, 20, .22); }
+.sect-hub .icon { width: 24px; height: 24px; stroke-width: 1.6; }
+.sect-hub button { font: inherit; color: inherit; cursor: pointer; }
+.sect-hub button:disabled { cursor: not-allowed; opacity: .5; }
+.sect-hub button:focus-visible { outline: 2px solid var(--sh-gold); outline-offset: 2px; }
+
+/* 左上：人物 */
+.sh-player { position: absolute; left: var(--sh-gap); top: 18px; display: flex; gap: 12px; align-items: center; width: 330px; padding: 10px 14px 10px 10px; border-color: var(--sh-edge); border-radius: 40px 8px 8px 40px; }
+.sh-avatar { flex-shrink: 0; width: 64px; height: 64px; border: 2px solid var(--sh-gold); border-radius: 50%; overflow: hidden; background: #e8efe9; }
+.sh-avatar .portrait { width: 100%; height: 100%; display: block; }
+.sh-player-copy { flex: 1; display: grid; gap: 3px; min-width: 0; }
+.sh-name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sh-name-line strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-badge { flex-shrink: 0; padding: 0 8px; border: 1px solid var(--sh-edge); border-radius: 3px; color: var(--sh-gold); font-size: 13px; line-height: 20px; }
+.sh-power { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--sh-gold); }
+.sect-hub .sh-power .icon { width: 18px; height: 18px; }
+.sh-bar { display: grid; grid-template-columns: 30px 1fr 74px; align-items: center; gap: 6px; font-size: 12px; color: var(--sh-dim); }
+.sh-track { position: relative; display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.sh-track > span { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, #3aa6c9, #7fe0ec); transition: width .4s ease; }
+.sh-bar[data-kind="mp"] .sh-track > span { background: linear-gradient(90deg, #2c9a74, #79d9a8); }
+.sh-bar[data-kind="hp"] .sh-track > span { background: linear-gradient(90deg, #b94a36, #e58e6f); }
+.sh-bar-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--sh-text); white-space: nowrap; }
+
+/* 顶部：资源与场景名 */
+.sh-top { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: grid; justify-items: center; gap: 6px; pointer-events: none !important; }
+.sh-resources { display: flex; gap: 4px; margin: 0; padding: 3px 6px; border-color: var(--sh-edge); border-radius: 16px; list-style: none; pointer-events: auto; }
+.sh-resources li { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 26px; font-size: 14px; color: var(--sh-dim); white-space: nowrap; }
+.sh-resources li + li { border-left: 1px solid var(--sh-edge-soft); }
+.sh-resources strong { color: var(--sh-text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.sect-hub .sh-resources .icon { width: 18px; height: 18px; color: var(--sh-gold); }
+.sh-plate { padding: 2px 22px; border: 1px solid var(--sh-edge); border-radius: 3px; background: var(--sh-bg-strong); font-family: var(--font-display); font-size: 20px; letter-spacing: .3em; color: var(--sh-text); }
+
+/* 右上：活动与设置 */
+.sh-corner { position: absolute; right: var(--sh-gap); top: 14px; display: flex; align-items: flex-start; gap: 10px; }
+.sh-events { display: flex; gap: 8px; }
+.sh-event { display: grid; justify-items: center; gap: 2px; width: 70px; padding: 6px 2px 4px; border-radius: 6px; font-size: 14px; }
+.sect-hub .sh-event .icon { width: 30px; height: 30px; color: var(--sh-gold); }
+.sh-event:hover, .sh-play:hover, .sh-home:hover, .sh-gear:hover { border-color: var(--sh-gold); background: var(--sh-bg-strong); }
+.sh-settings { position: relative; }
+.sh-gear { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; }
+.sh-sync-dot { position: absolute; right: 2px; top: 2px; width: 9px; height: 9px; border-radius: 50%; background: #5fd39a; box-shadow: 0 0 0 2px rgba(8, 28, 30, .9); }
+.sh-sync-dot[data-state="syncing"] { background: #6fb2ec; }
+.sh-sync-dot[data-state="retrying"] { background: #e8b14d; }
+.sh-sync-dot[data-state="offline"], .sh-sync-dot[data-state="failed"], .sh-sync-dot[data-state="auth"] { background: #e2664c; }
+.sh-settings-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; display: grid; gap: 10px; width: 300px; padding: 12px 14px; border-color: var(--sh-edge); border-radius: 8px; background: var(--sh-bg-strong); }
+.sh-settings-menu[hidden] { display: none; }
+.sh-settings-menu .section-number { color: var(--sh-gold); }
+.sh-settings-slot { display: grid; gap: 10px; }
+.sh-settings-slot .save-status { margin: 0; color: var(--sh-text); white-space: normal; font-size: 14px; }
+.sh-settings-slot .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.sh-settings-slot .account-menu { right: auto; left: 0; }
+
+/* 左侧：修行指引 */
+.sh-tracker { position: absolute; left: var(--sh-gap); top: 150px; width: 260px; padding: 10px 12px; border-left: 2px solid var(--sh-gold); border-radius: 6px; }
+.sh-tracker h2 { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--sh-gold); letter-spacing: .1em; }
+.sh-guide { margin: 4px 0 6px; font-size: 13px; color: var(--sh-dim); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sh-goals { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.sh-goal { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.sh-goal-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sect-hub .sh-go { flex-shrink: 0; height: 26px; padding: 0 10px; border: 1px solid var(--sh-edge); border-radius: 3px; background: rgba(227, 194, 115, .14); font-size: 13px; }
+.sh-go:hover { background: rgba(227, 194, 115, .3); }
+.sect-hub .sh-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 0; border: 0; background: none; font-size: 13px; color: var(--sh-gold); }
+.sect-hub .sh-link .icon { width: 18px; height: 18px; }
+
+/* 右侧：玩法入口 */
+.sh-plays { position: absolute; right: var(--sh-gap); top: 50%; transform: translateY(-46%); display: grid; gap: 8px; }
+.sh-play { display: flex; align-items: center; gap: 10px; width: 156px; height: 44px; padding: 0 12px 0 8px; border-right: 2px solid var(--sh-gold); border-radius: 22px 4px 4px 22px; font-size: 16px; text-align: left; }
+.sect-hub .sh-play .icon { width: 30px; height: 30px; color: var(--sh-gold); }
+.sh-play span { display: grid; line-height: 1.15; }
+.sh-play small { font-size: 12px; color: var(--sh-dim); }
+
+/* 中下：持续修炼 */
+.sh-cultivate { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; width: 560px; padding: 8px 12px; border-color: var(--sh-edge); border-radius: 8px; }
+.sect-hub .sh-lotus { width: 32px; height: 32px; color: #8fe8ef; flex-shrink: 0; }
+.sh-cultivate-copy { flex: 1; display: grid; gap: 4px; min-width: 0; }
+.sh-cultivate-head { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; overflow: hidden; }
+.sh-cultivate-head strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.sh-cultivate-head span { font-size: 14px; color: var(--sh-dim); overflow: hidden; text-overflow: ellipsis; }
+.sh-cultivate .sh-track { height: 4px; }
+.sh-break-text { font-size: 13px; color: var(--sh-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sect-hub .sh-break { flex-shrink: 0; width: 90px; height: 34px; border: 1px solid #c9a24a; border-radius: 4px; background: linear-gradient(180deg, #e6c56e, #b98a32); color: #2a1d06; font-family: var(--font-display); font-size: 18px; letter-spacing: .2em; }
+.sect-hub .sh-break[data-ready="false"] { background: rgba(227, 194, 115, .14); color: var(--sh-dim); }
+
+/* 底部 Dock */
+.sh-dock { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px 10px; border-color: var(--sh-edge); border-radius: 10px; }
+.sh-slot { position: relative; display: grid; justify-items: center; align-content: center; gap: 2px; width: 96px; height: 60px; border: 0; border-radius: 6px; background: none; font-size: 15px; }
+.sect-hub .sh-slot .icon { width: 30px; height: 30px; color: var(--sh-gold); }
+.sh-slot span { display: block; }
+.sh-slot kbd { position: absolute; right: 12px; top: 4px; font: 11px/1 var(--font-sans); color: var(--sh-dim); border: 1px solid var(--sh-edge-soft); border-radius: 3px; padding: 1px 3px; }
+.sh-slot:hover { background: rgba(227, 194, 115, .14); }
+
+/* 右下：视角 */
+.sh-view { position: absolute; right: var(--sh-gap); bottom: 18px; display: grid; justify-items: end; gap: 6px; pointer-events: none !important; }
+.sh-hint { margin: 0; padding: 2px 8px; border-radius: 3px; background: rgba(8, 28, 30, .45); font-size: 12px; color: var(--sh-dim); }
+.sh-home { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 18px; font-size: 14px; pointer-events: auto; }
+
+/* 宗门模式：场景与 HUD 常驻；原工作台退为右侧“小窗”，一次只显示一种内容（卷目 / 卷宗 / 潜修 / 序章旧事） */
+body.sect-mode { background: #9fbcc8; --win-w: min(880px, 52vw); --win-r: 196px; --win-top: 104px; --win-bottom: 186px; }
+body.sect-mode .landscape, body.sect-mode .masthead, body.sect-mode #game > .hud { display: none !important; }
+body.sect-mode .shell { position: fixed; inset: 0; z-index: 10; display: block; height: auto; pointer-events: none; }
+body.sect-mode #main, body.sect-mode #game { display: block; }
+body.sect-mode #main { visibility: hidden; }
+body.sect-mode .world-workbench { position: fixed; z-index: 11; top: var(--win-top); bottom: var(--win-bottom); right: var(--win-r); width: var(--win-w); display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); border: 1px solid var(--sh-edge); border-radius: 10px; background: var(--paper-0); box-shadow: 0 18px 60px rgba(4, 18, 20, .45); pointer-events: auto; overflow: hidden; animation: sect-window-in .22s var(--ease-out); }
+body.sect-mode.sect-panel-open .world-workbench { visibility: visible; }
+body.sect-mode:not(.sect-panel-open) .world-workbench { display: none; }
+@keyframes sect-window-in { from { opacity: 0; transform: translateX(16px); } }
+/* 小窗标题栏：卷名、来源说明与合上 */
+.sect-window-bar { display: none; }
+body.sect-mode .sect-window-bar:not([hidden]) { display: flex; min-width: 0; overflow: hidden; align-items: center; gap: 10px; height: 44px; padding: 0 8px 0 14px; border-bottom: 1px solid var(--line); background: linear-gradient(90deg, var(--dai-700), var(--dai-600)); color: var(--surface); }
+.sect-window-bar > .icon { width: 22px; height: 22px; color: var(--gold-300); flex-shrink: 0; }
+.sect-window-title { margin: 0; flex-shrink: 0; font-family: var(--font-display); font-weight: 400; font-size: 18px; letter-spacing: .12em; white-space: nowrap; }
+.sect-window-sub { flex: 1; min-width: 0; font-size: 13px; color: rgba(240, 234, 214, .78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sect-panel-close { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid rgba(227, 194, 115, .55); border-radius: 15px; background: rgba(255, 255, 255, .08); color: var(--surface); font-size: 14px; cursor: pointer; }
+.sect-panel-close kbd { font: 11px/1 var(--font-sans); color: rgba(240, 234, 214, .8); border: 1px solid rgba(240, 234, 214, .4); border-radius: 3px; padding: 1px 3px; }
+.sect-panel-close .icon { width: 16px; height: 16px; }
+.sect-panel-close:hover { border-color: var(--gold-300); background: rgba(255, 255, 255, .16); }
+/* 卷目视图：去掉原左侧卷目导航与右侧卷宗栏（入口已在场景与 HUD），卷首压缩为窄条 */
+body.sect-mode .world-workbench[hidden] { display: none; }
+@media (min-width: 760px) {
+  body.sect-mode .world-workbench .world-layout { height: 100%; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: none; padding: 10px; gap: 10px; --stage-h: 92px; }
+  body.sect-mode .world-workbench .world-layout:has(.in-battle) { --stage-h: clamp(140px, 22vh, 200px); }
+}
+/* 卷号与“NPC 模拟”标注已在小窗标题栏，卷首只留卷名与说明 */
+body.sect-mode .world-page-heading #world-page-number, body.sect-mode .world-page-heading .simulation-label { display: none; }
+body.sect-mode .world-page-heading #world-page-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+body.sect-mode .world-navigation, body.sect-mode .stage-tab.narrow-only, body.sect-mode #legacy-history-button, body.sect-mode #world-actions-jump { display: none !important; }
+body.sect-mode .world-workbench .world-aside { display: none; }
+body.sect-mode .world-workbench .legacy-history { display: none; }
+/* 卷宗视图（任务 / 回执 / 进度） */
+body.sect-mode [data-sect-view="dossier"] .world-content { display: none; }
+body.sect-mode [data-sect-view="dossier"] .world-layout { grid-template-rows: minmax(0, 1fr); grid-template-areas: none; }
+body.sect-mode [data-sect-view="dossier"] .world-aside { display: grid; grid-area: auto; box-shadow: none; }
+/* 潜修视图：原潜修栏与潜修详情在小窗内展开 */
+body.sect-mode #growth-panel { display: none; }
+body.sect-mode [data-sect-view="growth"] .world-layout, body.sect-mode [data-sect-view="legacy"] .world-layout { display: none; }
+body.sect-mode [data-sect-view="growth"] #growth-panel:not([hidden]) { grid-area: auto; grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; height: auto; padding: 16px 18px; border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+body.sect-mode [data-sect-view="growth"] .growth-details > summary { display: none; }
+body.sect-mode [data-sect-view="growth"] .growth-popover { position: static; width: auto; max-width: none; transform: none; box-shadow: none; margin: 0; }
+/* 潜修与旧事内容短：小窗高度随内容，不留大片空白 */
+body.sect-mode .world-workbench[data-sect-view="growth"], body.sect-mode .world-workbench[data-sect-view="legacy"] { bottom: auto; max-height: calc(100vh - var(--win-top) - var(--win-bottom)); grid-template-rows: auto auto; }
+/* 序章旧事视图 */
+body.sect-mode [data-sect-view="legacy"] .legacy-history:not([hidden]) { grid-area: auto; grid-column: 1 / -1; max-width: none; display: block; position: static; inset: auto; margin: 16px; transform: none; box-shadow: none; }
+/* 操作反馈：小窗打开时贴在小窗内顶部（不压标题栏与合上按钮），否则在资源条之下居中 */
+body.sect-mode #notice { top: 100px; pointer-events: auto; }
+body.sect-mode.sect-panel-open #notice { top: calc(var(--win-top) + 52px); left: calc(100vw - var(--win-r) - var(--win-w) + 12px); width: calc(var(--win-w) - 24px); max-width: none; transform: none; }
+/* 叠加提示（.toast）放在左侧任务追踪之下的空白，不压小窗、活动入口与玩法栏 */
+body.sect-mode .fx-layer { padding-top: 350px; }
+body.sect-mode .toast { float: left; clear: left; max-width: 260px; margin: 0 0 8px var(--sh-gap, 24px); padding: 10px 12px 10px 38px; font-size: 13px; }
+body.sect-mode .toast::before { left: 10px; top: 10px; }
+/* 潜修托盘的“详情”入口 */
+.sh-cultivate-tools { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sect-hub .sh-growth-open { height: 34px; padding: 0 12px; border: 1px solid var(--sh-edge); border-radius: 4px; background: rgba(227, 194, 115, .14); color: var(--sh-gold); font-size: 14px; }
+.sect-hub .sh-growth-open:hover { background: rgba(227, 194, 115, .3); }
+.sect-hub .sh-growth-open[data-attention="true"] { border-color: var(--cin-300); color: #ffd9c9; }
+.sh-links { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.sh-menu-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* 较小桌面窗口：收紧边距与宽度，仍保持一屏 */
+@media (max-width: 1500px) {
+  :root { --sh-gap: 14px; }
+  .sh-tracker { width: 220px; }
+  .sh-play { width: 132px; font-size: 15px; }
+  body.sect-mode { --win-r: 162px; }
+}
+@media (max-width: 1100px) {
+  .sh-plays { top: auto; bottom: 170px; transform: none; grid-template-columns: repeat(2, auto); }
+  .sh-tracker, .sh-hint { display: none; }
+  /* 活动入口（闻道 / 名录）收为设置按钮下的竖列，窄屏仍可达 */
+  .sh-corner { flex-direction: column-reverse; align-items: flex-end; }
+  .sh-events { flex-direction: column; gap: 4px; }
+  .sh-event { width: 52px; padding: 4px 2px 3px; font-size: 11px; }
+  .sect-hub .sh-event .icon { width: 22px; height: 22px; }
+  .sh-cultivate { width: min(560px, calc(100vw - 28px)); bottom: 88px; }
+  .sh-slot { width: 64px; font-size: 13px; }
+  .sh-slot kbd { display: none; }
+  .sh-player { width: 260px; }
+  /* 窄窗口没有侧旁空地：小窗铺满资源条以下，其下的 HUD 暂隐 */
+  body.sect-mode { --win-w: calc(100vw - 16px); --win-r: 8px; --win-top: 64px; --win-bottom: 8px; }
+  body.sect-panel-open .sh-player, body.sect-panel-open .sh-plate, body.sect-panel-open .sh-dock, body.sect-panel-open .sh-plays, body.sect-panel-open .sh-cultivate, body.sect-panel-open .sect-markers, body.sect-panel-open .sh-view, body.sect-panel-open .sect-tip { visibility: hidden; }
+  /* 提示从小窗标题行之下靠右开始，不压合上按钮 */
+  body.sect-mode .fx-layer { padding-top: 112px; }
+  body.sect-mode .toast { float: right; clear: right; max-width: min(340px, calc(100vw - 32px)); margin: 0 16px 8px 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sect-marker { transition: none; } }

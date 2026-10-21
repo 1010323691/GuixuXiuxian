@@ -32,7 +32,7 @@ def main():
             assert 'r3' in server.snapshot()['state']['world']
             baseline_route(server.snapshot, driver.legacy)
             driver.action('world_enter')
-            expect(page.locator('#growth-panel')).to_be_visible()
+            driver.open_growth()
             assert server.snapshot()['view']['growth']['rate']['per_day'] == 540
             driver.visit('social')
             draft_form=page.locator('form[data-world-action=world_family_create]')
@@ -111,7 +111,8 @@ def main():
             offset=next(n for n in range(21) if ((today.toordinal()+n-anchor.toordinal())//7)%3==2)
             server.clock.advance(offset*86400)
             page.reload()
-            expect(page.locator('#growth-panel')).to_be_visible()
+            expect(page.locator('#sect-hub')).to_be_visible()
+            driver.open_growth()
             driver.action('world_activity_week_accept')
             weekly=next(k for k in server.snapshot()['state']['world']['r3']['activities']['entries'] if k.startswith('w:'))
             for resource in ['ore','wood']:
@@ -173,12 +174,8 @@ def main():
             for entry in server.snapshot()['view']['world']['pages']:
                 driver.visit(entry['id'])
             page.screenshot(path=str(artifacts/'r3-desktop.png'), full_page=True)
-            page.set_viewport_size({'width':320,'height':780})
-            for entry in server.snapshot()['view']['world']['pages']:
-                driver.visit(entry['id'])
-                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), entry['id']
-            page.screenshot(path=str(artifacts/'r3-mobile.png'), full_page=True)
-            report['checks'].append('all eleven real pages and 320px no horizontal overflow')
+            # 手机宽度（320px）巡检已按 CLAUDE.md「不做手机端适配」规则移除
+            report['checks'].append('all eleven real pages')
             assert not report['page_errors'], report['page_errors']
             assert not report['console_errors'], report['console_errors']
             assert not report['failed_requests'], report['failed_requests']

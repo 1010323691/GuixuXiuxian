@@ -61,7 +61,7 @@ class DomContractTests(unittest.TestCase):
         self.assertRegex(INDEX, r'id="auth-password"[^>]*autocomplete="current-password"')
 
     def test_page_loads_only_same_origin_scripts_and_styles(self):
-        self.assertEqual(re.findall(r'<script[^>]*src="([^"]+)"', INDEX), ['/battle_replay.js', '/app.js'])
+        self.assertEqual(re.findall(r'<script[^>]*src="([^"]+)"', INDEX), ['/battle_replay.js', '/app.js', '/sect_hub.js'])
         self.assertEqual(re.findall(r'<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', INDEX), ['/styles.css'])
         self.assertNotRegex(INDEX, r'<script(?![^>]*\bsrc=)[^>]*>')            # no inline script (CSP script-src self)
         self.assertNotRegex(INDEX, r'\son\w+="')                                 # no inline event handlers
