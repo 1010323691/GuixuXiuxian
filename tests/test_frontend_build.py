@@ -48,6 +48,18 @@ class FrontendBuildTests(unittest.TestCase):
         self.assertIn("from '/arena3d.js'", (ROOT / 'static' / 'battle_lab.js').read_text(encoding='utf-8'))
         self.assertNotIn('battle-lab', (ROOT / 'static' / 'index.html').read_text(encoding='utf-8'))  # not linked from the game
 
+    def test_painted_hero_art_is_served_with_recorded_source(self):
+        names = ('front', 'side', 'back', 'sword', 'talisman', 'circle', 'jade')
+        for name in names:
+            path = '/art/hero/%s.png' % name
+            self.assertEqual(server.FILES.get(path), ('art/hero/%s.png' % name, 'image/png'), path)
+            data = (ROOT / 'static' / 'art' / 'hero' / ('%s.png' % name)).read_bytes()
+            self.assertEqual(data[:8], bytes.fromhex('89504e470d0a1a0a'), name)
+            self.assertIn("'%s'" % name, (ROOT / 'src' / 'battle' / 'art.ts').read_text(encoding='utf-8'))
+        source = (ROOT / 'static' / 'art' / 'hero' / 'SOURCE.md').read_text(encoding='utf-8')
+        self.assertIn('protagonist_xianxia_character_concept_turnaround_v001', source)
+        self.assertNotIn('/art/hero/SOURCE.md', server.FILES)  # provenance note is not served
+
     def test_node_modules_never_committed(self):
         self.assertIn('node_modules/', (ROOT / '.gitignore').read_text(encoding='utf-8').splitlines())
 

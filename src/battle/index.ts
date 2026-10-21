@@ -2,13 +2,14 @@
 // Rules never live here: in stage 2 the Python battle report will drive the same templates.
 import * as THREE from 'three';
 import { makeCultivator, makeDemon, type Actor } from './actors';
+import { loadArt, makeArtCultivator } from './art';
 import { CameraRig, type ShotName } from './camera';
 import { buildEnvironment } from './env';
 import { FxSystem } from './fx';
 import { buildPost } from './post';
 import { V, disposeOutlines, disposeShared, lerp, easeInOut, easeOut } from './util';
 
-export interface ArenaOptions { quality?: 0 | 1 | 2; reducedMotion?: boolean; skill?: THREE.ColorRepresentation }
+export interface ArenaOptions { quality?: 0 | 1 | 2; reducedMotion?: boolean; skill?: THREE.ColorRepresentation; hero?: 'art' | 'toon' }
 
 const HERO_HOME = V(0, 0, 6);
 const FOE_HOME = V(0, 1.2, -11);
@@ -44,7 +45,9 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
     aberrate: (a) => post.aberrate(a),
   }, reduced);
 
-  const hero = makeCultivator(skill), foe = makeDemon();
+  const art = opts.hero === 'toon' ? null : loadArt();
+  if (art) fx.setArt(art);
+  const hero = art ? makeArtCultivator(art, skill) : makeCultivator(skill), foe = makeDemon();
   scene.add(hero.root, foe.root);
   fx.attachAura(foe.root, { color: 0x1a1012, rate: 14, radius: 3, rise: 1.5, size: [2.5, 5], smoke: true, offset: V(-.5, 3, 0) });
   fx.attachAura(foe.root, { color: 0xff3a12, rate: 26, radius: 3.4, rise: 4, size: [.15, .4], offset: V(0, 3.5, 0) });
@@ -62,7 +65,8 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
   shot(0, 'establish');
   tl.tween(0, 2.2, (u) => { const k = easeOut(u); hero.root.position.set(lerp(heroFrom.x, HERO_HOME.x, k), lerp(heroFrom.y, HERO_HOME.y, k) + Math.sin(u * Math.PI) * 3, lerp(heroFrom.z, HERO_HOME.z, k)); });
   tl.at(.9, () => { foe.moves.play('roar', 2); fx.embers(foe.anchor('head'), 0xff4a1a, 1.5); rig.shake(.35); });
-  shot(2.1, 'shoulder', 1.1);
+  shot(1.9, 'heroClose', .5);
+  shot(2.9, 'shoulder', .7);
   // 剑阵 sword formation
   tl.at(2.4, () => { hero.moves.play('charge', 1.4); fx.gather(() => hero.anchor('hand'), skill, 1.3, 3.5); });
   tl.at(3.1, () => {
@@ -73,7 +77,7 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
     });
   });
   // 符箓 talisman volley
-  shot(5.3, 'side', .9);
+  shot(5.3, 'side');
   tl.at(5.5, () => { hero.moves.play('thrust', .8); fx.talismans(() => hero.anchor('hand'), chest(foe), 5, (i) => {
     const p = jitter(foe.anchor('chest'), i + 20);
     fx.impact(p, 0xffc040, .9); fx.embers(p, 0xffc040, .8); foe.flash(0xffe0a0, 1); foe.moves.play('hit', .5);
@@ -185,6 +189,7 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
         const mats = mesh.material ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) : [];
         for (const m of mats) { for (const v of Object.values(m)) if (v instanceof THREE.Texture) v.dispose(); m.dispose(); }
       });
+      if (art) for (const v of Object.values(art)) if (v instanceof THREE.Texture) v.dispose();
       disposeOutlines();
       disposeShared();
     },
@@ -211,7 +216,7 @@ export function runLab(host: HTMLElement) {
     return;
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, quality >= 2 ? 2 : 1.25));
-  const arena = createArena(renderer, { quality, reducedMotion: reduced });
+  const arena = createArena(renderer, { quality, reducedMotion: reduced, hero: params.get('hero') === 'toon' ? 'toon' : 'art' });
   const resize = () => arena.resize(host.clientWidth, host.clientHeight);
   addEventListener('resize', resize);
   resize();

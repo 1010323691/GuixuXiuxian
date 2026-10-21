@@ -6,6 +6,7 @@ import {
   ColorOverLife, SizeOverLife, Gradient, PiecewiseBezier, Bezier, ApplyForce, Vector4, Vector3 as QVector3, SpeedOverLife,
 } from 'three.quarks';
 import { makeSword } from './actors';
+import { artSword, type ArtSet } from './art';
 import { C, V, TAU, GLYPHS, canvasTexture, clamp, easeIn, easeInOut, easeOut, glowMat, lerp, rng, smooth, softDot } from './util';
 
 export interface Effect { update(dt: number): boolean; dispose?(): void }
@@ -155,6 +156,10 @@ export class FxSystem {
   private live: Effect[] = [];
   private pools = new Map<string, { systems: ParticleSystem[]; next: number }>();
   private looping: ParticleSystem[] = [];
+  private art: ArtSet | null = null;
+  /** Use the painted sword, talisman, glyph circle and jade pendant instead of the procedural ones. */
+  setArt(art: ArtSet) { this.art = art; }
+  private sword(color: THREE.ColorRepresentation, scale: number) { return this.art ? artSword(this.art, color, 2.4 * scale) : makeSword(color, scale); }
   private shared = { ringGeo: new THREE.RingGeometry(.9, 1, 64), planeGeo: new THREE.PlaneGeometry(1, 1), sphereGeo: new THREE.SphereGeometry(1, 32, 20) };
 
   constructor(scene: THREE.Scene, private camera: THREE.Camera, private hooks: FxHooks, private reduced: boolean) {
@@ -348,7 +353,7 @@ export class FxSystem {
   swordSwarm(from: () => THREE.Vector3, back: () => THREE.Vector3, target: () => THREE.Vector3, color: THREE.ColorRepresentation, count: number, onHit: (i: number) => void) {
     const r = rng(77);
     const swords = Array.from({ length: count }, (_, i) => {
-      const mesh = makeSword(color, .9);
+      const mesh = this.sword(color, .9);
       const trail = new Trail(22, .16, color);
       this.group.add(mesh, trail.mesh);
       const fan = (i / (count - 1) - .5) * 2;
@@ -400,10 +405,10 @@ export class FxSystem {
   /** 符箓: paper talismans spin out in a fan, ignite and detonate in gold. */
   talismans(from: () => THREE.Vector3, target: () => THREE.Vector3, count: number, onHit: (i: number) => void) {
     const r = rng(13);
-    const mat = new THREE.MeshBasicMaterial({ map: textures().talisman, side: THREE.DoubleSide, transparent: true });
+    const mat = new THREE.MeshBasicMaterial({ map: this.art?.talisman ?? textures().talisman, side: THREE.DoubleSide, transparent: true, color: C(0xffffff).multiplyScalar(this.art ? 1.4 : 1) });
     const items = Array.from({ length: count }, (_, i) => {
       const mesh = new THREE.Mesh(this.shared.planeGeo, mat);
-      mesh.scale.set(.5, 1.25, 1);
+      if (this.art) mesh.scale.set(.62, .62 / this.art.aspect.talisman, 1); else mesh.scale.set(.5, 1.25, 1);
       const halo = new THREE.Sprite(glowMat(C(0xffc850).multiplyScalar(2), textures().dot, .8));
       halo.scale.setScalar(1.6);
       mesh.add(halo);
@@ -445,11 +450,11 @@ export class FxSystem {
   runeCircle(center: () => THREE.Vector3, facing: () => THREE.Vector3, color: THREE.ColorRepresentation, size: number, seconds: number) {
     const col = C(color);
     const layers = [
-      { map: textures().circle, scale: 1, spin: .35, alpha: 1 },
-      { map: textures().circleInner, scale: .5, spin: -.8, alpha: 1 },
+      ...(this.art ? [{ map: this.art.circle, scale: 1.05, spin: .3, alpha: 1, tint: C(0xffffff).multiplyScalar(1.5) }] : [{ map: textures().circle, scale: 1, spin: .35, alpha: 1 }]),
+      { map: textures().circleInner, scale: .5, spin: -.8, alpha: this.art ? .4 : 1 },
       { map: textures().circle, scale: 1.35, spin: -.15, alpha: .35 },
     ].map((l) => {
-      const mat = new THREE.MeshBasicMaterial({ map: l.map, color: col.clone().multiplyScalar(2.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+      const mat = new THREE.MeshBasicMaterial({ map: l.map, color: 'tint' in l ? (l.tint as THREE.Color) : col.clone().multiplyScalar(2.4), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
       const mesh = new THREE.Mesh(this.shared.planeGeo, mat);
       return { ...l, mesh, mat };
     });
@@ -515,7 +520,7 @@ export class FxSystem {
 
   /** 八卦镜: a bronze mirror spins into place and throws up a hexagonal ward that ripples on impact. */
   baguaWard(anchor: () => THREE.Vector3, facing: () => THREE.Vector3, seconds: number) {
-    const mirrorMat = new THREE.MeshBasicMaterial({ map: textures().bagua, transparent: true, side: THREE.DoubleSide });
+    const mirrorMat = new THREE.MeshBasicMaterial({ map: this.art?.jade ?? textures().bagua, transparent: true, side: THREE.DoubleSide, color: C(0xffffff).multiplyScalar(this.art ? 1.5 : 1) });
     const mirror = new THREE.Mesh(this.shared.planeGeo, mirrorMat);
     const wardMat = new THREE.ShaderMaterial({
       uniforms: { color: { value: C(0xffd77a).multiplyScalar(1.6) }, time: { value: 0 }, hit: { value: V(0, 0, 1) }, ripple: { value: 9 }, alpha: { value: 0 } },
@@ -545,7 +550,8 @@ export class FxSystem {
         mirror.position.copy(dir).multiplyScalar(1.4);
         mirror.lookAt(a.clone().add(dir.clone().multiplyScalar(10)).sub(group.position).add(mirror.position));
         mirror.rotateZ(t * 2);
-        mirror.scale.setScalar(Math.max(.01, 1.5 * open * close));
+        const ms = Math.max(.01, (this.art ? 1.9 : 1.5) * open * close);
+        mirror.scale.set(this.art ? ms * this.art.aspect.jade : ms, ms, 1);
         ward.scale.setScalar(Math.max(.01, 2.2 * open));
         wardMat.uniforms.alpha.value = open * close;
         wardMat.uniforms.time.value = t;
@@ -623,7 +629,7 @@ export class FxSystem {
 
   /** A sword grown to colossal size above the caster, then driven down onto the target. */
   heavenSword(above: () => THREE.Vector3, target: () => THREE.Vector3, color: THREE.ColorRepresentation, rise: number, fall: number, onHit: () => void) {
-    const sword = makeSword(color, 1);
+    const sword = this.sword(color, 1);
     const halo = new THREE.Sprite(glowMat(C(color).multiplyScalar(2.2), textures().dot, .9));
     halo.scale.set(18, 4, 1); halo.position.x = .3;
     sword.add(halo);

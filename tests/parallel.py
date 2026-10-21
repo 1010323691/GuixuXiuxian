@@ -51,8 +51,13 @@ def main(argv=None):
     parser.add_argument('-j', '--jobs', type=int, default=os.cpu_count() or 4)
     parser.add_argument('patterns', nargs='*', help='only run test ids containing any of these substrings')
     args = parser.parse_args(argv)
-    ids = [test_id for test_id in _discover()
-           if not test_id.startswith('unittest.loader') and (not args.patterns or any(p in test_id for p in args.patterns))]
+    discovered = _discover()
+    # a module that fails to import shows up as unittest.loader._FailedTest; never let it pass silently
+    broken = [test_id for test_id in discovered if test_id.startswith('unittest.loader')]
+    if broken:
+        print('test modules failed to import:', ', '.join(t.rsplit('.', 1)[-1] for t in broken))
+        print('run `python -m unittest <module>` for the traceback'); return 1
+    ids = [test_id for test_id in discovered if not args.patterns or any(p in test_id for p in args.patterns)]
     if not ids:
         print('no tests matched'); return 1
     try:
