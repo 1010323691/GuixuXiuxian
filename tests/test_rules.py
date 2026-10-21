@@ -90,6 +90,19 @@ class RuleBoundaryTests(unittest.TestCase):
         self.reject(result, 'auto_battle')
         self.reject(state, 'auto_battle', {'extra': 'x'})
 
+    def test_prelude_battle_frames_carry_fx_events_matching_hp_changes(self):
+        state = new_game('特效道友')
+        state.update(battle={'enemy': 'wolf', 'hp': 36, 'turn': 0})
+        context = {}
+        apply_action(state, 'auto_battle', {}, context=context)
+        frames = context['battle_report']['frames']
+        dealt = sum(e['amount'] for f in frames for e in f['events'] if e.get('fx_only') and e['type'] == 'damage' and e['target'] == 'enemy')
+        self.assertEqual(dealt, 36)
+        for a, b in zip(frames, frames[1:]):
+            taken = sum(e['amount'] for e in b['events'] if e.get('fx_only') and e['target'] == 'player' and e['type'] == 'damage')
+            healed = sum(e['amount'] for e in b['events'] if e.get('fx_only') and e['type'] == 'heal')
+            self.assertEqual(b['player']['hp'], a['player']['hp'] - taken + healed)
+
     def test_invalid_values_and_extra_parameters(self):
         state = new_game('边界道友')
         self.reject(state, 'gather', {'amount': 9999})

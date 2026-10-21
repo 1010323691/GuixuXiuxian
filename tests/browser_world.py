@@ -3,7 +3,7 @@ import json
 
 from playwright.sync_api import expect, sync_playwright
 
-from tests.support import ROOT, Server, baseline_route
+from tests.support import ROOT, Server, baseline_route, launch_browser, attach_session
 from tests.test_world_systems import WorldPlanner
 
 # V3 one-screen UI: nothing may scroll; long content is paged inside fixed regions.
@@ -121,12 +121,13 @@ def main():
     try:
         server.start()
         with sync_playwright() as p:
-            browser = p.chromium.launch(executable_path='/usr/bin/chromium', args=['--no-sandbox'])
+            browser = launch_browser(p)
             page = browser.new_page(viewport={'width': 1365, 'height': 900})
             page.on('pageerror', lambda error: report['page_errors'].append(str(error)))
             page.on('console', lambda message: report['console_errors'].append(message.text) if message.type == 'error' else None)
             page.on('requestfailed', lambda request: report['failed_requests'].append(request.url))
             page.on('response', lambda response: report['http_errors'].append([response.status, response.url]) if response.status >= 400 else None)
+            attach_session(page, server)
             page.goto(server.url)
             expect(page.locator('#creation')).to_be_visible()
             page.locator('#mode').select_option('free')
@@ -164,13 +165,10 @@ def main():
             planner.perform('world_buy', item='ore', quantity=3)
             planner.perform('world_sell', item='ore', quantity=2)
             world_before = server.snapshot()
-            saved = driver.click_write(page.locator('#save-button'), '/api/save')
-            planner.perform('world_gather', item='wood')
-            restored = driver.click_write(page.locator('#load-button'), '/api/load', confirm=True)
-            assert restored['state'] == saved['state'] == world_before['state']
+            # 进度自动同步：刷新后从服务端恢复，状态与刷新前一致
             page.reload()
             expect(page.locator('[data-world-page="world"]')).to_be_visible()
-            assert server.snapshot()['state'] == restored['state']
+            assert server.snapshot()['state'] == world_before['state']
             page.set_viewport_size({'width': 320, 'height': 740})
             for entry in server.snapshot()['view']['world']['pages']:
                 driver.visit(entry['id'])

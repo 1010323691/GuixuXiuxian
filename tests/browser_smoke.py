@@ -4,7 +4,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright, expect
 
-from tests.support import ROOT, Server, baseline_route
+from tests.support import ROOT, Server, baseline_route, launch_browser, attach_session
 from tests.browser_world import assert_one_screen, reveal as reveal_node
 
 
@@ -16,8 +16,7 @@ def main():
     try:
         server.start()
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(executable_path='/usr/bin/chromium', headless=True,
-                args=['--no-sandbox'])
+            browser = launch_browser(playwright, headless=True)
             context = browser.new_context(viewport={'width': 1365, 'height': 900}, reduced_motion='reduce')
             page = context.new_page()
             injected = {'active': False}
@@ -29,6 +28,7 @@ def main():
                 p.on('response', lambda response: report['http_errors'].append({'status': response.status, 'url': response.url, 'injected': injected['active']}) if response.status >= 400 else None)
 
             monitor(page)
+            attach_session(page, server)
             page.goto(server.url)
             expect(page.locator('#creation')).to_be_visible()
             page.locator('#mode').select_option('free')
@@ -81,21 +81,13 @@ def main():
             page.screenshot(path=str(artifacts / 'desktop-ending.png'), full_page=True)
             report['checks'].append('real-page no-upgrade completion with click-free auto-battle replay')
 
-            saved = click_write('#save-button', '/api/save')['state']
-            action('gather')
-            before_cancel = server.snapshot()
-            page.locator('#load-button').click()
-            expect(page.locator('#confirm-dialog')).to_be_visible()
-            page.locator('#cancel-confirm').click()
-            expect(page.locator('#load-button')).to_be_focused()
-            assert server.snapshot() == before_cancel
-            page.locator('#load-button').click()
-            restored = click_write('#accept-confirm', '/api/load')
-            assert restored['state'] == saved
+            # 进度自动同步：刷新页面后从服务端恢复
+            before_reload = server.snapshot()['state']
             page.reload()
             expect(page.locator('#character-name')).to_have_text('问道QA')
             expect(page.locator('#ending')).to_be_visible()
-            report['checks'].append('manual save/load confirmation cancel/focus and refresh restore')
+            assert server.snapshot()['state'] == before_reload
+            report['checks'].append('automatic sync: refresh restores progress')
 
             # Another actual page remains stale; no API writes are injected.
             other = context.new_page()
@@ -109,7 +101,7 @@ def main():
             with other.expect_response(lambda response: response.url.endswith('/api/action')) as conflict:
                 other.locator('[data-action-key="gather:{}"]').click()
             assert conflict.value.status == 409
-            expect(other.locator('#notice-text')).to_contain_text('重新')
+            expect(other.locator('#notice-text')).to_contain_text('刷新到最新')
             expect(other.locator('#main')).to_have_attribute('aria-busy', 'false')
             assert server.snapshot() == before
             injected['active'] = False
@@ -130,13 +122,12 @@ def main():
             page.route('**/api/action', drop_after_commit, times=1)
             reveal('[data-action-key="gather:{}"]')
             page.locator('[data-action-key="gather:{}"]').click()
-            expect(page.locator('#retry-button')).to_be_visible()
-            expect(page.locator('#notice-text')).to_contain_text('尚未确认')
+            # 响应丢失：服务端已提交；页面进入断线重连，用原操作编号自动重放，只记一次
+            expect(page.locator('#save-status')).to_have_attribute('data-state', 'synced', timeout=30000)
             once = server.snapshot()
             assert once['revision'] == before['revision'] + 1
             assert once['state']['herbs'] == before['state']['herbs'] + 2
-            # R05: B starts while A has an unresolved request. Its own write must
-            # neither inherit A's pending payload nor overwrite/clear A's retry.
+            # 另一个页面独立写入，不继承前一页的待确认操作
             independent = context.new_page()
             monitor(independent)
             independent.goto(server.url)
@@ -151,18 +142,10 @@ def main():
             assert b_result['state'] == latest['state']
             independent.close()
             page.reload()
-            expect(page.locator('#retry-button')).to_be_visible()
-            with page.expect_request(lambda request: request.url.endswith('/api/action')) as retry:
-                retried = click_write('#retry-button', '/api/action')
-            assert retry.value.post_data_json == seen[0]
-            assert retried['duplicate'] is True
-            assert retried['state'] == latest['state']
+            expect(page.locator('#character-name')).to_have_text('问道QA')
             assert server.snapshot()['state'] == latest['state']
-            assert server.snapshot()['revision'] == latest['revision']
-            assert server.snapshot()['state']['herbs'] == before['state']['herbs'] + 4
-            expect(page.locator('#notice-text')).to_contain_text('已处理')
             injected['active'] = False
-            report['checks'].append('response lost after commit + independent tab write + reload + identical-ID retry preserves latest state and counts once')
+            report['checks'].append('response lost after commit -> automatic same-ID replay counts once + independent tab write + reload keeps latest state')
 
             # New-game cancellation preserves state; confirmed replacement clears slot.
             page.locator('#new-button').click()
@@ -172,8 +155,7 @@ def main():
             page.locator('#new-name').fill('窄屏道友')
             page.locator('#new-mode').select_option('free')
             created = click_write('#accept-confirm', '/api/new-game')
-            assert created['state']['actions_taken'] == 0 and not created['save']['exists']
-            expect(page.locator('#load-button')).to_be_disabled()
+            assert created['state']['actions_taken'] == 0
             page.set_viewport_size({'width': 320, 'height': 740})
             herbs = server.snapshot()['state']['herbs']
             action('gather')

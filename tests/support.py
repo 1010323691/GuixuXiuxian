@@ -576,3 +576,24 @@ def baseline_route(snapshot, action):
         assert enemy in snapshot()['state']['victories'], snapshot()['state']
     state = snapshot()['state']
     assert state['completed'] and state['battle'] is None, state
+
+
+def launch_browser(playwright, **kwargs):
+    """启动 Chromium 系浏览器：优先环境变量 GUIXU_BROWSER，其次探测系统 Chromium/Edge/Chrome。"""
+    import os
+    import shutil
+    candidates = [os.environ.get('GUIXU_BROWSER'), '/usr/bin/chromium',
+                  r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+                  r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+                  r'C:\Program Files\Microsoft\Edge\Application\msedge.exe',
+                  shutil.which('chromium'), shutil.which('google-chrome')]
+    path = next((c for c in candidates if c and os.path.exists(c)), None)
+    if path is None:
+        raise RuntimeError('未找到浏览器：请设置环境变量 GUIXU_BROWSER 为 Chromium/Edge/Chrome 可执行文件路径')
+    kwargs.setdefault('args', ['--no-sandbox'])
+    return playwright.chromium.launch(executable_path=path, **kwargs)
+
+
+def attach_session(page, server):
+    """把 Server 默认账号 tester 的会话 Cookie 放进浏览器上下文（套件在多账号化后需先登录）。"""
+    page.context.add_cookies([{'name': server.settings.cookie_name, 'value': server.default.cookie, 'url': server.url}])

@@ -10,7 +10,7 @@
   // 舞台坐标（viewBox 1000×340）
   const POINT = { player: [200, 190], main: [120, 100], guard: [130, 262], enemy: [800, 180], npc: [300, 280] };
   const FX_TYPES = new Set(["damage", "shield", "shield_absorb", "poison", "heal", "control", "buff", "defend", "mana"]);
-  let report = null, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [];
+  let fx3d = null, fx3dToken = 0, report = null, cursor = 0, playing = false, speed = 1, timer = null, generation = 0, opener = null, effectTimers = [];
 
   const reduced = () => !!globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -43,12 +43,29 @@
     document.body.append(root);
     $("replay-close").addEventListener("click", close);
     $("replay-play").addEventListener("click", () => (playing ? pause() : play()));
-    $("replay-speed").addEventListener("click", () => { speed = speed === 1 ? 2 : 1; $("replay-speed").textContent = `速度 ${speed}×`; if (playing) schedule(); });
+    $("replay-speed").addEventListener("click", () => { speed = speed === 1 ? 2 : 1; fx3d?.setSpeed(speed); $("replay-speed").textContent = `速度 ${speed}×`; if (playing) schedule(); });
     $("replay-skip").addEventListener("click", () => { pause(); cursor = report.frames.length - 1; render(false); });
     $("replay-timeline").addEventListener("input", () => { pause(); cursor = Number($("replay-timeline").value); render(false); });
     root.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
     root.addEventListener("click", (event) => { if (event.target === root) close(); });
     document.addEventListener("visibilitychange", () => { if (document.hidden && playing) pause(); });
+  }
+
+  // 三维特效层：按需加载，失败/无 WebGL 时保持 null，沿用 SVG 演出
+  function startFx3d() {
+    stopFx3d();
+    if (reduced()) return;
+    const token = ++fx3dToken;
+    import("/fx3d.js").then((mod) => {
+      if (token !== fx3dToken || !report || !$("battle-replay") || $("battle-replay").hidden) return;
+      fx3d = mod.create($("replay-stage"));
+      if (fx3d) { fx3d.setSpeed(speed); $("replay-stage").dataset.fx3d = "on"; }
+    }).catch(() => { fx3d = null; });
+  }
+  function stopFx3d() {
+    fx3dToken += 1;
+    if (fx3d) { fx3d.dispose(); fx3d = null; }
+    const host = $("replay-stage"); if (host) delete host.dataset.fx3d;
   }
 
   function stage() {
@@ -96,7 +113,8 @@
     if (event.type === "damage" || event.type === "shield") {
       const path = svg("path", { d: `M${from[0]} ${from[1]} Q${(from[0] + to[0]) / 2} ${Math.min(from[1], to[1]) - 50} ${to[0]} ${to[1]}`, class: `trace ${event.source} ${event.type}` });
       layer.append(path);
-      if (animate && !reduced() && (event.source === "main" || event.source === "player")) {
+      if (animate && fx3d && !fx3d.lost) fx3d.play(event, from, to, (event.amount || 0) / Math.max(1, report.enemy.max_hp) * 3);
+      else if (animate && !reduced() && (event.source === "main" || event.source === "player")) {
         const bolt = svg("circle", { r: event.source === "main" ? 7 : 9, class: `bolt ${event.source}`, cx: 0, cy: 0 });
         layer.append(bolt);
         bolt.animate([{ transform: `translate(${from[0]}px, ${from[1]}px)` }, { transform: `translate(${(from[0] + to[0]) / 2}px, ${Math.min(from[1], to[1]) - 40}px)` }, { transform: `translate(${to[0]}px, ${to[1]}px)` }], { duration: 420 / speed, easing: "ease-in", fill: "forwards" }).onfinish = () => bolt.remove();
@@ -106,17 +124,25 @@
       }
       if (event.type === "damage" && event.amount > 0) float(to, `−${event.amount}`, event.target === "enemy" ? "hit" : "hurt");
     } else if (event.type === "shield_absorb") {
+      if (animate && fx3d && !fx3d.lost) fx3d.play(event, from, to, .5);
       const ward = document.querySelector("#replay-stage .actor.player .ward");
       if (ward) { ward.setAttribute("opacity", 1); if (!reduced()) ward.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900 / speed, fill: "forwards" }); else ward.setAttribute("opacity", .8); }
       float(pointOf("player"), `拦截 ${event.amount}`, "guard");
-    } else if (event.type === "heal" && event.amount > 0) float(pointOf("player"), `+${event.amount}`, "heal");
-    else if (event.type === "buff" || event.type === "control" || event.type === "defend") float(event.type === "control" ? pointOf("enemy") : pointOf("player"), event.label.replace(/，.*/, ""), "note");
+    } else if (event.type === "heal" && event.amount > 0) {
+      if (animate && fx3d && !fx3d.lost) fx3d.play(event, pointOf("player"), pointOf("player"), .4);
+      float(pointOf("player"), `+${event.amount}`, "heal");
+    }
+    else if (event.type === "buff" || event.type === "control" || event.type === "defend") {
+      if (animate && fx3d && !fx3d.lost) fx3d.play(event, from, to, .4);
+      float(event.type === "control" ? pointOf("enemy") : pointOf("player"), event.label.replace(/，.*/, ""), "note");
+    }
   }
 
   function sceneEffects(frame, animate) {
     for (const id of effectTimers) clearTimeout(id);
     effectTimers = [];
     const layer = $("replay-fx"); layer.replaceChildren();
+    fx3d?.clear();
     document.querySelectorAll("#replay-stage .source-active").forEach((n) => n.classList.remove("source-active"));
     const events = (frame.events || []).filter((e) => FX_TYPES.has(e.type));
     if (!events.length) return;
@@ -153,13 +179,13 @@
     meter("replay-player-hp", frame.player.hp, report.player.max_hp, "本方气血");
     meter("replay-player-mp", frame.player.mp, report.player.max_mp, "本方灵力");
     meter("replay-enemy-hp", frame.enemy.hp, report.enemy.max_hp, "敌方气血");
-    const events = frame.events || [];
+    const events = (frame.events || []).filter((e) => !e.fx_only);
     $("replay-now").textContent = cursor === 0 ? "双方就位，自动斗法即将开始。" : `第 ${frame.round} 拍 · ${frame.action}${events.length ? "：" + events.map(eventText).join("；") : ""}`;
     $("replay-intent").textContent = cursor === report.frames.length - 1 ? "" : `敌方下一意图：${frame.intent}`;
     $("replay-round").textContent = `第 ${frame.round} / ${report.rounds} 拍`;
     $("replay-timeline").value = String(cursor);
     const log = [];
-    for (const f of report.frames.slice(1, cursor + 1)) for (const e of f.events || []) { const li = make("li", "", `第${f.round}拍 · ${eventText(e)}`); log.push(li); }
+    for (const f of report.frames.slice(1, cursor + 1)) for (const e of (f.events || []).filter((x) => !x.fx_only)) { const li = make("li", "", `第${f.round}拍 · ${eventText(e)}`); log.push(li); }
     $("replay-log").replaceChildren(...log.slice(-60));
     const last = cursor === report.frames.length - 1;
     $("replay-result").hidden = !last;
@@ -190,6 +216,7 @@
     $("replay-title").textContent = `${data.enemy.name} · ${OUTCOME[data.outcome] || ""}`;
     $("replay-timeline").max = String(data.frames.length - 1);
     stage();
+    startFx3d();
     opener = document.activeElement;
     $("battle-replay").hidden = false;
     document.body.classList.add("replay-open");
@@ -199,7 +226,7 @@
 
   function close() {
     if (!$("battle-replay") || $("battle-replay").hidden) return;
-    generation += 1; pause();
+    generation += 1; pause(); stopFx3d();
     $("battle-replay").hidden = true; document.body.classList.remove("replay-open");
     if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
   }

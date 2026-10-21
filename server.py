@@ -17,7 +17,7 @@ from game.settings import Settings
 from game.storage import Database, LayoutError, LegacyLayoutError, Store
 
 STATIC=Path(__file__).resolve().parent/'static'
-FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8')}
+FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8'),'/fx3d.js':('fx3d.js','text/javascript; charset=utf-8'),'/vendor/three.module.min.js':('vendor/three.module.min.js','text/javascript; charset=utf-8')}
 JSON_TYPE='application/json; charset=utf-8'
 GAME_WRITES={'/api/new-game','/api/action'}
 AUTH_POSTS={'/api/register','/api/login','/api/logout','/api/password'}
@@ -152,6 +152,7 @@ def dispatch_full(app,method,target,headers,body,server_address,client_ip='127.0
                 name,ctype=FILES[path]
                 file=STATIC/name
                 if not file.is_file():return respond(404,error_body('NOT_FOUND','页面资源尚未就绪。'))
+                if path.startswith('/vendor/'):out['Cache-Control']='public, max-age=604800'  # 固定版本的第三方库，可缓存
                 return respond(200,file.read_bytes(),ctype)
             return respond(404,error_body('NOT_FOUND','未找到此页面或接口。'))
         if method!='POST':return respond(405,error_body('METHOD_NOT_ALLOWED','不支持此请求方式。'))
@@ -214,9 +215,9 @@ class Handler(BaseHTTPRequestHandler):
     def send(self,status,body,ctype,headers=None):
         self.send_response(status)
         self.send_header('Content-Type',ctype);self.send_header('Content-Length',str(len(body)))
-        self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff')
+        extra=dict(headers or {});self.send_header('Cache-Control',extra.pop('Cache-Control','no-store'));self.send_header('X-Content-Type-Options','nosniff')
         self.send_header('Content-Security-Policy',"default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
-        for name,value in (headers or {}).items():self.send_header(name,value)
+        for name,value in extra.items():self.send_header(name,value)
         self.end_headers();self.wfile.write(body)
     def _serve(self,method,body):
         app=self.server.app

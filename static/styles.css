@@ -1242,6 +1242,10 @@ dialog h2 { font-family: var(--font-display); font-weight: 400; font-size: var(-
 .replay-head .section-number { color: var(--cin-600); }
 .replay-head h2 { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); color: var(--dai-900); }
 .replay-stage { min-height: 0; max-height: 44vh; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--c-border); background: var(--sky-top); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6); }
+.replay-stage { position: relative; }
+.fx3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.fx3d-canvas.lost { display: none; }
+.replay-stage[data-fx3d="on"] .replay-svg .trace { opacity: .35; }
 .replay-svg { display: block; width: 100%; height: 100%; max-height: 44vh; }
 .replay-svg .sky { fill: var(--sky-top); }
 .replay-svg .peaks { fill: var(--jade-50); stroke: var(--jade-300); stroke-width: 1.5; }
@@ -1311,3 +1315,13 @@ body.replay-open { overflow: hidden; }
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   .is-pending::after { animation: none !important; border-top-color: var(--jade-300); }
 }
+
+/* 下一步提示：高亮被指向的事项卡（只用阴影与透明度，不改布局） */
+.guide-go { margin: var(--sp-3) 0 var(--sp-2); max-width: 100%; white-space: normal; text-align: left; }
+.world-action.guided { box-shadow: 0 0 0 2px var(--c-reward), var(--e-2); animation: guided-pulse 1.2s ease-in-out 2; }
+@keyframes guided-pulse { 50% { box-shadow: 0 0 0 4px var(--gold-100), var(--e-2); } }
+@media (prefers-reduced-motion: reduce) { .world-action.guided { animation: none; } }
+
+/* 三维舞台接管时隐藏 Canvas2D 灵气画布；三维画布沿用 .aura-canvas 的定位 */
+body.stage3d-on canvas.aura-canvas:not(.stage3d-canvas) { display: none; }
+.stage3d-canvas.lost { display: none; }

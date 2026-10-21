@@ -6,7 +6,7 @@
 ## 开始与恢复
 先读 `README.md`、`docs/studio/README.md`、`docs/studio/TASKS.md`、`docs/studio/DECISIONS.md` 和对应岗位文档。当前W1的冻结设计、接口、模型、评审与验收在 `docs/iterations/`，以 `COVERAGE.md`、`WORLD_API.md`、`WORLD_DATA.md`、`WORLD_TESTING.md` 的实际状态/证据为准。多用户在线化（MU）的需求、设计与交接在 `docs/iterations/MU_PRD.md`、`MU_DESIGN.md`（v2，方案B）、`MU_HANDOFF.md`，当前接口契约在 `docs/API.md`。原GDD/API及首版报告保留为序章历史，历史文档中的“存档/载入”描述的是v1.2的单机行为，不是现行行为，也不能当作新功能测试通过。
 
-使用现有检出；任务本已隔离，除用户明确要求外不创建Git worktree。保留玩家数据和现有修改，不能以测试或迁移覆盖真实玩家数据。运行标准库Python，不引入外部账号/付费API、第三方包或未授权费用。
+使用现有检出；任务本已隔离，除用户明确要求外不创建Git worktree。保留玩家数据和现有修改，不能以测试或迁移覆盖真实玩家数据。后端运行标准库Python，不引入外部账号/付费API或未授权费用。前端允许内置固定版本的第三方库（现为 `static/vendor/three.module.min.js`，Three.js r170，MIT，用户2026-10-21明确裁决取消“不引入第三方包、无外部资源”约束）；库文件只能同源内置，不得改用CDN，且必须有无WebGL的降级路径。
 
 ## 团队职责
 唯一主Agent担任项目经理，统一维护任务/决策、文件归属、审查和最终验收。五岗位为主策划、技术架构师、视觉与交互设计师、开发工程师、QA与交付工程师；岗位规范见 `docs/studio/roles/`。需要时按文档重新创建/恢复岗位，不依赖旧会话存活，子智能体不得自行扩充团队。
@@ -25,9 +25,10 @@
 - 部署：默认只监听本机。对外开放须配 `--allowed-host`，开放注册并面向公网**必须**放在HTTPS反向代理之后并加 `--secure-cookies`（可选 `--trust-proxy`、`--no-register`）。详见 `README.md`。
 - 玩家可见文案术语：进度/进度已同步/登录后恢复进度；不在界面、API message、事件日志、启动脚本输出与现行文档中使用“存档、读档、载入、检查点、保存位置、单机”等旧词（历史文档除外），由 `tests/test_terminology.py` 扫描兜底。
 
-验证入口：`python -m tests.parallel`（并行白盒全量，约30–45秒；可加子串只跑部分）或串行 `python -m unittest discover -s tests -v`、`python -m tests.browser_smoke`、`python -m tests.browser_world`。后两者为可选开发依赖Playwright/系统Chromium；游戏运行无第三方包。测试使用独立临时数据，不对玩家data注入故障。完成状态仅按最新代码和当轮实际证据，不沿用历史通过证明新改动。
+验证入口：`python -m tests.parallel`（并行白盒全量，约30–45秒；可加子串只跑部分）或串行 `python -m unittest discover -s tests -v`、`python -m tests.browser_smoke`、`python -m tests.browser_world`。后两者为可选开发依赖Playwright/系统Chromium；后端运行无第三方包。测试使用独立临时数据，不对玩家data注入故障。完成状态仅按最新代码和当轮实际证据，不沿用历史通过证明新改动。
 
 ## 本轮交付状态
+**体验重构（2026-10-21，分支 feat/three-battle-fx）**：已新增Three.js统一特效管理器（战报特效、舞台氛围、洞府灯笼）、世界视图 `guide`/`estate` 字段、三处破坏性确认，并修复四套浏览器套件（现可在本机Edge运行，`GUIXU_BROWSER` 可指定浏览器）。证据：白盒392项、五套浏览器套件、44组页面审计，详 `docs/acceptance-report.md`；真实GPU帧率与小时级内存未测。
 **多用户在线化（MU，本轮）**：需求 `MU_PRD.md`（21条AC）、设计 `MU_DESIGN.md` v2。隔离方案经用户决策由方案A（每用户一库）改为方案B（单库 `data/game.db` + `user_id` + WAL）。任务拆分T01存储与迁移、T02认证与服务入口、T03文案服务化（已完成，仅改字符串）、T04前端（登录/账号/同步状态）、T05测试/脚本/文档。文档车道（T05-docs）已把 README、`docs/API.md`、本文件与 `docs/studio/` 同步到新架构。**下列项一律以QA实测记录为准，当前未验证的不得写成已通过**：白盒全量（`python -m tests.parallel`）通过数；浏览器套件（Playwright，本机未必可用，未运行即记“未运行”）；scrypt（`n=2^15,r=8,p=1`）在目标机上的耗时；HTTPS反向代理下的 `--secure-cookies`/`--trust-proxy` 实际表现；`synchronous=FULL` 下写事务的P99；`--migrate-multiuser`/`--claim-legacy` 在真实旧库上的演练。用户待确认默认值见 `docs/studio/DECISIONS.md` 的MU条目。
 
 V4设计系统「青绿金碧」已落地正式static：两层token、统一组件与五态按钮、类别字牌事项卡、服务信息的特效（境界灵气、收益飞入、执行金光、损失残影等），一屏不滚动不变。规范与实测见 `docs/iterations/V4_DESIGN_SYSTEM.md`；白盒197项通过、10视口一屏巡检0问题，Playwright浏览器套件本机未运行。（此为MU之前的结论，不代表多用户改动后的状态。）
