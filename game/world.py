@@ -1531,7 +1531,7 @@ def project(state,context=None):
     add('arena','world_season_fight','挑战当前赛区','模拟战斗，无真实玩家','胜利晋级、积分10与灵石10，每场一次')
     add('arena','world_season_claim','领取本季冠军奖励','本季三胜','灵石30、灵晶3、家族声望5；NPC下季成长一级')
     if w['battle']:
-        battle=w['battle'];intent=['攻击%d'%battle['attack'],'蓄势，本回合0伤害','重击%d'%battle['heavy']][battle['turn']%3];incoming=_incoming(w,battle)
+        battle=w['battle'];intent=['攻击%d'%battle['attack'],'蓄势（首领不出手）','重击%d'%battle['heavy']][battle['turn']%3];incoming=_incoming(w,battle)
         for page in pages:
             page['actions']=[a for a in page['actions'] if a['id'].startswith('world_')]
         pack=[m for m in battle.get('minions',()) if m['hp']>0]
@@ -1544,7 +1544,7 @@ def project(state,context=None):
     resources=[{'id':k,'label':label,'value':v,'max':maximum} for k,label,v,maximum in [('world_hp','凡界气血',w['hp'],attrs['hp']),('world_mp','凡界灵力',w['mp'],attrs['mp']),('world_xp','凡界修为',w['xp'],CAP),('world_stone','凡界灵石',w['wallet'],CAP)]]
     battle_view=None
     if w['battle']:
-        b=w['battle'];battle_view={'name':b['name'],'hp':b['hp'],'max_hp':b['max_hp'],'intent':['常规攻击%d'%b['attack'],'蓄势：本回合无伤害','重击%d'%b['heavy']][b['turn']%3],'page':'arena' if b['kind'] in {'arena','regional'} else 'exploration'}
+        b=w['battle'];battle_view={'name':b['name'],'hp':b['hp'],'max_hp':b['max_hp'],'intent':['常规攻击%d'%b['attack'],'蓄势：首领不出手','重击%d'%b['heavy']][b['turn']%3],'page':'arena' if b['kind'] in {'arena','regional'} else 'exploration'}
     result={'version':2,'active':w['active'],'battle':battle_view,'stage':stage,'summary':'凡界已封界，修行未止。' if w['ending'] else _advance_reason(w) or '突破条件已齐。','resources':resources,'pages':pages,'guide':_guide(w,pages),'estate':dict(w['home'])}
     if 'r3' in w:loot.project(state,result,context=context)
     return result

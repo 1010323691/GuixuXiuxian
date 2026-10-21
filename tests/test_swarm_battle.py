@@ -279,6 +279,19 @@ class SwarmBattleTests(unittest.TestCase):
         self.round('world_attack')
         self.assertEqual(hp - w['hp'], shown, 'the preview matches what the beat then deals')
 
+    def test_charge_beat_preview_does_not_claim_zero_damage_while_the_pack_still_chips(self):
+        """On the leader's charge beat the row says the leader holds back and still previews the pack's chips."""
+        b = self.hunt()
+        w = self.state['world']
+        b['turn'] = 1
+        view = world.project(self.state, context=self.context)
+        row = [r for page in view['pages'] for section in page['sections'] for r in section.get('rows', []) if r['label'] == '下一意图'][0]
+        self.assertNotIn('0伤害', row['value'])
+        self.assertIn('首领不出手', row['value'])
+        shown = int(row['value'].rsplit('承伤', 1)[1])
+        self.assertEqual(shown, world._incoming(w, b))
+        self.assertGreater(shown, 0, 'the pack alone still deals damage on the charge beat')
+
     # ------------------------------------------------------------------ mechanics crossed with the pack
     def test_venom_with_a_pack_poisons_on_the_heavy_beat_and_the_pack_keeps_chipping(self):
         b = self.dungeon_boss('den')
