@@ -1,9 +1,12 @@
 """FB3 swarm battles: real minions in the rules (leader + minions, AoE, targets, scatter, report, validation)."""
 import copy
+import json
+from pathlib import Path
 import unittest
 from unittest import mock
 
-from game import rules, world, world_config as C
+from game import cadence, growth, journey, loot, rules, world, world_config as C
+from game import gameplay_config as G
 from game import r3_config as R
 from tests.support import baseline_route, solo_battles
 
@@ -32,6 +35,14 @@ class SwarmBattleTests(unittest.TestCase):
     def solo_enemy(self, kind='wild'):
         with mock.patch.dict(C.SWARMS['counts'], clear=True):
             return world._enemy(copy.deepcopy(self.state['world']), kind)
+
+    def dungeon_boss(self, target, difficulty=2):
+        """A round-2 dungeon boss (venom / mana_seal / furnace shield) carrying a real minion pack."""
+        w = self.state['world']
+        w['dungeon'] = {'id': target, 'difficulty': difficulty, 'stage': 0, 'round': 2, 'run_id': 'fixture'}
+        b = world._enemy(w, 'dungeon', target, difficulty=difficulty)
+        w['battle'] = b
+        return b
 
     # ------------------------------------------------------------------ the split
     def test_leader_keeps_original_hp_and_minions_carry_their_share_of_damage(self):
@@ -195,6 +206,124 @@ class SwarmBattleTests(unittest.TestCase):
         state['world']['battle']['kind'] = 'arena'
         with self.assertRaises(ValueError):
             rules.validate_state(state)
+
+    def test_balance_knobs_cannot_invalidate_a_battle_that_is_already_underway(self):
+        """Validation reads SWARM_KINDS/MAX_MINIONS, never C.SWARMS: tuning the dials must not 503 live saves."""
+        b = self.hunt()
+        rules.validate_state(self.state)
+        for counts in ({'wild': (len(b['minions']), len(b['minions']))}, {'wild': (1, 1)}, {'wild': (world.MAX_MINIONS, world.MAX_MINIONS)}):
+            with mock.patch.dict(C.SWARMS['counts'], counts, clear=False):
+                rules.validate_state(self.state)
+        with mock.patch.dict(C.SWARMS, {'minion_hp_pct': 50, 'minion_hit_pct': 60}):
+            rules.validate_state(self.state)
+
+    def test_elite_validation_survives_balance_changes_and_still_rejects_tampering(self):
+        """The elite branch checks invariants instead of recomputing _split from the live knobs."""
+        source = json.loads((Path(__file__).parent / 'fixtures' / 'r4_v1_1_released_save.json').read_text(encoding='utf-8'))['current']['state']
+        state = growth.upgrade_legacy(source, self.context['now'])
+        state = cadence.migrate_legacy(state, self.context['now'])
+        journey.migrate(state['world'])
+        w = state['world']
+        loot.release_run(w)
+        w['battle'] = None
+        w['dungeon'] = None
+        w['stage'] = 1
+        w['region'] = 'chisha'
+        w['r3']['growth']['rate_num'] = growth.rate_num(state)
+        stories = w['r3']['journey']['stories']
+        for story in G.STORIES[:2]:
+            stories[story['id']] = {'progress': [objective['amount'] for objective in story['objectives']], 'claimed': True}
+        story = G.STORIES[2]
+        stories[story['id']] = {'progress': [0, 0], 'claimed': False}
+        state, _ = rules.apply_action(state, 'world_elite_enter', {'elite': 'caravan_guard'}, context=self.context)
+        rules.validate_state(state)
+        for counts, hp_pct, hit_pct in (((3, 4), 12, 30), ((1, 1), 40, 10), ((6, 6), 25, 75)):
+            with mock.patch.dict(C.SWARMS['counts'], {'elite': counts}, clear=False):
+                with mock.patch.dict(C.SWARMS, {'minion_hp_pct': hp_pct, 'minion_hit_pct': hit_pct}):
+                    rules.validate_state(state)
+        elite = G.ELITES['caravan_guard']
+        for mutate in (lambda b: b.update(attack=elite['attack'] + 1),
+                       lambda b: b.update(max_hp=elite['hp'] + 1),
+                       lambda b: b['minions'][0].update(max_hp=10 ** 6)):
+            tampered = copy.deepcopy(state)
+            mutate(tampered['world']['battle'])
+            with self.assertRaises(ValueError):
+                rules.validate_state(tampered)
+
+    def test_tampered_rosters_are_still_rejected(self):
+        """Loosening the bound to MAX_MINIONS must not accept an empty, oversized or nonsensical pack."""
+        self.hunt()
+        mutations = (lambda b: b.update(minions=[]),
+                     lambda b: b.update(minions=[dict(id='m%d' % (i + 1), name='x', hp=1, max_hp=1, attack=1) for i in range(world.MAX_MINIONS + 1)]),
+                     lambda b: b['minions'][0].update(hp=b['minions'][0]['max_hp'] + 1),
+                     lambda b: b['minions'][0].update(attack=-1),
+                     lambda b: b['minions'][0].update(name=''))
+        for mutation in mutations:
+            state = copy.deepcopy(self.state)
+            mutation(state['world']['battle'])
+            with self.assertRaises(ValueError):
+                rules.validate_state(state)
+
+    # ------------------------------------------------------------------ the view
+    def test_next_intent_previews_the_damage_the_beat_actually_deals(self):
+        """The preview row must equal _incoming (leader + chips); showing the leader alone understates the beat."""
+        b = self.hunt()
+        w = self.state['world']
+        view = world.project(self.state, context=self.context)
+        rows = [row for page in view['pages'] for section in page['sections'] for row in section.get('rows', []) if row['label'] == '下一意图']
+        self.assertEqual(len(rows), 1, 'the battle section shows exactly one intent row')
+        shown = int(rows[0]['value'].rsplit('承伤', 1)[1])
+        self.assertEqual(shown, world._incoming(w, b))
+        self.assertGreater(shown, b['attack'], 'the pack adds damage the leader row alone does not explain')
+        hp = w['hp']
+        self.round('world_attack')
+        self.assertEqual(hp - w['hp'], shown, 'the preview matches what the beat then deals')
+
+    # ------------------------------------------------------------------ mechanics crossed with the pack
+    def test_venom_with_a_pack_poisons_on_the_heavy_beat_and_the_pack_keeps_chipping(self):
+        b = self.dungeon_boss('den')
+        chips = [m['attack'] for m in b['minions']]
+        b['turn'] = 2  # heavy beat
+        trace = self.round('world_attack')
+        self.assertEqual(b['poison_turns'], G.DUNGEON_MECHANICS['den']['poison_turns'], 'the heavy blow still poisons with a pack present')
+        self.assertEqual([t['amount'] for t in trace if t.get('unit')], chips, 'the pack still chips on the poison beat')
+        w = self.state['world']
+        hp = w['hp']
+        b['turn'] = 0
+        trace = self.round('world_attack')
+        self.assertEqual([t['amount'] for t in trace if t['type'] == 'poison'], [b['poison_damage']], 'old poison settles on the next beat')
+        self.assertEqual(hp - w['hp'], b['attack'] + sum(chips) + b['poison_damage'])
+        fresh = self.dungeon_boss('den')
+        fresh['turn'] = 2
+        self.round('world_defend')
+        self.assertEqual(fresh['poison_turns'], 0, 'defending the heavy blow still prevents the poison')
+
+    def test_mana_seal_with_a_pack_drains_on_the_attack_beat_and_the_pack_keeps_chipping(self):
+        b = self.dungeon_boss('tower')
+        w = self.state['world']
+        w['mp'] = 60
+        chips = [m['attack'] for m in b['minions']]
+        trace = self.round('world_attack')
+        drained = min(G.DUNGEON_MECHANICS['tower']['mp_drain'], 60)
+        self.assertEqual(w['mp'], 60 - drained, 'the ordinary blow still drains mp with a pack present')
+        self.assertEqual([t['amount'] for t in trace if t.get('unit')], chips)
+        fresh = self.dungeon_boss('tower')
+        w['mp'] = 60
+        self.round('world_defend')
+        self.assertEqual(w['mp'], 60, 'defending the ordinary blow still avoids the drain')
+
+    def test_furnace_barrier_absorbs_the_strike_and_the_pack_still_reaches_the_body(self):
+        b = self.dungeon_boss('forge')
+        w = self.state['world']
+        barrier, hp, chips = b['barrier'], w['hp'], [m['attack'] for m in b['minions']]
+        self.assertGreater(barrier, 0)
+        trace = self.round('world_attack')
+        absorbed = next(t['amount'] for t in trace if t['type'] == 'shield' and t['source'] == 'player')
+        self.assertEqual(b['barrier'], barrier - absorbed, 'the leader strike is eaten by the barrier first')
+        self.assertEqual(b['hp'], b['max_hp'], 'no strike damage reaches the leader body')
+        leader = next(t['amount'] for t in trace if t['type'] == 'damage' and t['source'] == 'enemy' and not t.get('unit'))
+        self.assertEqual(hp - w['hp'], leader + sum(chips), 'the player takes the leader blow plus the pack')
+        self.assertEqual([t['amount'] for t in trace if t.get('unit')], chips, 'minion chips ignore the leader barrier')
 
     def test_a_battle_started_before_swarms_finishes_single(self):
         with mock.patch.dict(C.SWARMS['counts'], clear=True):

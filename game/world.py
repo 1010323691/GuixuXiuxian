@@ -308,15 +308,23 @@ def _swarm_key(w,b):
     return 'dungeon_boss' if b['kind']=='dungeon' and w.get('dungeon') and w['dungeon'].get('round')==2 else b['kind']
 
 
+SWARM_KINDS={'wild','escort','secret','guard','dungeon','dungeon_boss','elite'}  # 会长小怪的战斗类型，独立于 C.SWARMS 的取值
+MAX_MINIONS=12  # 结构上界，不是平衡旋钮：调 C.SWARMS['counts'] 不会让进行中的战斗存档失效。
+
+
 def _check_minions(w,b):
-    """Roster shape of an in-progress swarm battle: only long-line swarm kinds, ids m1..mn, sane numbers."""
+    """Roster shape of an in-progress swarm battle: only long-line swarm kinds, ids m1..mn, sane numbers.
+
+    Bounds come from SWARM_KINDS/MAX_MINIONS instead of C.SWARMS['counts']: the swarm knobs are the
+    balance dials (scripts/swarm_balance.py sweeps them), so tuning or rolling them back must not
+    invalidate a battle that is already underway - Store._decode validates on every read.
+    """
     if 'minions' not in b:return True
     key=_swarm_key(w,b);roster=b['minions']
-    if 'r3' not in w or key not in C.SWARMS['counts'] or not isinstance(roster,list):return False
-    lo,hi=C.SWARMS['counts'][key]
-    if not lo<=len(roster)<=hi:return False
+    if 'r3' not in w or key not in SWARM_KINDS or not isinstance(roster,list):return False
+    if not 1<=len(roster)<=MAX_MINIONS:return False
     for i,m in enumerate(roster):
-        if not isinstance(m,dict) or set(m)!={'id','name','hp','max_hp','attack'} or m['id']!='m%d'%(i+1) or not isinstance(m['name'],str):return False
+        if not isinstance(m,dict) or set(m)!={'id','name','hp','max_hp','attack'} or m['id']!='m%d'%(i+1) or not isinstance(m['name'],str) or not m['name']:return False
         if not all(type(m[k]) is int for k in ('hp','max_hp','attack')) or not 0<=m['hp']<=m['max_hp']<=CAP or not 1<=m['attack']<=CAP:return False
     return True
 
@@ -1319,9 +1327,9 @@ def _deep_validate(w):
                 e=G.ELITES[b['target']]
                 j=w['r3'].get('journey',{});record=j.get('stories',{}).get(e['story'])
                 if not record or record['claimed'] or b['target'] in j.get('elite_wins',[]) or w['region']!=e['region']:invalid()
-                want=_split(e['hp'],e['attack'],e['heavy'],'elite',e['chapter']) if 'minions' in b else (dict(max_hp=e['hp'],attack=e['attack'],heavy=e['heavy']),None)
-                if want[1] is not None and [(m['max_hp'],m['attack']) for m in b['minions']]!=[(m['max_hp'],m['attack']) for m in want[1]]:invalid()
-                if (b['max_hp'],b['attack'],b['heavy'])!=(want[0]['max_hp'],want[0]['attack'],want[0]['heavy']) or b['poison_damage']!=e['poison_damage'] or e['story'] not in w['r3'].get('journey',{}).get('stories',{}):invalid()
+                # 只校验不变量，不用实时 C.SWARMS 重算拆分：调平衡（counts/minion_hp_pct/minion_hit_pct）
+                # 不能让进行中的精英战存档在读取时变成 503。小怪个体形状由 _check_minions 负责。
+                if (b['max_hp']!=e['hp'] or not 0<=b['attack']<=e['attack'] or not 0<=b['heavy']<=e['heavy'] or b['poison_damage']!=e['poison_damage'] or e['story'] not in w['r3'].get('journey',{}).get('stories',{})):invalid()
             elif b['mechanic']!=G.DUNGEON_MECHANICS[b['target']]['id']:invalid()
             scalar(b['poison_turns'],0,2);scalar(b['poison_damage']);scalar(b['barrier'],0,_total_hp(b)//4)
         if b['kind']=='world_boss':
@@ -1523,11 +1531,11 @@ def project(state,context=None):
     add('arena','world_season_fight','挑战当前赛区','模拟战斗，无真实玩家','胜利晋级、积分10与灵石10，每场一次')
     add('arena','world_season_claim','领取本季冠军奖励','本季三胜','灵石30、灵晶3、家族声望5；NPC下季成长一级')
     if w['battle']:
-        battle=w['battle'];intent=['攻击%d'%battle['attack'],'蓄势，本回合0伤害','重击%d'%battle['heavy']][battle['turn']%3]
+        battle=w['battle'];intent=['攻击%d'%battle['attack'],'蓄势，本回合0伤害','重击%d'%battle['heavy']][battle['turn']%3];incoming=_incoming(w,battle)
         for page in pages:
             page['actions']=[a for a in page['actions'] if a['id'].startswith('world_')]
         pack=[m for m in battle.get('minions',()) if m['hp']>0]
-        section('exploration','当前战斗：'+battle['name'],[('敌方气血','%d / %d'%(battle['hp'],battle['max_hp'])),('下一意图',intent),('战斗回合',battle['turn']+1)]+([('随行小怪','%d只存活，共气血%d'%(len(pack),sum(m['hp'] for m in pack)))] if pack else []))
+        section('exploration','当前战斗：'+battle['name'],[('敌方气血','%d / %d'%(battle['hp'],battle['max_hp'])),('下一意图','%s；本拍预计承伤%d'%(intent,incoming)),('战斗回合',battle['turn']+1)]+([('随行小怪','%d只存活，共气血%d'%(len(pack),sum(m['hp'] for m in pack)))] if pack else []))
         for strategy,label,cost,effect in [('balanced','自动斗法·均衡','按战况自动出招；必要时才用回元丹与三符','自动攻守、回灵与回血；战力型法宝按各自冷却独立出击或回护，直到本战分出结果'),('steady','自动斗法·稳妥','气血≤75%即服丹，符箓提前备用','优先保住气血，愿意多用丹符；战力型法宝同样出手'),('aggressive','自动斗法·强攻','只在气血≤25%时服丹，不用三符','优先输出，防御与符箓不自动使用；战力型法宝同样出手'),('frugal','自动斗法·节制','不消耗任何丹药与符箓','只用普攻、强攻与防御；战力型法宝同样出手')]:add('arena' if battle['kind'] in {'arena','regional'} else 'exploration','world_auto_battle',label,cost,effect,{'strategy':strategy})
         if battle['kind'] in {'arena','regional'}:section('arena','当前演武',[(battle['name'],'气血%d / %d；下一招%s'%(battle['hp'],battle['max_hp'],intent))])
     for page in pages:
