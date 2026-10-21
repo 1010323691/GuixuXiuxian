@@ -55,10 +55,22 @@ class FrontendBuildTests(unittest.TestCase):
             self.assertEqual(server.FILES.get(path), ('art/hero/%s.png' % name, 'image/png'), path)
             data = (ROOT / 'static' / 'art' / 'hero' / ('%s.png' % name)).read_bytes()
             self.assertEqual(data[:8], bytes.fromhex('89504e470d0a1a0a'), name)
-            self.assertIn("'%s'" % name, (ROOT / 'src' / 'battle' / 'art.ts').read_text(encoding='utf-8'))
+            self.assertRegex((ROOT / 'src' / 'battle' / 'art.ts').read_text(encoding='utf-8'), r'\b%s: \[\d+, \d+\]' % name)  # registered in SIZES
         source = (ROOT / 'static' / 'art' / 'hero' / 'SOURCE.md').read_text(encoding='utf-8')
-        self.assertIn('protagonist_xianxia_character_concept_turnaround_v001', source)
+        self.assertIn('char_protagonist_turnaround_v001', source)
         self.assertNotIn('/art/hero/SOURCE.md', server.FILES)  # provenance note is not served
+
+    def test_lion_king_art_is_served_with_recorded_source(self):
+        for name in ('front', 'side', 'back', 'sigil'):
+            path = '/art/lion/%s.png' % name
+            self.assertEqual(server.FILES.get(path), ('art/lion/%s.png' % name, 'image/png'), path)
+            data = (ROOT / 'static' / 'art' / 'lion' / ('%s.png' % name)).read_bytes()
+            self.assertEqual(data[:8], bytes.fromhex('89504e470d0a1a0a'), name)
+        source = (ROOT / 'static' / 'art' / 'lion' / 'SOURCE.md').read_text(encoding='utf-8')
+        self.assertIn('mon_amethyst_winged_lion_king_sheet_v001', source)
+        self.assertTrue((ROOT / 'assets' / 'mon_amethyst_winged_lion_king_sheet_v001.png').is_file())
+        art = (ROOT / 'src' / 'battle' / 'art.ts').read_text(encoding='utf-8')
+        self.assertIn("loadLionArt(base = '/art/lion/')", art)
 
     def test_node_modules_never_committed(self):
         self.assertIn('node_modules/', (ROOT / '.gitignore').read_text(encoding='utf-8').splitlines())

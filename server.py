@@ -20,6 +20,7 @@ STATIC=Path(__file__).resolve().parent/'static'
 FILES={'/':('index.html','text/html; charset=utf-8'),'/index.html':('index.html','text/html; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/battle_replay.js':('battle_replay.js','text/javascript; charset=utf-8'),'/fx3d.js':('fx3d.js','text/javascript; charset=utf-8'),'/battle3d.js':('battle3d.js','text/javascript; charset=utf-8'),'/arena3d.js':('arena3d.js','text/javascript; charset=utf-8'),'/battle-lab.html':('battle-lab.html','text/html; charset=utf-8'),'/battle_lab.js':('battle_lab.js','text/javascript; charset=utf-8'),'/vendor/three.module.min.js':('vendor/three.module.min.js','text/javascript; charset=utf-8')}
 VENDOR_ADDONS=('CopyShader','EffectComposer','LuminosityHighPassShader','MaskPass','OutputPass','OutputShader','Pass','RenderPass','ShaderPass','UnrealBloomPass')  # three r170 官方后期扩展，同源内置
 FILES.update({'/art/hero/%s.png'%n:('art/hero/%s.png'%n,'image/png') for n in ('front','side','back','sword','talisman','circle','jade')})  # 主角三视图与法宝立绘（用户提供的设定图裁切）
+FILES.update({'/art/lion/%s.png'%n:('art/lion/%s.png'%n,'image/png') for n in ('front','side','back','sigil')})  # 紫晶翼狮王三视图与灵气凝聚阵印
 FILES.update({'/vendor/addons/%s.js'%n:('vendor/addons/%s.js'%n,'text/javascript; charset=utf-8') for n in VENDOR_ADDONS})
 JSON_TYPE='application/json; charset=utf-8'
 GAME_WRITES={'/api/new-game','/api/action'}

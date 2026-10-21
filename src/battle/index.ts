@@ -2,14 +2,14 @@
 // Rules never live here: in stage 2 the Python battle report will drive the same templates.
 import * as THREE from 'three';
 import { makeCultivator, makeDemon, type Actor } from './actors';
-import { loadArt, makeArtCultivator } from './art';
+import { LION_COLOR, disposeTextures, loadArt, loadLionArt, makeArtCultivator, makeArtLion } from './art';
 import { CameraRig, type ShotName } from './camera';
 import { buildEnvironment } from './env';
 import { FxSystem } from './fx';
 import { buildPost } from './post';
 import { V, disposeOutlines, disposeShared, lerp, easeInOut, easeOut } from './util';
 
-export interface ArenaOptions { quality?: 0 | 1 | 2; reducedMotion?: boolean; skill?: THREE.ColorRepresentation; hero?: 'art' | 'toon' }
+export interface ArenaOptions { quality?: 0 | 1 | 2; reducedMotion?: boolean; skill?: THREE.ColorRepresentation; hero?: 'art' | 'toon'; foe?: 'lion' | 'demon' }
 
 const HERO_HOME = V(0, 0, 6);
 const FOE_HOME = V(0, 1.2, -11);
@@ -47,10 +47,15 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
 
   const art = opts.hero === 'toon' ? null : loadArt();
   if (art) fx.setArt(art);
-  const hero = art ? makeArtCultivator(art, skill) : makeCultivator(skill), foe = makeDemon();
+  const lionArt = opts.foe === 'demon' ? null : loadLionArt();
+  const hero = art ? makeArtCultivator(art, skill) : makeCultivator(skill), foe = lionArt ? makeArtLion(lionArt) : makeDemon();
+  // the foe's palette: amethyst crystal light for the lion king, lava for the legacy demon
+  const P = lionArt
+    ? { mist: 0x8a7ab8, spark: LION_COLOR, ember: 0xd8b0ff, roar: 0xc890ff, claw: 0xb46cff, death: 0xe0c0ff, deathSmoke: 0x6a5a8a }
+    : { mist: 0x1a1012, spark: 0xff3a12, ember: 0xff4a1a, roar: 0xff3010, claw: 0xff2a1a, death: 0xff6a2a, deathSmoke: 0x2a2024 };
   scene.add(hero.root, foe.root);
-  fx.attachAura(foe.root, { color: 0x1a1012, rate: 14, radius: 3, rise: 1.5, size: [2.5, 5], smoke: true, offset: V(-.5, 3, 0) });
-  fx.attachAura(foe.root, { color: 0xff3a12, rate: 26, radius: 3.4, rise: 4, size: [.15, .4], offset: V(0, 3.5, 0) });
+  fx.attachAura(foe.root, { color: P.mist, rate: lionArt ? 6 : 14, radius: 3, rise: 1.5, size: [2.5, 5], smoke: true, offset: V(-.5, 3, 0) });
+  fx.attachAura(foe.root, { color: P.spark, rate: 26, radius: 3.4, rise: 4, size: [.15, .4], offset: V(0, 3.5, 0) });
   fx.attachAura(hero.root, { color: skill, rate: 16, radius: .5, rise: -.5, size: [.08, .2], offset: V(-.6, -1.5, 0) });
 
   // ---------------------------------------------------------------- the lab duel, beat by beat
@@ -64,7 +69,7 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
   tl.at(0, () => { hero.reset(); foe.reset(); fx.clear(); hero.root.position.copy(heroFrom); foe.root.position.copy(FOE_HOME); hero.moves.play('dash', 2.2); });
   shot(0, 'establish');
   tl.tween(0, 2.2, (u) => { const k = easeOut(u); hero.root.position.set(lerp(heroFrom.x, HERO_HOME.x, k), lerp(heroFrom.y, HERO_HOME.y, k) + Math.sin(u * Math.PI) * 3, lerp(heroFrom.z, HERO_HOME.z, k)); });
-  tl.at(.9, () => { foe.moves.play('roar', 2); fx.embers(foe.anchor('head'), 0xff4a1a, 1.5); rig.shake(.35); });
+  tl.at(.9, () => { foe.moves.play('roar', 2); fx.embers(foe.anchor('head'), P.ember, 1.5); rig.shake(.35); });
   shot(1.9, 'heroClose', .5);
   shot(2.9, 'shoulder', .7);
   // 剑阵 sword formation
@@ -99,7 +104,7 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
   tl.at(9.05, () => { fx.impact(foe.anchor('chest'), skill, 1.6); foe.moves.play('hit', .8); foe.flash(0xffffff, 1.2); });
   // the demon answers: roar, wind-up, lunge, 八卦镜 blocks
   shot(10, 'demonClose', .6);
-  tl.at(10.1, () => { foe.moves.play('roar', 1.3); fx.embers(foe.anchor('chest'), 0xff3010, 2); fx.smoke(foe.anchor('chest'), 0x1e1416, 1.6); rig.shake(.3); });
+  tl.at(10.1, () => { foe.moves.play('roar', 1.3); fx.embers(foe.anchor('chest'), P.roar, 2); fx.smoke(foe.anchor('chest'), P.deathSmoke, 1.6); rig.shake(.3); });
   tl.at(10.9, () => foe.moves.play('windup', 1.6, { attack: .5 }));
   const lungeTo = () => V().lerpVectors(FOE_HOME, HERO_HOME, .58).setY(FOE_HOME.y - .5);
   shot(11.35, 'side');
@@ -109,9 +114,9 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
   tl.at(11.45, () => foe.moves.play('strike', .9));
   tl.at(11.68, () => {
     const contact = hero.anchor('chest').addScaledVector(V().subVectors(foe.root.position, hero.root.position).normalize(), 2.2);
-    fx.clawSlash(contact, camera.position, 0xff2a1a, 3.2);
+    fx.clawSlash(contact, camera.position, P.claw, 3.2);
     ward?.strike(contact);
-    fx.impact(contact, 0xffc860, 1.4); fx.sparks(contact, 0xff3a1a, 1.2);
+    fx.impact(contact, 0xffc860, 1.4); fx.sparks(contact, P.spark, 1.2);
     hero.moves.play('recoil', .8); hero.flash(0xffd080, .6);
   });
   tl.tween(11.7, .5, (u) => { const back = V().subVectors(hero.root.position, foe.root.position).setY(0).normalize(); hero.root.position.copy(HERO_HOME).addScaledVector(back, Math.sin(u * Math.PI) * 1.6); });
@@ -121,10 +126,10 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
   tl.at(13, () => hero.moves.play('rise', 2.4));
   tl.at(13.2, () => fx.heavenSword(() => hero.anchor('head').add(V(0, 3, 0)), () => foe.anchor('chest'), skill, 1.3, .42, () => {
     const p = foe.anchor('chest');
-    fx.impact(p, skill, 2.2); fx.embers(p, 0xff7a3a, 2.4); fx.smoke(p, 0x3a3034, 2);
+    fx.impact(p, skill, 2.2); fx.embers(p, P.death, 2.4); fx.smoke(p, P.deathSmoke, 2);
     post.flash(.55, 0xffffff); rig.fovKick(10); foe.moves.play('die', 2, { hold: true });
   }));
-  for (const k of [0, 1, 2]) tl.at(15.1 + k * .45, () => { const p = foe.anchor('chest').add(V(0, k - 1, 0)); fx.embers(p, 0xff6a2a, 1.6); fx.smoke(p, 0x2a2024, 1.2); });
+  for (const k of [0, 1, 2]) tl.at(15.1 + k * .45, () => { const p = foe.anchor('chest').add(V(0, k - 1, 0)); fx.embers(p, P.death, 1.6); fx.smoke(p, P.deathSmoke, 1.2); });
   shot(14.5, 'impact');
   shot(15.4, 'wide', 1.6);
 
@@ -190,7 +195,8 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
         const mats = mesh.material ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) : [];
         for (const m of mats) { for (const v of Object.values(m)) if (v instanceof THREE.Texture) v.dispose(); m.dispose(); }
       });
-      if (art) for (const v of Object.values(art)) if (v instanceof THREE.Texture) v.dispose();
+      if (art) disposeTextures(art);
+      if (lionArt) disposeTextures(lionArt);
       disposeOutlines();
       disposeShared();
     },
@@ -217,7 +223,7 @@ export function runLab(host: HTMLElement) {
     return;
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, quality >= 2 ? 2 : 1.25));
-  const arena = createArena(renderer, { quality, reducedMotion: reduced, hero: params.get('hero') === 'toon' ? 'toon' : 'art' });
+  const arena = createArena(renderer, { quality, reducedMotion: reduced, hero: params.get('hero') === 'toon' ? 'toon' : 'art', foe: params.get('foe') === 'demon' ? 'demon' : 'lion' });
   const resize = () => arena.resize(host.clientWidth, host.clientHeight);
   addEventListener('resize', resize);
   resize();
