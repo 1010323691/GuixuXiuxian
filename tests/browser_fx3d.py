@@ -4,6 +4,7 @@
 帧率数值仅代表本机软件渲染环境，不代表真实 GPU。
 """
 import json
+from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -15,8 +16,44 @@ REPORT = {'outcome': 'victory', 'rounds': 1, 'strategy': 'balanced', 'strategy_l
           'frames': [{'round': 0, 'player': {'hp': 100, 'mp': 20}, 'enemy': {'hp': 100, 'barrier': 0}, 'intent': '蓄势', 'action': '准备', 'events': []},
                      {'round': 1, 'player': {'hp': 100, 'mp': 20}, 'enemy': {'hp': 0, 'barrier': 0}, 'intent': '—', 'action': '斗法',
                       'events': [{'type': 'damage', 'source': 'player', 'target': 'enemy', 'label': '攻', 'amount': 100}]}]}
+# 三维斗法台：覆盖本方/法宝/同行/敌方重击/回护/丹药/封印/金钟罩/破盾与终局消散
+def _ev(kind, source, target, label, amount=None):
+    item = {'type': kind, 'source': source, 'target': target, 'label': label}
+    if amount is not None:
+        item['amount'] = amount
+    return item
+
+
+def _frame(round_, php, ehp, barrier, action, events):
+    return {'round': round_, 'player': {'hp': php, 'mp': 60}, 'enemy': {'hp': ehp, 'barrier': barrier}, 'intent': '重击', 'action': action, 'events': events}
+
+
+ARENA = {'outcome': 'victory', 'rounds': 5, 'strategy': 'balanced', 'strategy_label': '均衡', 'enemy': {'name': '赤沙妖狼王', 'max_hp': 400, 'kind': 'guard'},
+         'player': {'max_hp': 300, 'max_mp': 100}, 'treasures': {'main': {'name': '本命法宝', 'quality': '上品'}, 'guard': {'name': '护持法宝', 'quality': '中品'}},
+         'frames': [_frame(0, 300, 400, 60, '准备', []),
+                    _frame(1, 270, 300, 0, '运功强攻', [_ev('shield', 'player', 'enemy', '破盾：运功强攻', 60), _ev('damage', 'player', 'enemy', '运功强攻', 80),
+                                                    _ev('damage', 'main', 'enemy', '本命法宝出击', 20), _ev('shield_absorb', 'guard', 'player', '护持法宝实际拦截', 40),
+                                                    _ev('damage', 'enemy', 'player', '敌方重击', 30)]),
+                    _frame(2, 290, 250, 0, '服回元丹', [_ev('heal', 'player', 'player', '服回元丹', 50), _ev('damage', 'npc', 'enemy', '同行支援', 10), _ev('damage', 'enemy', 'player', '敌方常击', 30)]),
+                    _frame(3, 290, 250, 0, '镇魂符', [_ev('control', 'player', 'enemy', '镇魂符')]),
+                    _frame(4, 290, 120, 0, '防御', [_ev('defend', 'player', 'player', '防御回灵', 6), _ev('damage', 'main', 'enemy', '本命法宝出击', 130)]),
+                    _frame(5, 290, 0, 0, '焚火符', [_ev('damage', 'player', 'enemy', '焚火符', 120), _ev('victory', 'player', 'enemy', '战斗胜利')])]}
+LOOKS = [{'tier': 7, 'root': 'fire', 'skill': 'flame', 'form': 'beast', 'boss': True},
+         {'tier': 2, 'root': 'wood', 'skill': 'origin', 'form': 'serpent', 'boss': False},
+         {'tier': 4, 'root': 'earth', 'skill': 'mountain', 'form': 'golem', 'boss': False},
+         {'tier': 0, 'root': None, 'skill': 'origin', 'form': 'shade', 'boss': False}]
+ARTIFACTS = Path(__file__).resolve().parents[1] / 'artifacts' / 'fx3d-qa'
 GPU_ARGS = ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
 STATS = "async () => { const m = await import('/fx3d.js'); return m.stats(); }"
+
+
+def wait_fx3d(page, timeout=15000):
+    # 页面 CSP 禁 eval，wait_for_function 的字符串谓词不可用；改用 evaluate 轮询
+    for _ in range(timeout // 100):
+        if page.evaluate("() => document.querySelector('#replay-stage')?.dataset.fx3d === 'on'"):
+            return
+        page.wait_for_timeout(100)
+    raise AssertionError('三维斗法台未在 %d ms 内就绪' % timeout)
 
 
 def enter_world(page, server, name):
@@ -78,6 +115,48 @@ def main():
             assert after['stage']['geometries'] == baseline['geometries'] and after['stage']['textures'] == baseline['textures'], (baseline, after)
             assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0
             report['checks'].append('30 replay open/close cycles: one renderer, geometries/textures stable, no leftover battle canvas')
+
+            # 三维斗法台：四种外形/天时各完整播放一遍并截图；信息层（气血、飘字、日志）与三维并行存在
+            ARTIFACTS.mkdir(parents=True, exist_ok=True)
+            page.evaluate("(r) => { window.__arena = r; }", ARENA)
+            for index, look in enumerate(LOOKS):
+                page.evaluate("(look) => BattleReplay.open(window.__arena, look)", look)
+                wait_fx3d(page)
+                assert page.evaluate("document.getElementById('battle-replay').classList.contains('immersive')")
+                battle = page.evaluate(STATS)['battle']
+                assert battle and battle['form'] == look['form'] and battle['geometries'] > 20, battle
+                if index == 0:
+                    for beat in range(len(ARENA['frames']) - 1):
+                        page.wait_for_timeout(2600 if beat == 0 else 900)
+                        page.screenshot(path=str(ARTIFACTS / ('arena-beat%d.png' % (beat + 1))))
+                    page.wait_for_timeout(900)
+                else:
+                    page.wait_for_timeout(2600)
+                floaters = page.evaluate("document.querySelectorAll('#replay-floaters .floater3d').length")
+                page.screenshot(path=str(ARTIFACTS / ('arena-%s.png' % look['form'])))
+                page.locator('#replay-skip').click()
+                expect(page.locator('#replay-result')).to_be_visible()
+                page.wait_for_timeout(1500)
+                page.screenshot(path=str(ARTIFACTS / ('arena-%s-result.png' % look['form'])))
+                assert page.evaluate("document.getElementById('replay-player-hp-text').textContent").startswith('本方气血')
+                report.setdefault('arena', []).append({'look': look, 'battle': page.evaluate(STATS)['battle'], 'floaters_seen': floaters})
+                page.locator('#replay-close').click()
+                expect(page.locator('#battle-replay')).to_be_hidden()
+                assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0
+            report['checks'].append('3D arena: four enemy forms x four sky tiers play, skip/close work, canvas released; screenshots in artifacts/fx3d-qa')
+
+            # 窄屏：斗法台与 HUD 在 375x812 下可见且不出横向滚动
+            page.set_viewport_size({'width': 375, 'height': 812})
+            page.evaluate("(look) => BattleReplay.open(window.__arena, look)", LOOKS[1])
+            wait_fx3d(page)
+            page.wait_for_timeout(2600)
+            page.screenshot(path=str(ARTIFACTS / 'arena-mobile.png'))
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+            box = page.locator('#replay-stage').bounding_box()
+            assert box and box['height'] >= 150, box
+            page.locator('#replay-close').click()
+            page.set_viewport_size({'width': 1365, 'height': 900})
+            report['checks'].append('mobile 375x812: arena stage visible, no horizontal overflow')
             report['stats'] = after['stage']
             browser.close()
 
@@ -93,9 +172,14 @@ def main():
             page.locator('[data-world-page="estate"]').click()
             page.wait_for_timeout(1200)
             assert not page.evaluate("document.body.classList.contains('stage3d-on')")
-            page.evaluate("(r) => BattleReplay.open(r)", REPORT)
+            page.evaluate("(r) => BattleReplay.open(r, {tier: 3, root: 'fire', skill: 'flame', form: 'beast', boss: true})", ARENA)
             expect(page.locator('#battle-replay')).to_be_visible()
+            page.wait_for_timeout(2500)
             assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0
+            assert page.evaluate("document.querySelector('#replay-stage').dataset.fx3d") is None
+            assert page.evaluate("getComputedStyle(document.querySelector('.replay-svg')).visibility") == 'visible'
+            page.locator('#replay-skip').click()
+            expect(page.locator('#replay-result')).to_be_visible()
             page.evaluate("() => BattleReplay.close()")
             report['checks'].append('without WebGL: no 3D canvas, replay and pages still work (SVG/Canvas2D fallback)')
             browser.close()

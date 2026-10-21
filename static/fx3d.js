@@ -1,30 +1,12 @@
 // 三维特效管理器：同一页面同一时刻只持有一个 WebGL 上下文。
-//  - battle：斗法战报特效，由战报事件驱动（蓄力 → 飞行 → 命中 → 伤害冲击 → 收尾），不推进任何规则、不决定胜负；
+//  - battle：三维斗法台「云海御空」（battle3d.js），由战报事件驱动（蓄力 → 飞行 → 命中 → 冲击 → 收尾），不推进任何规则、不决定胜负；
 //  - stage ：舞台氛围（真透视视差的云雾 + 境界色灵气，洞府页按洞府等级点亮灯笼），绑定境界与洞府数据。
 // 战报打开时让出舞台上下文，合上后自动恢复。加载或创建失败时返回 null，调用方继续用原有 SVG/Canvas2D 演出。
 import * as THREE from "/vendor/three.module.min.js";
+import { buildArena } from "/battle3d.js";
 
 const liveRenderers = new Set();      // 当前存活的渲染器（用于核对“单上下文”与泄漏检测）
-let stageInstance = null, stageSpec = null, battleDepth = 0;
-
-const VIEW_W = 1000, VIEW_H = 340;     // 与战报舞台 SVG 的 viewBox 一致
-const MAX_PARTICLES = 520;
-const MAX_RINGS = 8;
-
-// 各类事件的阶段配置（毫秒，按 1× 速度；速度倍率在 schedule 时统一折算）
-const PHASES = {
-  damage: { charge: 170, fly: 380, hit: 420 },
-  shield: { charge: 120, fly: 320, hit: 360 },
-  shield_absorb: { charge: 0, fly: 0, hit: 520 },
-  heal: { charge: 0, fly: 0, hit: 760 },
-  buff: { charge: 0, fly: 0, hit: 560 },
-  defend: { charge: 0, fly: 0, hit: 560 },
-  control: { charge: 120, fly: 300, hit: 520 },
-  poison: { charge: 0, fly: 260, hit: 520 },
-  mana: { charge: 0, fly: 0, hit: 560 },
-};
-const COLORS = { player: 0x3fa585, main: 0xe8b84a, guard: 0x4a8fb8, enemy: 0xc8452f, npc: 0x8a7bb8 };
-const EVENT_COLORS = { heal: 0x6fd1a4, shield_absorb: 0x5aa9e6, shield: 0x5aa9e6, buff: 0xe8b84a, defend: 0x5aa9e6, control: 0x8a7bb8, poison: 0x7aa84a, mana: 0x5aa9e6 };
+let stageInstance = null, stageSpec = null, battleDepth = 0, battleInstance = null;
 
 const SPRITE = (() => {
   const canvas = document.createElement("canvas");
@@ -38,15 +20,6 @@ const SPRITE = (() => {
   return canvas;
 })();
 
-const VERT = `
-attribute float size; attribute float alpha; attribute vec3 tint;
-varying float vAlpha; varying vec3 vTint;
-uniform float scale;
-void main() {
-  vAlpha = alpha; vTint = tint;
-  gl_PointSize = size * scale;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}`;
 const FRAG = `
 uniform sampler2D map; varying float vAlpha; varying vec3 vTint;
 void main() { vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vTint, t.a * vAlpha); }`;
@@ -65,194 +38,49 @@ function webglAvailable() {
 }
 
 /**
+ * 三维斗法台。ctx = { report, tier, root, skill, form, boss, onLost, onRestore }。
  * @param {HTMLElement} host 战报舞台容器（须为定位元素）
- * @returns {null | {play, clear, resize, setSpeed, dispose}}
+ * @returns {null | {play, setFrame, project, clear, resize, setSpeed, dispose, lost}}
  */
-export function create(host) {
-  if (!host || !webglAvailable()) return null;
+export function create(host, ctx = {}) {
+  if (!host || !ctx.report || !webglAvailable()) return null;
   suspendStage();
-  let renderer;
+  let renderer, arena;
   try {
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: "low-power" });
+    renderer = new THREE.WebGLRenderer({ alpha: false, antialias: false, powerPreference: "high-performance" });
   } catch { resumeStage(); return null; }
   liveRenderers.add(renderer);
   const canvas = renderer.domElement;
   canvas.className = "fx3d-canvas";
   canvas.setAttribute("aria-hidden", "true");
   host.append(canvas);
-  renderer.setClearColor(0x000000, 0);
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(0, VIEW_W, 0, VIEW_H, -10, 10);
-  camera.position.z = 5;
-
-  // 粒子池：单个 Points，CPU 更新属性
-  const geometry = new THREE.BufferGeometry();
-  const pos = new Float32Array(MAX_PARTICLES * 3), tint = new Float32Array(MAX_PARTICLES * 3);
-  const size = new Float32Array(MAX_PARTICLES), alpha = new Float32Array(MAX_PARTICLES);
-  geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  geometry.setAttribute("tint", new THREE.BufferAttribute(tint, 3));
-  geometry.setAttribute("size", new THREE.BufferAttribute(size, 1));
-  geometry.setAttribute("alpha", new THREE.BufferAttribute(alpha, 1));
-  const texture = new THREE.CanvasTexture(SPRITE);
-  const material = new THREE.ShaderMaterial({ uniforms: { map: { value: texture }, scale: { value: 1 } }, vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending });
-  const points = new THREE.Points(geometry, material);
-  points.frustumCulled = false;
-  scene.add(points);
-
-  // 冲击环池
-  const ringGeometry = new THREE.RingGeometry(.86, 1, 40);
-  const rings = Array.from({ length: MAX_RINGS }, () => {
-    const mat = new THREE.MeshBasicMaterial({ transparent: true, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 });
-    const mesh = new THREE.Mesh(ringGeometry, mat);
-    mesh.visible = false; mesh.userData = { life: 0, span: 1, from: 10, to: 60 };
-    scene.add(mesh);
-    return mesh;
-  });
-
-  const parts = [];            // 活动粒子
-  const timeline = [];         // { at, run }：以毫秒时钟推进，暂停/倍速自然生效
-  let clock = 0, speed = 1, frameId = 0, last = 0, disposed = false, lost = false;
-
-  canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); lost = true; canvas.classList.add("lost"); });
-  canvas.addEventListener("webglcontextrestored", () => { lost = false; canvas.classList.remove("lost"); });
-
-  function resize() {
-    const rect = host.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const ratio = Math.min(1.5, globalThis.devicePixelRatio || 1);
-    renderer.setPixelRatio(ratio);
-    renderer.setSize(rect.width, rect.height, false);
-    canvas.style.width = "100%"; canvas.style.height = "100%";
-    // 与 SVG 的 meet 适配一致：viewBox 等比居中
-    const aspect = rect.width / rect.height, view = VIEW_W / VIEW_H;
-    let w = VIEW_W, h = VIEW_H;
-    if (aspect > view) w = VIEW_H * aspect; else h = VIEW_W / aspect;
-    const cx = VIEW_W / 2, cy = VIEW_H / 2;
-    camera.left = cx - w / 2; camera.right = cx + w / 2; camera.top = cy - h / 2; camera.bottom = cy + h / 2;
-    camera.updateProjectionMatrix();
-    material.uniforms.scale.value = ratio * rect.width / w;
+  try { arena = buildArena(renderer, host, ctx); } catch (error) {
+    console.warn("三维斗法台创建失败，改用平面演出", error);
+    renderer.dispose(); renderer.forceContextLoss(); liveRenderers.delete(renderer); canvas.remove(); resumeStage();
+    return null;
   }
-  const observer = globalThis.ResizeObserver ? new ResizeObserver(resize) : null;
-  observer?.observe(host);
-  resize();
-
-  const rgb = (hex) => [(hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255];
-
-  function spawn(x, y, vx, vy, life, sz, hex, gain = 1) {
-    if (parts.length >= MAX_PARTICLES) parts.shift();
-    parts.push({ x, y, vx, vy, life, span: life, sz, c: rgb(hex), gain });
-  }
-  function ring(x, y, hex, from, to, life) {
-    const mesh = rings.find((r) => !r.visible) || rings[0];
-    mesh.position.set(x, y, 0); mesh.material.color.setHex(hex);
-    Object.assign(mesh.userData, { life, span: life, from, to });
-    mesh.visible = true;
-  }
-
-  const at = (delay, run) => { timeline.push({ at: clock + delay, run }); wake(); };
-  const bez = (a, c, b, t) => (1 - t) * (1 - t) * a + 2 * (1 - t) * t * c + t * t * b;
-
-  // 一次事件 → 若干阶段。intensity 0..1 由逻辑数值（伤害 / 敌方气血上限）决定。
-  function play(event, from, to, intensity = .4) {
-    if (disposed || lost) return;
-    const ph = PHASES[event.type];
-    if (!ph) return;
-    const hex = EVENT_COLORS[event.type] || COLORS[event.source] || COLORS.player;
-    const k = Math.max(.25, Math.min(1, intensity));
-    const self = event.source === event.target || ["heal", "buff", "defend", "shield_absorb", "mana"].includes(event.type);
-    const [x0, y0] = from, [x1, y1] = self ? from : to;
-    const cx = (x0 + x1) / 2, cy = Math.min(y0, y1) - 50;
-    // 蓄力：施放者处聚拢光点
-    if (ph.charge) at(0, () => { for (let i = 0; i < 14; i++) { const a = Math.random() * 6.283, r = 38 + Math.random() * 20; spawn(x0 + Math.cos(a) * r, y0 + Math.sin(a) * r, -Math.cos(a) * r / (ph.charge / 1000), -Math.sin(a) * r / (ph.charge / 1000), ph.charge / 1000, 8 + Math.random() * 6, hex, .8); } });
-    if (ph.fly) {
-      // 飞行：弹头沿贝塞尔轨迹，每帧留尾迹
-      const t0 = ph.charge, steps = Math.max(8, Math.round(ph.fly / 22));
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        at(t0 + ph.fly * t, () => {
-          const x = bez(x0, cx, x1, t), y = bez(y0, cy, y1, t);
-          spawn(x, y, 0, 0, .34, 20 + 8 * k, hex, 1.1);
-          spawn(x, y, (Math.random() - .5) * 40, (Math.random() - .5) * 40, .5, 9, 0xfffdf0, .8);
-        });
-      }
-    }
-    // 命中：爆发粒子 + 冲击环（强度随真实伤害占比）
-    at(ph.charge + ph.fly, () => {
-      const count = Math.round(18 + 46 * k);
-      const power = event.type === "heal" ? 40 : 90 + 120 * k;
-      for (let i = 0; i < count; i++) {
-        const a = event.type === "heal" ? -1.57 + (Math.random() - .5) * 1.4 : Math.random() * 6.283;
-        const v = power * (.3 + Math.random() * .7);
-        spawn(x1 + (Math.random() - .5) * 14, y1 + (Math.random() - .5) * 14, Math.cos(a) * v, Math.sin(a) * v, (ph.hit / 1000) * (.5 + Math.random() * .6), 8 + Math.random() * 10 * k, Math.random() < .3 ? 0xfffdf0 : hex, 1);
-      }
-      if (!["heal", "mana"].includes(event.type)) ring(x1, y1, hex, 8, 40 + 60 * k, ph.hit / 1000);
-    });
-  }
-
-  function clear() {
-    timeline.length = 0; parts.length = 0;
-    for (const r of rings) r.visible = false;
-    flush();
-    if (!disposed && !lost) renderer.render(scene, camera);
-  }
-
-  function flush() {
-    const n = parts.length;
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      if (i < n) {
-        const p = parts[i], life = Math.max(0, p.life / p.span);
-        pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = 0;
-        tint[i * 3] = p.c[0]; tint[i * 3 + 1] = p.c[1]; tint[i * 3 + 2] = p.c[2];
-        size[i] = p.sz * (.5 + .5 * life); alpha[i] = Math.min(1, life * 1.6) * p.gain * .85;
-      } else alpha[i] = 0;
-    }
-    for (const name of ["position", "tint", "size", "alpha"]) geometry.attributes[name].needsUpdate = true;
-  }
-
-  function frame(now) {
-    frameId = 0;
-    if (disposed) return;
-    const dt = Math.min(.05, (now - last) / 1000); last = now;
-    clock += dt * 1000 * speed;
-    for (let i = timeline.length - 1; i >= 0; i--) if (timeline[i].at <= clock) timeline.splice(i, 1)[0].run();
-    const step = dt * speed;
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i];
-      p.life -= step;
-      if (p.life <= 0) { parts.splice(i, 1); continue; }
-      p.x += p.vx * step; p.y += p.vy * step; p.vx *= .96; p.vy *= .96;
-    }
-    let ringsLive = false;
-    for (const r of rings) {
-      if (!r.visible) continue;
-      r.userData.life -= step;
-      if (r.userData.life <= 0) { r.visible = false; continue; }
-      ringsLive = true;
-      const t = 1 - r.userData.life / r.userData.span, s = r.userData.from + (r.userData.to - r.userData.from) * (1 - (1 - t) ** 3);
-      r.scale.set(s, s, 1); r.material.opacity = .85 * (1 - t);
-    }
-    flush();
-    if (!lost) renderer.render(scene, camera);
-    if (timeline.length || parts.length || ringsLive) wake();
-  }
-  function wake() { if (!frameId && !disposed && !document.hidden) { last = performance.now(); frameId = requestAnimationFrame(frame); } }
+  let disposed = false, lost = false;
+  canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); if (disposed) return; lost = true; canvas.classList.add("lost"); ctx.onLost?.(); });
+  canvas.addEventListener("webglcontextrestored", () => { if (disposed) return; lost = false; canvas.classList.remove("lost"); ctx.onRestore?.(); });
+  battleInstance = arena;
 
   function dispose() {
     if (disposed) return;
     disposed = true;
-    if (frameId) cancelAnimationFrame(frameId);
-    observer?.disconnect();
-    geometry.dispose(); material.dispose(); texture.dispose(); ringGeometry.dispose();
-    for (const r of rings) r.material.dispose();
+    arena.dispose();
     renderer.dispose();
     renderer.forceContextLoss();
     liveRenderers.delete(renderer);
+    if (battleInstance === arena) battleInstance = null;
     canvas.remove();
     resumeStage();
   }
 
-  return { play, clear, resize, setSpeed: (value) => { speed = value; }, dispose, get lost() { return lost; } };
+  const guard = (fn) => (...args) => (disposed || lost ? undefined : fn(...args));
+  return {
+    play: guard(arena.play), setFrame: guard(arena.setFrame), project: guard(arena.project), clear: guard(arena.clear),
+    resize: guard(arena.resize), setSpeed: (v) => arena.setSpeed(v), dispose, get lost() { return lost; },
+  };
 }
 
 // ------------------------------------------------------------------ 舞台氛围（stage）
@@ -324,7 +152,7 @@ export function unmountStage() {
 
 /** 监测数据：存活渲染器数、舞台实例的帧率与 GPU 对象计数（用于泄漏检查与验收取证）。 */
 export function stats() {
-  return { renderers: liveRenderers.size, stage: stageInstance?.stats() || null, battleDepth };
+  return { renderers: liveRenderers.size, stage: stageInstance?.stats() || null, battle: battleInstance?.stats() || null, battleDepth };
 }
 
 function buildStage(spec) {

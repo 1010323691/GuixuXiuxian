@@ -206,7 +206,7 @@ class StaticFileTermsTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_javascript_sources_without_comments(self):
-        for name in ('app.js', 'battle_replay.js', 'fx3d.js'):
+        for name in ('app.js', 'battle_replay.js', 'fx3d.js', 'battle3d.js'):
             source = (ROOT / 'static' / name).read_text(encoding='utf-8')
             text, _ = strip_js_comments(source)
             found = []

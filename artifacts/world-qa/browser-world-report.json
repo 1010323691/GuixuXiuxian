@@ -20,7 +20,7 @@
   "used_actions": [
     "world_achievement",
     "world_advance",
-    "world_attack",
+    "world_auto_battle",
     "world_boss",
     "world_buy",
     "world_companion",
@@ -40,7 +40,6 @@
     "world_home",
     "world_home_collect",
     "world_master",
-    "world_power",
     "world_quest_accept",
     "world_quest_claim",
     "world_rest",
