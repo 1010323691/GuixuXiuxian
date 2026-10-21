@@ -252,7 +252,7 @@ function dissolvable(mat: THREE.MeshToonMaterial, amount: { value: number }) {
       .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
         float dz = dn(vObj * 3.1) * .7 + dn(vObj * 9.) * .3;
         if (dz < dissolve) discard;`)
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(3., 1.1, .3) * smoothstep(.08, 0., dz - dissolve) * step(.001, dissolve);');
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n  totalEmissiveRadiance += vec3(3., 1.1, .3) * smoothstep(.16, 0., dz - dissolve) * step(.001, dissolve);');
   };
   mat.customProgramCacheKey = () => 'toon-rim-dissolve';
   return mat;
@@ -264,12 +264,14 @@ export function makeDemon(): Actor {
   const dissolve = { value: 0 };
   const runes = runeTexture();
   const skinMat = dissolvable(toon(0x4a1214, { emissiveMap: runes, emissive: C(0xff3a12), emissiveIntensity: .6, rim: 0xff8a5a, rimPower: 2.6 }), dissolve);
+  // limbs drop the vein map: on capsule UVs it reads as stripes; veins stay on chest and head
+  const limbMat = dissolvable(toon(0x3e1012, { emissive: C(0x3a0804), emissiveIntensity: .35, rim: 0xff6a40, rimPower: 2.4 }), dissolve);
   const darkMat = dissolvable(toon(0x3a1414, { rim: 0xff7a4a }), dissolve);
   const hornMat = dissolvable(toon(0x2b2321, { rim: 0xffd0a0, rimPower: 2 }), dissolve);
   const clawMat = dissolvable(toon(0x161112, { rim: 0xff6040 }), dissolve);
   const wingMat = dissolvable(toon(0x2a0c10, { side: THREE.DoubleSide, transparent: true, opacity: .92, rim: 0x5a1610, rimPower: 3 }), dissolve);
   const eyeMat = new THREE.MeshBasicMaterial({ color: C(0xffd040).multiplyScalar(4) });
-  const T = (mesh: THREE.Mesh, thick = .05) => inked(mesh, thick);
+  const T = (mesh: THREE.Mesh, thick = .028) => inked(mesh, thick); // thin line: sits closer to the painted hero
 
   // torso hunched forward over a narrow waist
   const torso = new THREE.Group(); torso.position.y = 2.2; torso.rotation.z = -.35; body.add(torso);
@@ -310,12 +312,12 @@ export function makeDemon(): Actor {
     const shoulder = new THREE.Group(); shoulder.position.set(.3, 2.1, side * 1.85); torso.add(shoulder);
     const pauldron = T(new THREE.Mesh(new THREE.SphereGeometry(.85, 24, 16), darkMat)); pauldron.scale.set(1, .9, 1); shoulder.add(pauldron);
     for (let k = 0; k < 3; k++) { const spike = T(new THREE.Mesh(new THREE.ConeGeometry(.16, .8, 8), hornMat), .025); spike.position.set(-.2 + k * .3, .65, side * .3); spike.rotation.set(side * -.5, 0, .3 - k * .3); shoulder.add(spike); }
-    const upper = T(new THREE.Mesh(new THREE.CapsuleGeometry(.48, 1.3, 8, 18), skinMat)); upper.position.y = -1.0; shoulder.add(upper);
+    const upper = T(new THREE.Mesh(new THREE.CapsuleGeometry(.48, 1.3, 8, 18), limbMat)); upper.position.y = -1.0; shoulder.add(upper);
     const elbow = new THREE.Group(); elbow.position.y = -1.9; shoulder.add(elbow);
-    const fore = T(new THREE.Mesh(new THREE.CapsuleGeometry(.52, 1.3, 8, 18), skinMat)); fore.position.y = -.85; fore.scale.set(1, 1, 1.05); elbow.add(fore);
+    const fore = T(new THREE.Mesh(new THREE.CapsuleGeometry(.52, 1.3, 8, 18), limbMat)); fore.position.y = -.85; fore.scale.set(1, 1, 1.05); elbow.add(fore);
     const bracer = T(new THREE.Mesh(new THREE.CylinderGeometry(.6, .55, .5, 16), darkMat), .03); bracer.position.y = -1.2; elbow.add(bracer);
     const hand = new THREE.Group(); hand.position.y = -1.9; elbow.add(hand);
-    const palm = T(new THREE.Mesh(new THREE.SphereGeometry(.5, 16, 12), skinMat), .04); palm.scale.set(1, .8, 1.1); hand.add(palm);
+    const palm = T(new THREE.Mesh(new THREE.SphereGeometry(.5, 16, 12), limbMat), .04); palm.scale.set(1, .8, 1.1); hand.add(palm);
     for (let k = 0; k < 4; k++) {
       const claw = taperTube(10, 8, clawMat);
       const z = (k - 1.5) * .28;
@@ -329,11 +331,11 @@ export function makeDemon(): Actor {
   // legs folded beneath (it hovers), and a tail
   for (const s of [-1, 1]) {
     const hip = new THREE.Group(); hip.position.set(-.1, 1.4, s * .85); body.add(hip);
-    const thigh = T(new THREE.Mesh(new THREE.CapsuleGeometry(.5, 1.1, 6, 14), skinMat)); thigh.position.y = -.7; thigh.rotation.z = .9; hip.add(thigh);
+    const thigh = T(new THREE.Mesh(new THREE.CapsuleGeometry(.5, 1.1, 6, 14), limbMat)); thigh.position.y = -.7; thigh.rotation.z = .9; hip.add(thigh);
     const shin = T(new THREE.Mesh(new THREE.CapsuleGeometry(.36, 1.1, 6, 14), darkMat)); shin.position.set(-.9, -1.5, 0); shin.rotation.z = -.5; hip.add(shin);
     const hoof = T(new THREE.Mesh(new THREE.ConeGeometry(.35, .6, 10), hornMat), .03); hoof.position.set(-.55, -2.25, 0); hoof.rotation.z = Math.PI + .4; hip.add(hoof);
   }
-  const tail = taperTube(36, 10, skinMat);
+  const tail = taperTube(36, 10, limbMat);
   body.add(T(tail.mesh, .03));
   const tailTip = T(new THREE.Mesh(new THREE.ConeGeometry(.35, .9, 4), hornMat), .03); body.add(tailTip);
   const tailCurve = new THREE.CatmullRomCurve3([V(), V(), V(), V(), V(), V()]);
@@ -351,7 +353,7 @@ export function makeDemon(): Actor {
 
   const moves = new Moves();
   const flashColor = C(0xffffff);
-  let flashAmt = 0;
+  let flashAmt = 0, inkShown = true;
 
   return {
     root, moves, height: 8.5, radius: 3.2,
@@ -400,8 +402,12 @@ export function makeDemon(): Actor {
       flashAmt = Math.max(0, flashAmt - dt * 4);
       skinMat.emissive.setRGB(1, .23 + flashAmt * .7, .07 + flashAmt * .9);
       if (flashAmt > 0) skinMat.emissiveIntensity += flashAmt * 3 * (flashColor.r + flashColor.g + flashColor.b) / 3;
+      limbMat.emissive.copy(flashColor).multiplyScalar(flashAmt * .8).add(C(0x3a0804));
+      limbMat.emissiveIntensity = .35 + w.roar * .6 + w.windup * .4;
       const dieU = moves.progress('die');
-      dissolve.value = dieU >= 0 ? clamp(dieU / .85) : 0;
+      dissolve.value = dieU >= 0 ? clamp(dieU / .8) * 1.12 : 0; // overshoot so nothing lingers as a dark husk
+      const inkOn = dissolve.value < .02; // the outline hulls do not dissolve; drop them once the body starts burning away
+      if (inkOn !== inkShown) { inkShown = inkOn; root.traverse((o) => { if (o.name === 'ink') o.visible = inkOn; }); }
       if (dissolve.value >= .999) root.visible = false;
     },
   };

@@ -124,6 +124,7 @@ export function createArena(renderer: THREE.WebGLRenderer, opts: ArenaOptions = 
     fx.impact(p, skill, 2.2); fx.embers(p, 0xff7a3a, 2.4); fx.smoke(p, 0x3a3034, 2);
     post.flash(.55, 0xffffff); rig.fovKick(10); foe.moves.play('die', 2, { hold: true });
   }));
+  for (const k of [0, 1, 2]) tl.at(15.1 + k * .45, () => { const p = foe.anchor('chest').add(V(0, k - 1, 0)); fx.embers(p, 0xff6a2a, 1.6); fx.smoke(p, 0x2a2024, 1.2); });
   shot(14.5, 'impact');
   shot(15.4, 'wide', 1.6);
 

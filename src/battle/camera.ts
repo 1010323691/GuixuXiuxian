@@ -42,7 +42,8 @@ export class CameraRig {
     switch (shot) {
       case 'shoulder': return { pos: hero.clone().addScaledVector(dir, -4.3 * far).addScaledVector(right, 1.9 + drift * .3).add(V(0, .7, 0)), look: V().lerpVectors(hero, foe, .6).add(V(0, 1.9, 0)), fov: 46 };
       case 'castView': return { pos: hero.clone().addScaledVector(dir, -4.4 * far).addScaledVector(right, -2.6).add(V(0, .6, 0)), look: hero.clone().addScaledVector(dir, 5).add(V(0, 1.6, 0)), fov: 46 };
-      case 'side': return { pos: mid.clone().addScaledVector(right, 17 * far).addScaledVector(dir, -3).add(V(0, 3 + drift, 0)), look: mid.clone().add(V(0, 2.4, 0)), fov: 40 };
+      case 'side': if (far > 1.3) return { pos: mid.clone().addScaledVector(right, 8).addScaledVector(dir, -15).add(V(0, 4 + drift, 0)), look: mid.clone().add(V(0, 2.4, 0)), fov: 44 }; // portrait: diagonal keeps both fighters in frame
+        return { pos: mid.clone().addScaledVector(right, 17 * far).addScaledVector(dir, -3).add(V(0, 3 + drift, 0)), look: mid.clone().add(V(0, 2.4, 0)), fov: 40 };
       case 'heroClose': return { pos: hero.clone().addScaledVector(dir, 4.6 * far).addScaledVector(right, .9 + drift * .4).add(V(0, .5, 0)), look: hero.clone().add(V(0, .35, 0)), fov: 38 };
       case 'demonClose': return { pos: foe.clone().addScaledVector(dir, -10.5 * far).addScaledVector(right, -3.5).add(V(0, .8, 0)), look: foe.clone().add(V(0, 5.6, 0)), fov: 42 };
       case 'impact': return { pos: foe.clone().addScaledVector(dir, -8 * far).addScaledVector(right, 4).add(V(0, 4.2, 0)), look: foe.clone().add(V(0, 4.2, 0)), fov: 50 };
