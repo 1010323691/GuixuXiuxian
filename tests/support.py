@@ -327,7 +327,8 @@ class Server:
             self._install_trace()
         if self.live:
             from server import GameServer
-            self.httpd = GameServer((self.HOST, 0), self.app)
+            # default listen backlog is 5: a page loading many images while the machine is busy gets ECONNREFUSED
+            self.httpd = type('TestGameServer', (GameServer,), {'request_queue_size': 128})((self.HOST, 0), self.app)
             self.url = f'http://{self.HOST}:{self.httpd.server_port}'
             self.worker = threading.Thread(target=self.httpd.serve_forever, daemon=True)
             self.worker.start()
@@ -614,3 +615,14 @@ def launch_browser(playwright, **kwargs):
 def attach_session(page, server):
     """把 Server 默认账号 tester 的会话 Cookie 放进浏览器上下文（套件在多账号化后需先登录）。"""
     page.context.add_cookies([{'name': server.settings.cookie_name, 'value': server.default.cookie, 'url': server.url}])
+
+
+def save_screenshot(page, path, retries=5, **kwargs):
+    """page.screenshot with retry: on Windows the artifacts file can be briefly locked by scanners/watchers (Errno 22)."""
+    for attempt in range(retries):
+        try:
+            return page.screenshot(path=str(path), **kwargs)
+        except OSError:
+            if attempt == retries - 1:
+                raise
+            time.sleep(0.3 * (attempt + 1))

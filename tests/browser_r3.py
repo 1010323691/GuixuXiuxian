@@ -49,7 +49,7 @@ def main():
                 before_db = tuple(db.execute('select * from current').fetchall()) + tuple(db.execute('select * from requests').fetchall())
             server.clock.advance(160)
             with page.expect_response(lambda r: r.url == server.url+'/api/state' and r.request.method == 'GET',timeout=20000):
-                page.wait_for_timeout(16000)
+                pass  # the page polls /api/state every 15s; leaving the block waits for that response
             expect(page.locator('#growth-available')).not_to_be_empty()
             assert server.snapshot()['view']['growth']['available_micro'] == '1000000'
             assert len(report['post_requests']) == before_posts

@@ -3,7 +3,7 @@ import json
 
 from playwright.sync_api import expect, sync_playwright
 
-from tests.support import ROOT, Server, baseline_route, launch_browser, attach_session
+from tests.support import ROOT, Server, baseline_route, launch_browser, attach_session, save_screenshot
 from tests.test_world_systems import WorldPlanner
 
 # V3 one-screen UI: nothing may scroll; long content is paged inside fixed regions.
@@ -139,7 +139,7 @@ def main():
             planner = WorldPlanner(server.snapshot, driver.action)
             for entry in server.snapshot()['view']['world']['pages']:
                 driver.visit(entry['id'])
-                page.screenshot(path=str(artifacts / (entry['id'] + '.png')), full_page=True)
+                save_screenshot(page, artifacts / (entry['id'] + '.png'), full_page=True)
             # Filled below with the frozen legal full-world route; a partial
             # framework must fail rather than claim full-world completion.
             planner.full_progress()
@@ -173,7 +173,7 @@ def main():
             for entry in server.snapshot()['view']['world']['pages']:
                 driver.visit(entry['id'])
                 assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), ('320px overflow', entry['id'])
-                page.screenshot(path=str(artifacts / ('mobile-' + entry['id'] + '.png')), full_page=True)
+                save_screenshot(page, artifacts / ('mobile-' + entry['id'] + '.png'), full_page=True)
             # Numeric constraints must prevent a malformed write from real form.
             driver.visit('market')
             forms = page.locator('form[data-world-action]')

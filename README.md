@@ -111,6 +111,7 @@ python server.py --claim-legacy 玩家名 --data-dir ./data
 
 ```sh
 python -m tests.parallel
+python -m tests.browser_all   # 6个浏览器套件3并发，约5分钟（串行约10分钟）；-j N 调并发，可加套件名子串
 python -m unittest discover -s tests -v
 python -m tests.browser_smoke
 python -m tests.browser_world
