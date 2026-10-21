@@ -227,7 +227,8 @@ function faceToward(root: THREE.Object3D, target: THREE.Vector3, rate: number) {
 const LION_UNITS_PER_PX = 7.6 / 415;
 export const LION_COLOR = 0xb27cff;
 
-export function makeArtLion(lion: LionArt): Actor {
+/** light: false skips the aura point light (minions: one light per flier would recompile and slow every lit material). */
+export function makeArtLion(lion: LionArt, { light = true } = {}): Actor {
   const root = new THREE.Group();
   const painted = new PaintedCard({ front: lion.front, side: lion.side, back: lion.back }, SIZES.lion as Record<View, Px>, LION_UNITS_PER_PX, LION_COLOR, { flap: .05 });
   const { billboard, card, u } = painted;
@@ -238,7 +239,7 @@ export function makeArtLion(lion: LionArt): Actor {
   const sigil = new THREE.Mesh(new THREE.PlaneGeometry(7, 7 * 94 / 117), sigilMat);
   sigil.rotation.x = -Math.PI / 2; sigil.position.y = -.8;
   root.add(sigil);
-  const aura = new THREE.PointLight(C(LION_COLOR), 6, 18, 2); aura.position.set(0, 3.5, 0); root.add(aura);
+  const aura = new THREE.PointLight(C(LION_COLOR), 6, 18, 2); aura.position.set(0, 3.5, 0); if (light) root.add(aura);
 
   const moves = new Moves();
   let flashAmt = 0;

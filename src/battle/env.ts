@@ -229,7 +229,11 @@ function birds(count: number, seed: number) {
   return { mesh, phase };
 }
 
-export interface Environment { group: THREE.Group; update(t: number, dt: number): void; obstacles: { x: number; z: number; r: number; top: number }[] }
+export interface Environment { group: THREE.Group; update(t: number, dt: number): void; obstacles: { x: number; z: number; r: number; top: number }[]; setDetail(low: boolean): void }
+
+/** Pillars inside the arena, flanking the far side beyond the foe (stage 4: something real to fly around).
+ *  Kept off the shoulder-camera corridor (+z) and outside the wide shot's early orbit. */
+export const ARENA_PILLARS = [{ x: -15, z: -15, r: 3.4, top: 9 }, { x: 17, z: -19, r: 3.9, top: 5 }, { x: -6, z: -34, r: 4.2, top: 14 }];
 
 export function buildEnvironment(scene: THREE.Scene, quality: number): Environment {
   const group = new THREE.Group();
@@ -267,6 +271,7 @@ export function buildEnvironment(scene: THREE.Scene, quality: number): Environme
     pillarSlots.push({ pos: V(x, -90, z), radius, height });
     obstacles.push({ x, z, r: radius * 1.2, top });
   }
+  for (const p of ARENA_PILLARS) { pillarSlots.push({ pos: V(p.x, -90, p.z), radius: p.r / 1.2, height: p.top + 90 }); obstacles.push({ ...p }); }
   const meshes = variants.map((geo) => new THREE.InstancedMesh(geo, pillarMat, pillarSlots.length));
   const counts = [0, 0, 0, 0], m = new THREE.Matrix4(), q = new THREE.Quaternion();
   pillarSlots.forEach((s, i) => {
@@ -351,6 +356,8 @@ export function buildEnvironment(scene: THREE.Scene, quality: number): Environme
   const animated = [sky.material, seaLow.material, seaHigh.material, flock.mesh.material, ...falls.map((f) => f.material)] as THREE.ShaderMaterial[];
   return {
     group, obstacles,
+    /** Low detail drops the far billboard clouds, the bird flock and the waterfalls (quality ladder). */
+    setDetail(low) { puffs.visible = !low; flock.mesh.visible = !low; falls.forEach((f) => { f.visible = !low; }); },
     update(t) {
       for (const mat of animated) mat.uniforms.time.value = t;
       isles.forEach((isle, k) => { isle.position.y = isle.userData.base + Math.sin(t * .35 + k) * 1.2; isle.rotation.y = t * .01 * (k % 2 ? 1 : -1); });

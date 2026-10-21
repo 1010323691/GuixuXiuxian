@@ -51,6 +51,33 @@ def collect_reports():
     return reports
 
 
+def swarm12():
+    """阶段四压力回放：首领 + 10 只小怪 + 主角 = 12 个飞行单位；小怪逐拍扑击，第 3 拍群攻收 3 只，末拍首领败亡、残余溃散。"""
+    ids = ['m%d' % (i + 1) for i in range(10)]
+    hp = {u: 30 for u in ids}
+    frames = [{'round': 0, 'player': {'hp': 400, 'mp': 60}, 'enemy': {'hp': 600, 'barrier': 0}, 'units': [{'id': u, 'hp': 30} for u in ids], 'intent': '常击', 'action': '准备', 'events': []}]
+    leader = 600
+    for n in range(1, 7):
+        events = [{'type': 'damage', 'source': 'player', 'target': 'enemy', 'label': '运功强攻', 'amount': 100}]
+        leader -= 100
+        if n == 3:
+            events.append({'type': 'damage', 'source': 'main', 'target': 'enemy', 'label': '本命法宝出击', 'amount': 30, 'aoe': True})
+            for u in ids[:3]:
+                hp[u] = 0
+                events += [{'type': 'damage', 'source': 'main', 'target': 'enemy', 'label': '本命法宝出击', 'amount': 30, 'unit': u, 'aoe': True},
+                           {'type': 'fall', 'source': 'main', 'target': 'enemy', 'label': u + '伏诛', 'unit': u}]
+        if leader > 0:
+            events.append({'type': 'damage', 'source': 'enemy', 'target': 'player', 'label': '敌方常击', 'amount': 20})
+            events += [{'type': 'damage', 'source': 'enemy', 'target': 'player', 'label': '小妖扑击', 'amount': 3, 'unit': u} for u in ids if hp[u] > 0]
+        else:
+            events += [{'type': 'scatter', 'source': 'enemy', 'target': 'enemy', 'label': '残余小怪溃散', 'amount': 7}, {'type': 'victory', 'source': 'player', 'target': 'enemy', 'label': '战斗胜利'}]
+        frames.append({'round': n, 'player': {'hp': 300, 'mp': 40}, 'enemy': {'hp': max(0, leader), 'barrier': 0}, 'units': [{'id': u, 'hp': hp[u]} for u in ids],
+                       'intent': '常击', 'action': '运功强攻', 'events': events})
+    return {'outcome': 'victory', 'rounds': 6, 'strategy': 'balanced', 'strategy_label': '均衡',
+            'enemy': {'name': '赤沙妖狼王', 'max_hp': 600, 'kind': 'guard', 'units': [{'id': u, 'name': '荒野小妖', 'max_hp': 30} for u in ids]},
+            'player': {'max_hp': 400, 'max_mp': 100}, 'treasures': {'main': {'name': '本命法宝', 'quality': '上品'}, 'guard': None}, 'frames': frames}
+
+
 def look(entry, tier):
     """与 app.js battleLook/enemyLook 相同的展示线索（只用于外观）。"""
     report, world = entry['report'], entry['world'] or {}
@@ -109,6 +136,25 @@ def main():
                 page.locator('#replay-close').click()
                 page.wait_for_timeout(300)
                 assert page.evaluate("document.querySelectorAll('.fx3d-canvas').length") == 0
+            # 阶段四：12 个单位自由飞行完整回放——全程不撞石柱、避障确实介入、AI 30Hz、终局全部倒下或溃散
+            page.evaluate("(r) => BattleReplay.open(r, {tier: 6, root: 'wood', skill: 'origin', form: 'fox', boss: true})", swarm12())
+            wait_fx3d(page)
+            page.wait_for_timeout(9000)
+            page.screenshot(path=str(ARTIFACTS / 'swarm12-mid.png'))
+            for _ in range(60):
+                if page.locator('#replay-result').is_visible():
+                    break
+                page.wait_for_timeout(500)
+            page.wait_for_timeout(2600)   # 首领败亡后残余小怪飞散约 2.2 秒
+            page.screenshot(path=str(ARTIFACTS / 'swarm12-end.png'))
+            stats = page.evaluate(STATS)
+            assert stats['agents'] == 12 and stats['units'] == 10, stats
+            assert stats['clearance'] is not None and stats['clearance'] >= 0, ('a flier touched a pillar', stats)
+            assert stats['avoids'] > 0, ('pillar avoidance never engaged', stats)
+            assert 27 <= stats['aiHz'] <= 31, ('AI tick off 30 Hz', stats)
+            assert stats['unitsUp'] == 0 and stats['foeGone'], stats
+            result['swarm12'] = {k: stats[k] for k in ('fps', 'frameMs', 'level', 'ratio', 'drawCalls', 'triangles', 'geometries', 'textures', 'agents', 'aiHz', 'clearance', 'avoids')}
+            page.locator('#replay-close').click()
             browser.close()
         assert not [e for e in result['errors'] if 'Failed to load resource' not in e], result['errors']
         result['passed'] = True

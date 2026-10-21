@@ -9,6 +9,7 @@ import type { Actor } from './actors';
 import { buildEnvironment } from './env';
 import { FxSystem } from './fx';
 import { buildPost } from './post';
+import { Flock, PROGRAMS, type Agent } from './steer';
 import { C, V, clamp, disposeOutlines, disposeShared, easeInOut, easeOut, lerp } from './util';
 
 /** unit: the minion hit (target enemy) or striking (source enemy); absent = the leader. aoe: part of a group attack. */
@@ -34,6 +35,7 @@ const HERO_HOME = V(0, 0, 6);
 const HERO_FROM = V(-16, 5, 20);
 /** Minion slots around the leader: [side, rank]; rank 0 flanks it, later ranks step toward the hero. */
 const SLOTS = [[-1, 0], [1, 0], [-1, 1], [1, 1], [-.45, 2], [.45, 2]];
+const slotOf = (i: number) => (i < SLOTS.length ? SLOTS[i] : [(i % 2 ? 1 : -1) * (1 + .35 * Math.floor((i - 6) / 2)), 2.5 + Math.floor((i - 6) / 2) * .6]);
 
 /** Seconds from play() until the blow lands; mirrors the floater delays in battle_replay.js show3d(). */
 export function hitDelay(event: ReportEvent, action = '') {
@@ -101,15 +103,22 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   fx.attachAura(hero.root, { color, rate: 10 + tier * 2, radius: .5, rise: -.5, size: [.08, .2], offset: V(-.6, -1.5, 0) });
 
   // 随行小怪: the report's minions, each a small painted lion in a fan before the leader (all forms share the lion art for now)
-  interface Minion { id: string; actor: Actor; home: THREE.Vector3; side: number; lunge: number; flee: number; gone: boolean; armed: boolean; pending: number }
+  // free flight (stage 4): everyone circles an anchor on the 30 Hz steering tick, keeps apart and flies around the pillars
+  const flock = new Flock(env.obstacles);
+  const program = PROGRAMS[form] ?? PROGRAMS.spirit;
+  const heroAgent = flock.add('hero', HERO_HOME, 1, () => HERO_HOME.clone(), PROGRAMS.hero, 11);
+  const foeAgent = flock.add('leader', foeHome, 3 * foeScale, () => foeHome.clone(), { ...program, orbit: program.orbit * foeScale }, 23);
+  let heroScripted = false;
+  interface Minion { id: string; actor: Actor; agent: Agent; post: () => THREE.Vector3; side: number; lunge: number; gone: boolean; armed: boolean; pending: number }
   const minions: Minion[] = (report.enemy.units || []).map((u, i) => {
-    const actor = makeArtLion(lionArt);
+    const actor = makeArtLion(lionArt, { light: false });
     actor.root.scale.setScalar(.3);
-    const [side, rank] = SLOTS[i] ?? [0, 0];
-    const home = foeHome.clone().add(V(side * (5.5 + rank * 1.5) * foeScale, -1.4 + rank * .5, 3 + rank * 2.4));
-    actor.root.position.copy(home);
+    const [side, rank] = slotOf(i);
+    const offset = V(side * (5.5 + rank * 1.5) * foeScale, -1.4 + rank * .5, 3 + rank * 2.4);
+    const agent = flock.add(u.id, foeHome.clone().add(offset), 1.1, () => foeAgent.pos.clone().add(offset), program, 37 + i * 13);
+    actor.root.position.copy(agent.pos);
     scene.add(actor.root);
-    return { id: u.id, actor, home, side, lunge: 0, flee: 0, gone: false, armed: false, pending: 0 };
+    return { id: u.id, actor, agent, post: agent.anchor, side, lunge: 0, gone: false, armed: false, pending: 0 };
   });
   const unitOf = (id?: string) => (id ? minions.find((m) => m.id === id) ?? null : null);
 
@@ -137,7 +146,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   let pendingFoe = 0, pendingHero = 0, foeDeathArmed = false, heroFallArmed = false;
   let wardUntil = -1, ward: ReturnType<FxSystem['baguaWard']> | null = null;
   let shotToken = 0;
-  const lungeTo = () => V().lerpVectors(foeHome, HERO_HOME, .55).setY(foeHome.y - .5);
+  const lungeTo = (base: THREE.Vector3) => V().lerpVectors(base, hero.root.position, .55).setY(base.y - .5);
   const foeChest = () => foe.anchor('chest'), leaderChest = foeChest;
   const npcAt = () => hero.root.position.clone().add(V(-3.4, -.4, 2.6));
   const jitter = (p: THREE.Vector3, k: number) => p.add(V(Math.sin(k * 7.3), Math.cos(k * 3.1) * 1.2, Math.sin(k * 2.2) * .6).multiplyScalar(foeScale));
@@ -170,7 +179,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   }
   function killUnit(m: Minion) {
     if (m.gone) return;
-    m.gone = true; m.armed = false;
+    m.gone = true; m.armed = false; m.agent.paused = true;
     m.actor.moves.play('die', 1.4, { hold: true });
     fx.embers(m.actor.anchor('chest'), P.death, .9);
   }
@@ -357,6 +366,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     if (foeGone) return;
     foeGone = true; foeDeathArmed = false;
     foe.moves.play('die', 2, { hold: true });
+    foeAgent.paused = true;
     const p = foeChest();
     fx.impact(p, color, 1.3); fx.embers(p, P.death, 2.4); fx.smoke(p, P.deathSmoke, 2);
     post.flash(.5, 0xffffff); rig.fovKick(8);
@@ -366,14 +376,17 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     // the leader is down: whatever is left of the pack scatters into the clouds
     for (const m of minions) if (!m.gone) {
       m.armed = false;
-      sched.tween(.3 + Math.abs(m.side) * .2, 1.6, (u) => { m.flee = u * u; });
-      sched.after(2, () => { m.gone = true; m.actor.root.visible = false; });
+      // scatter: the flock flies each one up and away, still steering around the pillars
+      const from = m.agent.pos.clone(), away = V(m.side * 14, 16, -10);
+      sched.after(.3 + Math.abs(m.side) * .2, () => { m.agent.anchor = () => from.clone().add(away); m.agent.program = { ...m.agent.program, orbit: 0, bob: 0, weave: 0, dart: 0, maxSpeed: 14 }; });
+      sched.after(2.2, () => { m.gone = true; m.agent.paused = true; m.actor.root.visible = false; });
     }
   }
   function felled() {
     if (heroFall) return;
     heroFallArmed = false;
     hero.moves.play('hit', 3, { hold: true });
+    heroAgent.paused = true;
     sched.tween(0, 1.4, (u) => { heroFall = Math.max(.001, easeInOut(u)); post.desaturate(heroFall * .7); });
     rig.go('wide', 1.4);
   }
@@ -393,14 +406,16 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
       foeGone = foeDown; foe.root.visible = !foeDown;
       for (const m of minions) {
         const hp = frame.units?.find((u) => u.id === m.id)?.hp ?? 1;
-        m.actor.reset(); m.lunge = 0; m.flee = 0; m.armed = false;
-        m.gone = hp <= 0 || foeDown; m.actor.root.visible = !m.gone;
+        m.actor.reset(); m.lunge = 0; m.armed = false;
+        m.agent.anchor = m.post; m.agent.program = program;
+        m.gone = hp <= 0 || foeDown; m.actor.root.visible = !m.gone; m.agent.paused = m.gone;
       }
       heroFall = heroDown ? 1 : 0; post.desaturate(heroFall * .7);
       barrierTarget = bar > 0 ? 1 : 0; barrierMat.uniforms.alpha.value = barrierTarget * .6;
-      foe.root.position.copy(foeHome);
+      foeAgent.paused = foeDown; heroAgent.paused = heroDown; heroScripted = false;
+      flock.settle();
       if (frame.round === 0 && !info.last) intro();
-      else { hero.root.position.copy(HERO_HOME); rig.cut(!info.last ? 'shoulder' : foeDown ? 'heroClose' : 'wide'); }
+      else rig.cut(!info.last ? 'shoulder' : foeDown ? 'heroClose' : 'wide');
       return;
     }
     // an animated beat: the state changes land with the blows that cause them
@@ -427,13 +442,14 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   }
 
   function intro() {
+    heroScripted = true;
     hero.root.position.copy(HERO_FROM);
     hero.moves.play('dash', 2);
     rig.cut('establish');
     sched.tween(0, 2, (u) => { const k = easeOut(u); hero.root.position.set(lerp(HERO_FROM.x, HERO_HOME.x, k), lerp(HERO_FROM.y, HERO_HOME.y, k) + Math.sin(u * Math.PI) * 3, lerp(HERO_FROM.z, HERO_HOME.z, k)); });
     sched.after(.9, () => { foe.moves.play('roar', 1.8); fx.embers(foe.anchor('head'), P.ember, 1.4); rig.shake(.3); });
     sched.after(1.4, () => rig.go('heroClose', .4));
-    sched.after(2, () => rig.go('shoulder', .5));
+    sched.after(2, () => { rig.go('shoulder', .5); heroScripted = false; heroAgent.pos.copy(hero.root.position); heroAgent.prev.copy(hero.root.position); });
   }
 
   function clear() {
@@ -472,7 +488,7 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   resize();
 
   renderer.info.autoReset = false;
-  let disposed = false, frameId = 0, last = 0, simTime = 0;
+  let disposed = false, frameId = 0, last = 0, simTime = 0, flyTime = 0, level = 0;
   const frameMs: number[] = [];
   const wind = V();
   const counters = { calls: 0, triangles: 0 };
@@ -485,22 +501,29 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
   }
   function substep(dt: number) {
     sched.advance(dt);
+    flyTime += dt;
+    const alpha = flock.step(dt), at = V();
     let actorDt = dt;
     if (hitstop > 0) { hitstop -= dt; actorDt *= .1; }
     simTime += actorDt;
     foeFrozen = Math.max(0, foeFrozen - dt);
-    foe.root.position.lerpVectors(foeHome, lungeTo(), lunge);
-    if (heroFall) hero.root.position.copy(HERO_HOME).add(V(-.6 * heroFall, -3.2 * heroFall, 0));
+    if (heroFall) hero.root.position.copy(heroAgent.pos).add(V(-.6 * heroFall, -3.2 * heroFall, 0));
+    else if (!heroScripted) hero.root.position.copy(flock.at(heroAgent, alpha, at));
+    flock.at(foeAgent, alpha, at);
+    foe.root.position.lerpVectors(at, lungeTo(at), lunge);
     hero.face(foe.root.position, .2); foe.face(hero.root.position, .08);
     wind.subVectors(hero.root.position, foe.root.position).setY(0).normalize().multiplyScalar(5).add(V(0, .6, 0));
     hero.update({ camera, wind, time: simTime, dt: actorDt });
     foe.update({ camera, wind, time: simTime, dt: foeFrozen > 0 ? actorDt * .12 : actorDt });
     for (const m of minions) {
       if (!m.actor.root.visible) continue;
-      m.actor.root.position.lerpVectors(m.home, hero.root.position, m.lunge * .55).add(V(m.side * m.flee * 14, m.flee * 9, -m.flee * 10));
+      m.actor.root.position.lerpVectors(flock.at(m.agent, alpha, at), hero.root.position, m.lunge * .55);
+      flock.record(m.actor.root.position, m.agent.radius);
       m.actor.face(hero.root.position, .1);
       m.actor.update({ camera, wind, time: simTime + m.side, dt: foeFrozen > 0 ? actorDt * .12 : actorDt });
     }
+    if (!heroScripted) flock.record(hero.root.position, heroAgent.radius);
+    if (!foeGone) flock.record(foe.root.position, foeAgent.radius);
     const bTarget = foeGone ? 0 : barrierTarget * .6, ba = barrierMat.uniforms.alpha;
     ba.value += (bTarget - ba.value) * Math.min(1, dt * 6);
     barrier.visible = ba.value > .01;
@@ -521,17 +544,19 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
     adapt(ms);
     frameId = requestAnimationFrame(tick);
   }
-  /** Drop the pixel ratio when frames stay slow; quality never decides anything but sharpness. */
+  /** Quality ladder, one rung per 90 slow frames (>34 ms): sharper pixels go first, then far scenery. Never touches the fight itself. */
+  const LADDER = [() => { ratio = Math.min(ratio, 1); }, () => { ratio = .75; }, () => env.setDetail(true), () => { ratio = .6; }];
   function adapt(ms: number) {
     frameMs.push(ms); if (frameMs.length > 90) frameMs.shift();
     if (frameMs.length < 90) return;
     const avg = frameMs.reduce((a, b) => a + b, 0) / frameMs.length;
-    if (avg > 34 && ratio > .75) { ratio = Math.max(.75, ratio - .25); frameMs.length = 0; resize(); }
+    if (avg > 34 && level < LADDER.length) { LADDER[level++](); frameMs.length = 0; resize(); }
   }
   function wake() { if (!frameId && !disposed && !document.hidden) { last = 0; frameId = requestAnimationFrame(tick); } }
   const onVisibility = () => wake();
   document.addEventListener('visibilitychange', onVisibility);
   hero.root.position.copy(HERO_HOME); foe.root.position.copy(foeHome);
+  flock.settle();
   intro();
   wake();
 
@@ -542,7 +567,9 @@ export function buildArena(renderer: THREE.WebGLRenderer, host: HTMLElement, ctx
       fps: avg ? Math.round(1000 / avg) : 0, frameMs: Math.round(avg * 10) / 10, quality, ratio, size: [width, height],
       form, boss, style, tier, drawCalls: counters.calls, triangles: counters.triangles,
       geometries: info.memory.geometries, textures: info.memory.textures, effects: fx.count, shot: rig.shot, foeGone, heroFall,
-      units: minions.length, unitsUp: minions.filter((m) => !m.gone).length,
+      units: minions.length, unitsUp: minions.filter((m) => !m.gone).length, level,
+      agents: flock.agents.length, avoids: flock.avoids, aiHz: flyTime > 1 ? Math.round(flock.ticks / flyTime * 10) / 10 : 0,
+      clearance: Number.isFinite(flock.minClearance) ? Math.round(flock.minClearance * 100) / 100 : null,
     };
   }
 
