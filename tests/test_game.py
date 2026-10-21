@@ -39,7 +39,11 @@ class GameHTTPTests(unittest.TestCase):
         self.assertEqual(state['name'], '道友')
         self.assertEqual((state['hp'], state['mp'], state['realm']), (60, 12, 0))
         self.assertEqual(state['actions_taken'], 0)
-        self.assertEqual(self.server.action('cultivate')['state']['cultivation'], 6)
+        self.rejected('cultivate')
+        self.server.clock.advance(25)
+        self.assertEqual(self.server.snapshot()['view']['resources'][2]['value'], 5, '吐纳随时间自动累积，读取即可见')
+        self.assertEqual(self.server.snapshot()['state']['cultivation'], 0, '读取不写档')
+        self.assertEqual(self.server.action('gather')['state']['cultivation'], 5, '下一次写入时落档')
         self.rejected('rest')
         self.rejected('alchemy')
         self.rejected('breakthrough')
@@ -69,48 +73,31 @@ class GameHTTPTests(unittest.TestCase):
         self.assertEqual((state['technique'], state['stones']), (2, 0))
         self.rejected('upgrade')
 
-    def test_combat_order_cost_defense_and_free_recovery(self):
+    def test_prelude_auto_battle_replaces_click_combat_and_keeps_free_recovery(self):
         self.new()
         self.server.action('challenge', enemy='wolf')
         self.rejected('cultivate')
-        state = self.server.action('power_attack')['state']
-        self.assertEqual((state['mp'], state['hp'], state['battle']['hp']), (6, 52, 20))
-        state = self.server.action('power_attack')['state']
-        self.assertEqual((state['mp'], state['hp'], state['battle']['hp']), (0, 52, 4))
-        self.rejected('power_attack')
-        state = self.server.action('defend')['state']
-        self.assertEqual((state['mp'], state['hp']), (3, 45))
-        state = self.server.action('attack')['state']
+        for retired in ['attack', 'power_attack', 'defend', 'use_pill', 'flee']:
+            self.rejected(retired)
+        snapshot = self.server.snapshot()
+        self.assertEqual([a['id'] for a in snapshot['view']['actions'] if a['group'] == 'battle'], ['auto_battle'])
+        revision = snapshot['revision']
+        result = self.server.action('auto_battle')
+        state = result['state']
+        self.assertGreater(result['revision'], revision)
         self.assertIsNone(state['battle'])
-        self.assertEqual((state['hp'], state['stones'], state['cultivation']), (45, 6, 4))
         self.assertIn('wolf', state['victories'])
+        self.assertEqual((state['stones'], state['cultivation']), (6, 4))
+        report = result['battle_report']
+        self.assertEqual(report['outcome'], 'victory')
+        self.assertEqual(len(report['frames']), report['rounds'] + 1)
+        self.assertNotIn('battle_report', self.server.snapshot(), '回放只随本次响应返回，不入存档')
+        self.rejected('auto_battle')
         self.server.action('rest')
         self.server.action('rest')
-        self.server.action('challenge', enemy='wolf')
-        for _ in range(15):
-            if self.server.snapshot()['state']['battle'] is None:
-                break
-            self.server.action('defend')
-        # Extend without attacks to exercise actual defeat, then free recovery.
-        for _ in range(40):
-            if self.server.snapshot()['state']['battle'] is None:
-                break
-            self.server.action('defend')
-        state = self.server.snapshot()['state']
-        self.assertIsNone(state['battle'])
-        self.assertEqual((state['hp'], state['region']), (1, 'village'))
-        self.assertEqual(state['stones'], 6)
-        state = self.server.action('rest')['state']
-        self.assertEqual(state['hp'], 31)
-        self.server.action('gather')
-        self.server.action('cultivate')
-        self.server.action('challenge', enemy='wolf')
-        before = self.server.snapshot()['state']
-        after = self.server.action('flee')['state']
-        self.assertEqual(after['hp'], before['hp'])
-        self.assertEqual(after['stones'], before['stones'])
-        self.assertIsNone(after['battle'])
-
+        state = self.server.action('challenge', enemy='wolf')['state']
+        self.assertIsNotNone(state['battle'])
+        self.assertIsNone(self.server.action('auto_battle')['state']['battle'])
     def test_complete_legal_route_and_post_ending(self):
         self.new()
         route_to_ending(self.server.snapshot, self.server.action)
@@ -128,29 +115,29 @@ class GameHTTPTests(unittest.TestCase):
         baseline_route(self.server.snapshot, self.server.action)
         state = self.server.snapshot()['state']
         self.assertEqual((state['technique'], state['herbs'], state['pills']), (0, 0, 0))
-        self.assertEqual(state['cultivation'], 8)
+        self.assertEqual(state['cultivation'], 0, '吐纳修为全部用于三次突破')
 
-    def test_slot_restart_and_monotonic_revision(self):
+    def test_restart_keeps_progress_monotonic_revision_and_manual_endpoints_retired(self):
         self.new()
         self.server.action('challenge', enemy='wolf')
-        saved = self.server.action('attack')['state']
-        checkpoint = self.server.write('/api/save')
-        self.assertTrue(checkpoint['save']['exists'])
-        changed = self.server.action('defend')
-        self.server.stop()
-        self.server.start()
+        changed = self.server.action('auto_battle')
+        self.assertTrue(changed['sync']['persisted'])
+        self.assertNotIn('save', changed)
+        self.server.restart()
         self.assertEqual(self.server.snapshot()['state'], changed['state'])
-        restored = self.server.write('/api/load')
-        self.assertEqual(restored['state'], saved)
-        self.assertGreater(restored['revision'], changed['revision'])
-        self.assertTrue(restored['save']['exists'])
+        for path in ('/api/save', '/api/load'):
+            status, body = self.server.request('POST', path, {
+                'request_id': 'retired-' + path[5:], 'expected_revision': changed['revision']})
+            self.assertEqual((status, body['error']['code']), (404, 'NOT_FOUND'))
+        self.assertEqual(self.server.snapshot()['revision'], changed['revision'])
         new = self.new('新道友')
-        self.assertFalse(new['save']['exists'])
-        self.assertGreater(new['revision'], restored['revision'])
+        self.assertNotIn('save', new)
+        self.assertTrue(new['sync']['persisted'])
+        self.assertGreater(new['revision'], changed['revision'])
 
     def test_idempotency_latest_snapshot_conflicts_and_restart(self):
         self.new()
-        payload = {'request_id': 'stable-id', 'expected_revision': 1, 'action': 'cultivate', 'params': {}}
+        payload = {'request_id': 'stable-id', 'expected_revision': 1, 'action': 'gather', 'params': {}}
         status, first = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 200)
         latest = self.server.action('gather')
@@ -179,11 +166,10 @@ class GameHTTPTests(unittest.TestCase):
         snap = self.server.snapshot()
         self.assertEqual((snap['revision'], snap['state']['herbs'], snap['state']['actions_taken']), (2, 2, 1))
 
-    def test_default_name_empty_slot_and_long_name(self):
-        status, body = self.server.request('POST', '/api/load', {
-            'request_id': 'empty-slot', 'expected_revision': 0})
-        self.assertEqual((status, body['error']['code']), (422, 'NO_SAVE'))
-        self.assertEqual(self.server.snapshot()['revision'], 0)
+    def test_default_name_empty_progress_and_long_name(self):
+        empty = self.server.snapshot()
+        self.assertEqual((empty['revision'], empty['state']), (0, None))
+        self.assertTrue(empty['sync']['persisted'])
         state = self.new('   ')['state']
         self.assertEqual(state['name'], '归墟客')
         before = self.server.snapshot()
@@ -192,22 +178,22 @@ class GameHTTPTests(unittest.TestCase):
         self.assertEqual(status, 400, body)
         self.assertEqual(self.server.snapshot(), before)
 
-    def test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_load(self):
+    def test_new_game_retry_cannot_erase_progress_and_old_page_rejected_after_restart(self):
         payload = {'request_id': 'new-once', 'expected_revision': 0, 'name': '幂等道友', 'mode': 'free'}
         self.assertEqual(self.server.request('POST', '/api/new-game', payload)[0], 200)
         self.server.action('gather')
-        saved = self.server.write('/api/save')
-        advanced = self.server.action('cultivate')
-        loaded = self.server.write('/api/load')
-        self.assertEqual(loaded['state'], saved['state'])
+        advanced = self.server.action('explore')
+        self.server.restart()
+        latest = self.server.snapshot()
+        self.assertEqual(latest['state'], advanced['state'])
         status, body = self.server.request('POST', '/api/action', {
-            'request_id': 'old-tab', 'expected_revision': advanced['revision'], 'action': 'gather', 'params': {}})
+            'request_id': 'old-tab', 'expected_revision': advanced['revision'] - 1, 'action': 'gather', 'params': {}})
         self.assertEqual((status, body['error']['code']), (409, 'STALE_STATE'))
         status, duplicate = self.server.request('POST', '/api/new-game', payload)
         self.assertEqual(status, 200)
         self.assertTrue(duplicate['duplicate'])
-        self.assertEqual(duplicate['state'], loaded['state'])
-        self.assertEqual(duplicate['revision'], loaded['revision'])
+        self.assertEqual(duplicate['state'], latest['state'])
+        self.assertEqual(duplicate['revision'], latest['revision'])
 
     def test_invalid_inputs_and_origin_do_not_mutate(self):
         self.new()
@@ -249,16 +235,13 @@ class GameHTTPTests(unittest.TestCase):
     def test_write_failure_after_state_update_rolls_back_entire_transaction(self):
         self.new()
         before = self.server.snapshot()
-        database = next(self.server.data.glob('*.db'))
-        with open_db(database) as connection:
-            connection.execute("CREATE TRIGGER qa_fail_requests BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT, 'QA injected write failure'); END")
         payload = {'request_id': 'rollback-once', 'expected_revision': before['revision'], 'action': 'gather', 'params': {}}
-        status, body = self.server.request('POST', '/api/action', payload)
+        with self.server.fail_commit('before'):
+            status, body = self.server.request('POST', '/api/action', payload)
         self.assertEqual((status, body['error']['code']), (503, 'SAVE_FAILED'))
         self.assertEqual(self.server.snapshot(), before)
-        with open_db(database) as connection:
-            self.assertEqual(connection.execute('SELECT count(*) FROM requests WHERE request_id=?', ('rollback-once',)).fetchone()[0], 0)
-            connection.execute('DROP TRIGGER qa_fail_requests')
+        with open_db(self.server.data / 'game.db') as connection:
+            self.assertEqual(connection.execute('SELECT count(*) FROM requests WHERE user_id=? AND request_id=?', (self.server.user_id, 'rollback-once')).fetchone()[0], 0)
         status, committed = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 200)
         self.assertFalse(committed['duplicate'])

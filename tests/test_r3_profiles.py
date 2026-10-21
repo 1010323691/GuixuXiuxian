@@ -23,14 +23,15 @@ class R3ProfileHTTPTests(unittest.TestCase):
                 self.assertEqual(status, 400, body)
                 self.assertEqual(self.server.snapshot(), before)
 
-    def test_explicit_free_retains_original_immediate_growth(self):
+    def test_explicit_free_prologue_cultivates_over_time(self):
         status, created = self.create(mode='free')
         self.assertEqual(status, 200, created)
-        snap = self.server.action('cultivate')
-        self.assertEqual(snap['state']['cultivation'], 6)
-        saved = self.server.write('/api/save')
-        self.server.action('gather')
-        self.assertEqual(self.server.write('/api/load')['state'], saved['state'])
+        self.server.clock.advance(30)
+        snap = self.server.action('gather')
+        self.assertEqual(snap['state']['cultivation'], 6, '自由档同样按时间自动吐纳')
+        latest = self.server.action('gather')
+        self.server.restart()
+        self.assertEqual(self.server.snapshot()['state'], latest['state'])
 
     def test_http_default_and_explicit_longline_create_independent_profile_ids(self):
         ids = []

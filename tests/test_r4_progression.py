@@ -14,11 +14,11 @@ class R4ProgressionTests(unittest.TestCase):
         early=p.first_week(server.clock)
         self.assertEqual([c['claimed'] for c in early],[4,6,7])
         self.assertEqual([c['hours'] for c in early],[12,48,120])
-        p.finish_month(server.clock,checkpoint=lambda op:server.write('/api/'+op))
+        p.finish_month(server.clock,restart=server.restart)
         w=p.world();self.assertTrue(w['ending']);self.assertEqual(w['stage'],7)
         self.assertTrue(all(r['claimed'] for r in w['r3']['journey']['stories'].values()))
         report={'passed':True,'kind':'legal real HTTP with injected UTC, not human month observation',
-            'early_checkpoints':early,'elapsed_seconds':server.clock()-start,'world_actions':len(p.trace),
+            'early_milestones':early,'elapsed_seconds':server.clock()-start,'world_actions':len(p.trace),
             'stage':w['stage'],'remaining_xp':w['xp'],'ending':w['ending'],
             'manual_clears':w['r3']['journey']['manual_clears'],'elite_wins':w['r3']['journey']['elite_wins']}
         folder=ROOT/'artifacts'/'r4-qa';folder.mkdir(parents=True,exist_ok=True)

@@ -173,7 +173,7 @@ class R3ItemTests(unittest.TestCase):
         self.state['world']['dungeon']['round']=2
         self.act('world_dungeon_next')
         self.state['world']['battle']['hp']=1  # Valid last-hit boundary, not a route shortcut claim.
-        self.act('world_attack')
+        self.act('world_auto_battle',strategy='balanced')
         w=self.state['world'];r=w['r3']
         self.assertIsNone(w['battle'])
         self.assertIsNone(w['dungeon'])

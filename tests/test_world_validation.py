@@ -5,10 +5,11 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from pathlib import Path
 
 from game import rules, world, world_config
-from game.storage import Store
-from tests.support import open_db
+from game.storage import Database, Store
+from tests.support import fast_store, open_db
 
 
 class WorldValidationTests(unittest.TestCase):
@@ -89,13 +90,15 @@ class WorldValidationTests(unittest.TestCase):
 
     def test_schema2_corruption_does_not_reset_database(self):
         with tempfile.TemporaryDirectory() as directory:
-            store=Store(directory)
+            store=fast_store(directory)
+            path=Path(directory)/'game.db'
+            store.snapshot()  # creates the account's empty progress row
             invalid=self.fresh();invalid['world']['quests']=[]
-            with open_db(store.path) as db:
-                db.execute('UPDATE current SET state=? WHERE id=1',(json.dumps(invalid),))
-            before=hashlib.sha256(store.path.read_bytes()).digest()
-            with self.assertRaises(ValueError):Store(directory)
-            self.assertEqual(hashlib.sha256(store.path.read_bytes()).digest(),before)
+            with open_db(path) as db:
+                db.execute('UPDATE current SET state=? WHERE user_id=1',(json.dumps(invalid),))
+            before=hashlib.sha256(path.read_bytes()).digest()
+            with self.assertRaises(ValueError):Store(Database(directory),1).snapshot()
+            self.assertEqual(hashlib.sha256(path.read_bytes()).digest(),before)
 
 
 if __name__=='__main__':

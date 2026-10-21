@@ -45,23 +45,21 @@ class R3PublicProgressionTests(unittest.TestCase):
 
     def test_eight_stage_full_growth_and_final_spending_through_real_http(self):
         start = self.server.clock()
-        checkpoints = self.planner.full_growth(self.server.clock,
-            checkpoint=lambda operation:self.server.write('/api/'+operation))
+        milestones = self.planner.full_growth(self.server.clock, restart=self.server.restart)
         w = self.planner.world()
         self.assertTrue(w['ending'])
-        self.assertEqual(len(checkpoints),8)
+        self.assertEqual(len(milestones),8)
         # All three actual themed bosses at both enhanced difficulties, via legal unlocked routes.
         for dungeon,region in [('den','qinglan'),('forge','chisha'),('tower','xuanchao')]:
             for difficulty in [1,2,3]:
                 self.planner.dungeon(dungeon,region,difficulty,chapter=0)
         self.assertEqual(len(self.planner.mechanics_seen),6)
-        before_load = copy.deepcopy(w)
-        self.server.write('/api/save')
         self.server.action('world_gather',item='wood')
         latest = self.server.snapshot()['state']['world']
-        self.assertEqual(self.server.write('/api/load')['state']['world'], latest)
+        self.server.restart()
+        self.assertEqual(self.server.snapshot()['state']['world'], latest)
         evidence={'passed':True,'kind':'injected-clock legal HTTP, not real forty-day observation',
-                  'elapsed_seconds':self.server.clock()-start,'checkpoints':checkpoints,
+                  'elapsed_seconds':self.server.clock()-start,'milestones':milestones,
                   'actions':len(self.planner.trace),'ending':w['ending'],
                   'stage':w['stage'],'xp_remaining':w['xp'],
                   'themed_bosses':self.planner.mechanics_seen}

@@ -95,7 +95,7 @@ class WorldContractTests(unittest.TestCase):
         created = self.server.write('/api/new-game', name='序章兼容')
         world = copy.deepcopy(created['state']['world'])
         self.assertFalse(world['active'])
-        for action in ['cultivate', 'gather', 'explore']:
+        for action in ['gather', 'explore']:
             self.assertEqual(self.server.action(action)['state']['world'], world)
         before = self.server.snapshot()
         for _ in range(3):
@@ -112,22 +112,18 @@ class WorldContractTests(unittest.TestCase):
         self.reject('world_not_a_real_action', expected_status=400)
         self.reject('world_enter', {'stones': 999999}, expected_status=400)
 
-    def test_nested_world_checkpoint_restart_and_old_page_conflict(self):
+    def test_nested_world_restart_keeps_state_and_old_page_conflicts(self):
         activated = self.start_world()
-        saved = self.server.write('/api/save')
         advanced = self.server.action('world_gather', item='herb')
         self.assertEqual(advanced['state']['world']['tick'], activated['state']['world']['tick'] + 1)
-        self.server.stop()
-        self.server.start()
+        self.server.restart()
         self.assertEqual(self.server.snapshot()['state'], advanced['state'])
-        loaded = self.server.write('/api/load')
-        self.assertEqual(loaded['state'], saved['state'])
-        self.assertGreater(loaded['revision'], advanced['revision'])
+        self.assertEqual(self.server.snapshot()['revision'], advanced['revision'])
         status, body = self.server.request('POST', '/api/action', {
-            'request_id': str(uuid.uuid4()), 'expected_revision': advanced['revision'],
+            'request_id': str(uuid.uuid4()), 'expected_revision': activated['revision'],
             'action': 'gather', 'params': {}})
         self.assertEqual((status, body['error']['code']), (409, 'STALE_STATE'))
-        self.assertEqual(self.server.snapshot()['state'], loaded['state'])
+        self.assertEqual(self.server.snapshot()['state'], advanced['state'])
 
     def test_active_world_keeps_legacy_history_readonly(self):
         self.start_world()
@@ -165,16 +161,12 @@ class WorldContractTests(unittest.TestCase):
         self.assertEqual(sorted(status for status, _ in results), [200, 409, 409])
         after = self.server.snapshot()
         self.assertEqual(after['state']['world']['tick'], before['state']['world']['tick'] + 1)
-        database = next(self.server.data.glob('*.db'))
-        with open_db(database) as connection:
-            connection.execute("CREATE TRIGGER qa_fail_world BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'QA world commit failure'); END")
         payload = {'request_id': 'world-rollback', 'expected_revision': after['revision'],
                    'action': 'world_gather', 'params': {'item': 'wood'}}
-        status, error = self.server.request('POST', '/api/action', payload)
+        with self.server.fail_commit('before'):
+            status, error = self.server.request('POST', '/api/action', payload)
         self.assertEqual((status, error['error']['code']), (503, 'SAVE_FAILED'))
         self.assertEqual(self.server.snapshot(), after, 'state/AI/orders changed after failed commit')
-        with open_db(database) as connection:
-            connection.execute('DROP TRIGGER qa_fail_world')
         status, retry = self.server.request('POST', '/api/action', payload)
         self.assertEqual(status, 200, retry)
         self.assertFalse(retry['duplicate'])

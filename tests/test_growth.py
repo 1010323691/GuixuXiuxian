@@ -61,18 +61,13 @@ class GrowthTests(unittest.TestCase):
         after=growth.finish(s,after,99999999)
         self.assertEqual(after['world']['r3']['growth']['last_settled'],99999999)
 
-    def test_load_preserves_consumption_assets_and_progression(self):
-        s=growth.sync(state(),0);slot=copy.deepcopy(s)
-        s=growth.sync(s,86400*3);after=copy.deepcopy(s)
+    def test_checkpoint_merge_function_is_retired_and_spending_persists_as_is(self):
+        self.assertFalse(hasattr(growth,'load_checkpoint'))
+        s=growth.sync(growth.sync(state(),0),86400*3);after=copy.deepcopy(s)
         after['world']['xp']-=1620;after['world']['stage']=1
-        after['world']['region']='other';after['world']['r3']['owned']={'uid':'spent'}
-        s=growth.finish(s,after,86400*3)
-        restored,events=growth.load_checkpoint(s,slot)
-        self.assertEqual(restored['world']['stage'],1)
-        self.assertEqual(restored['world']['xp'],0)
-        self.assertEqual(restored['world']['r3'],s['world']['r3'])
-        self.assertEqual(restored['world']['region'],'qinglan')
-        self.assertTrue(events)
+        done=growth.finish(s,after,86400*3)
+        self.assertEqual(done['world']['stage'],1)
+        self.assertEqual(growth.sync(done,86400*3)['world']['xp'],done['world']['xp'])
 
     def test_stored_balance_and_rate_corruption_rejected(self):
         s=growth.sync(state(),1000)

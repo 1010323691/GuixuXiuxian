@@ -1,0 +1,125 @@
+sequenceDiagram
+    autonumber
+    participant B as 浏览器(app.js)
+    participant H as Handler/dispatch_full(server.py)
+    participant A as AuthService
+    participant S as Store(user_id绑定)
+    participant P as ProgressRepo
+    participant D as Database(data/game.db WAL)
+    participant O as 运维CLI(admin.py/legacy.py)
+
+    rect rgb(235,245,235)
+    Note over B,D: 一 注册并自动登录(登录同理，多一次限流检查)
+    B->>H: GET /api/session
+    H->>A: authenticate(Cookie=None)
+    A-->>H: None
+    H-->>B: 200 authenticated=false registration_open=true
+    B->>H: POST /api/register {username,password} + X-Game-Client
+    H->>H: check_host → 路由 → check_csrf → 解析JSON(≤2KiB)
+    H->>A: register(username,password,client_ip)
+    A->>A: NFKC规范化 校验 scrypt(随机盐) 全部在事务外
+    A->>D: tx() BEGIN IMMEDIATE 限流检查 INSERT accounts(username_key唯一) INSERT sessions(token_hash) COMMIT
+    A-->>H: Principal + 明文token(仅此一次)
+    H-->>B: 200 {ok,account} + Set-Cookie guixu_session=token HttpOnly SameSite=Lax
+    end
+
+    rect rgb(235,240,250)
+    Note over B,D: 二 动作与自动保存(user_id只来自会话 事务外计算 事务内CAS)
+    B->>H: POST /api/action {request_id,expected_revision,action,params}
+    H->>A: authenticate(Cookie) 校验过期 必要时滑动续期
+    A-->>H: Principal(account_id)
+    H->>S: app.store_for(account_id).write('action',payload)
+    S->>D: read() 延迟事务 WAL一致快照(无写锁)
+    S->>P: load(user_id) ledger_get(user_id,request_id)
+    P-->>S: revision R state slot 账本未命中
+    S->>S: 校验 expected_revision==R 再取 now(读之后)
+    S->>S: 事务外: growth.sync cadence.sync apply_action validate 构造响应(revision=R+1)
+    S->>D: BEGIN IMMEDIATE 仅3条语句
+    S->>P: commit(user_id,R,state,slot,request_id,canonical)
+    P->>D: SELECT requests WHERE user_id=? AND request_id=? (复核幂等)
+    P->>D: UPDATE current SET ... WHERE user_id=? AND revision=R (CAS)
+    P->>D: INSERT requests(user_id,request_id,payload)
+    S->>D: COMMIT (WAL fsync synchronous=FULL)
+    S-->>H: result(含 sync.persisted=true, revision=R+1)
+    H-->>B: 200 {ok,revision,state,view,sync,events,account}
+    B->>B: 状态指示 进度同步中… → 进度已同步
+    end
+
+    rect rgb(245,235,250)
+    Note over S,D: 三 并发冲突(同一用户 多标签/重复请求 不丢更新)
+    par 线程T1 request_id=X1
+        S->>D: 读到 revision=R 计算 BEGIN IMMEDIATE CAS(revision=R) COMMIT
+    and 线程T2 request_id=X2 同一expected_revision=R
+        S->>D: 读到 revision=R 计算 等待写锁
+        D-->>S: CAS rowcount=0 (T1已提交 revision=R+1)
+        S->>S: ROLLBACK 重读: 账本无X2 → 409 STALE_STATE(revision=R+1)
+    and 线程T3 request_id=X1(重复)
+        S->>D: 读到 revision=R 计算 等待写锁
+        D-->>S: 复核账本命中X1 → ROLLBACK
+        S->>S: canonical相同 → 返回 duplicate=true 不重复结算
+    end
+    end
+
+    rect rgb(250,240,235)
+    Note over B,D: 四 保存失败与断线重放(同一request_id)
+    B->>H: POST /api/action (request_id=X)
+    H->>S: write()
+    S->>D: COMMIT抛出异常 → ROLLBACK (忙超时则最多再试2次)
+    S-->>H: sqlite3.Error
+    H-->>B: 503 SAVE_FAILED(进度保存失败，当前操作未生效)
+    B->>B: 保留pending 显示同步失败正在重试 退避1s 2s 4s
+    B-xH: 重试时网络中断(超时或fetch失败)
+    B->>B: 显示网络中断，正在重连… 动作按钮禁用
+    loop 重连探测 2s到10s
+        B->>H: GET /api/session
+    end
+    H-->>B: 200 authenticated=true
+    B->>H: GET /api/state
+    H-->>B: 最新revision与state
+    B->>H: POST /api/action (同一request_id=X, 原expected_revision)
+    H->>S: write()
+    alt 上次其实已提交
+        S-->>H: 账本命中 duplicate=true 不重复生效
+        H-->>B: 200 duplicate=true
+    else 上次未提交
+        S-->>H: 正常提交
+        H-->>B: 200 duplicate=false
+    end
+    B->>B: 进度已同步
+    end
+
+    rect rgb(250,250,225)
+    Note over B,A: 五 会话过期 → 登录面板 → 恢复
+    B->>H: POST /api/action
+    H->>A: authenticate(Cookie)
+    A-->>H: 抛出 SESSION_EXPIRED(过期或已被登出)
+    H-->>B: 401 SESSION_EXPIRED + Set-Cookie清除
+    B->>B: 保留页面与pending 弹出登录面板“登录已过期，请重新登录”
+    B->>H: POST /api/login
+    H->>A: login(username,password,client_ip)
+    A->>A: 限流检查 scrypt比较(事务外 compare_digest)
+    A->>D: tx() 重置失败计数 新建会话
+    A-->>H: Principal + token
+    H-->>B: 200 + Set-Cookie
+    B->>B: 若账号与页面一致 重发pending 否则清空界面并GET /api/state
+    end
+
+    rect rgb(240,235,250)
+    Note over O,D: 六 旧版数据迁移与认领(迁移需停服 认领单事务)
+    O->>O: server.py --migrate-multiuser (schema1 须加 --migrate-save)
+    O->>O: 取 data/.migrate.lock 只读校验旧 data/game.db
+    O->>O: sqlite3.backup → game.pre-multiuser.ts.bak.db 逐行比对 fsync
+    O->>D: 新建 game.db.migrating 单事务写入 legacy_progress legacy_requests 并校验sha
+    O->>O: os.replace(game.db.migrating → game.db) 原子换位 旧数据仍在备份与待认领区
+    O->>O: server.py --claim-legacy 用户名 账号必须已存在
+    O->>O: upgrade_progress(state,slot,now) 事务外升级并校验
+    O->>D: BEGIN IMMEDIATE 复核 status=unclaimed
+    O->>P: import_legacy(user_id,...) UPDATE current WHERE user_id INSERT requests SELECT legacy_requests
+    O->>D: UPDATE legacy_progress SET status=claimed COMMIT
+    end
+
+    rect rgb(235,250,250)
+    Note over O,D: 七 在线备份(可不停服)
+    O->>D: server.py --backup → sqlite3.backup(data/backups/game.ts.bak.db)
+    O->>O: 副本 integrity_check 并核对各表行数
+    end

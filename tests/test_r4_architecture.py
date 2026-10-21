@@ -16,9 +16,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from game import cadence, growth,journey,rules,loot,gameplay_config as G
-from game.storage import Store,encode
-from tests.support import open_db
+import server
+from game import cadence, growth,journey,legacy,rules,loot,gameplay_config as G
+from game.storage import Database,ProgressRepo,Store,encode
+from tests.support import fast_store,open_db,test_settings
 
 NOW=1_800_000_000
 
@@ -105,7 +106,18 @@ class CadenceTests(unittest.TestCase):
 
 
 
+def write_old_database(path,row,ledger,replace=False):
+    """Build a pre-multiuser single-user file (current id=1 + requests) holding exactly the given row and ledger."""
+    path=Path(path)
+    if replace:path.unlink()
+    with open_db(path) as db:
+        db.executescript('CREATE TABLE current (id INTEGER PRIMARY KEY CHECK(id=1),schema_version INTEGER NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,slot TEXT NOT NULL);CREATE TABLE requests(request_id TEXT PRIMARY KEY,payload TEXT NOT NULL);')
+        db.execute('INSERT INTO current VALUES(1,?,?,?,?)',row)
+        db.executemany('INSERT INTO requests VALUES(?,?)',ledger)
+
+
 class ReleasedArchiveMigrationTests(unittest.TestCase):
+    """The released v1.1 single-user file -> verified import (unclaimed area) -> claim performs the content upgrade."""
     @classmethod
     def setUpClass(cls):
         cls.root=tempfile.TemporaryDirectory(prefix='guixu-r4-old-release-')
@@ -119,10 +131,7 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         assert hashlib.sha256(cls.row[3].encode()).hexdigest()==source['source_slot_sha256']
         assert hashlib.sha256(json.dumps(cls.ledger,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()==source['source_requests_sha256']
         cls.original=cls.folder/'old-data';cls.original.mkdir()
-        with open_db(cls.original/'game.db') as db:
-            db.executescript('CREATE TABLE current (id INTEGER PRIMARY KEY CHECK(id=1),schema_version INTEGER NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,slot TEXT NOT NULL);CREATE TABLE requests(request_id TEXT PRIMARY KEY,payload TEXT NOT NULL);')
-            db.execute('INSERT INTO current VALUES(1,?,?,?,?)',cls.row)
-            db.executemany('INSERT INTO requests VALUES(?,?)',cls.ledger)
+        write_old_database(cls.original/'game.db',cls.row,cls.ledger)
         cls.original_bytes=(cls.original/'game.db').read_bytes()
     @classmethod
     def tearDownClass(cls):cls.root.cleanup()
@@ -130,16 +139,40 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory(prefix='guixu-r4-migrate-test-');self.addCleanup(self.tmp.cleanup)
         self.data=Path(self.tmp.name);shutil.copyfile(self.original/'game.db',self.data/'game.db')
 
+    def backups(self):
+        return sorted(self.data.glob('*.bak.db'))
+
+    def open_app(self,now):
+        return server.App(self.data,settings=test_settings(),clock=lambda:now)
+
+    def migrate_and_claim(self,now,name='migrator'):
+        """Explicit operator steps: import into the unclaimed area, create the account, claim it at `now`."""
+        imported=legacy.migrate_multiuser(self.data)
+        app=self.open_app(now)
+        user_id=app.auth.create_account(name,'migrator-pass-1')
+        claimed=legacy.claim(app.db,name,clock=lambda:now)
+        return app,user_id,imported,claimed
+
+    def progress(self,app,user_id):
+        with app.db.read() as db:
+            row=db.execute('SELECT schema_version,revision,state,slot FROM current WHERE user_id=?',(user_id,)).fetchone()
+            ledger=db.execute('SELECT request_id,payload FROM requests WHERE user_id=? ORDER BY request_id',(user_id,)).fetchall()
+        return row,ledger
+
     def test_real_old_archive_current_slot_run_activity_and_backup(self):
-        s=Store(self.data,clock=lambda:NOW+28800)
-        self.assertIsNotNone(s.migration_backup)
-        with open_db(s.migration_backup) as backup:
-            self.assertEqual(backup.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
-            self.assertEqual(backup.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
-        self.assertEqual((self.original/'game.db').read_bytes(),self.original_bytes)
-        with open_db(s.path) as db:
-            row=db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone()
+        app,user_id,imported,claimed=self.migrate_and_claim(NOW+28800)
+        # Import: verified backup equals the old file row by row; unclaimed record carries the source digest.
+        self.assertEqual((imported.status,imported.source_schema,imported.revision,imported.ledger_count),
+                         (legacy.UNCLAIMED,self.row[0],self.row[1],len(self.ledger)))
+        self.assertEqual(imported.sha256,legacy._digest(self.row[0],self.row[1],self.row[2],self.row[3],self.ledger))
+        backup=self.data/imported.backup_file
+        with open_db(backup) as db:
+            self.assertEqual(db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
             self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
+        self.assertEqual((self.original/'game.db').read_bytes(),self.original_bytes)
+        self.assertEqual((claimed.status,claimed.claimed_by),(legacy.CLAIMED,user_id))
+        row,ledger=self.progress(app,user_id)
+        self.assertEqual(ledger,self.ledger)
         self.assertEqual(row[1],self.row[1]+1)
         for old_raw,new_raw in zip(self.row[2:],row[2:]):
             old,new=json.loads(old_raw),json.loads(new_raw);og,ng=old['world']['r3']['growth'],new['world']['r3']['growth']
@@ -154,30 +187,50 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
             self.assertEqual(list(new['world']['r3']['cadence']['reservations'].values()),['reserved'])
             self.assertEqual(ng['curve_version'],2)
             self.assertEqual(ng['total_micro'],og['total_micro']+(elapsed*og['rate_num']+og['remainder'])//growth.DENOMINATOR)
-        count=len(list(self.data.glob('*.bak.db')))
-        again=Store(self.data,clock=lambda:NOW+28800)
-        self.assertIsNone(again.migration_backup)
+        # Service restart: nothing is upgraded or backed up again, the ledger still answers duplicates.
+        count=len(self.backups())
+        again_app=self.open_app(NOW+28800)
+        again=Store(again_app.db,user_id,clock=lambda:NOW+28800)
         self.assertEqual(again.snapshot()['revision'],row[1])
-        self.assertEqual(len(list(self.data.glob('*.bak.db'))),count)
+        self.assertEqual(len(self.backups()),count)
+        with self.assertRaises(legacy.LegacyError):legacy.claim(again_app.db,'migrator')
+        self.assertEqual(legacy.migrate_multiuser(self.data).status,legacy.CLAIMED)
+        self.assertEqual(len(self.backups()),count)
         request=json.loads(self.ledger[-1][1]);duplicate=again.write(request['endpoint'],request['payload'])
         self.assertTrue(duplicate['duplicate']);self.assertEqual(duplicate['revision'],row[1])
 
     def test_sql_failure_rolls_back_current_slot_revision_and_ledger(self):
+        imported=legacy.migrate_multiuser(self.data)
+        app=self.open_app(NOW+28800);user_id=app.auth.create_account('migrator','migrator-pass-1')
         with open_db(self.data/'game.db') as db:
             db.execute("CREATE TRIGGER deny_r4 BEFORE UPDATE ON current BEGIN SELECT RAISE(ABORT,'r4-update-fault'); END")
-        before=(self.data/'game.db').read_bytes()
-        with self.assertRaises(sqlite3.IntegrityError):Store(self.data,clock=lambda:NOW+28800)
-        self.assertEqual((self.data/'game.db').read_bytes(),before)
+        with self.assertRaises(sqlite3.IntegrityError):legacy.claim(app.db,'migrator',clock=lambda:NOW+28800)
+        # The whole claim transaction rolled back: still unclaimed, no progress row content, no ledger copy.
+        record=legacy.status(app.db)
+        self.assertEqual((record.status,record.claimed_by,record.sha256),(legacy.UNCLAIMED,0,imported.sha256))
         with open_db(self.data/'game.db') as db:
-            self.assertEqual(db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
-            self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
-        self.assertEqual(len(list(self.data.glob('*.bak.db'))),1)
+            self.assertEqual(db.execute('SELECT state,slot,revision FROM legacy_progress').fetchone(),(self.row[2],self.row[3],self.row[1]))
+            self.assertEqual(db.execute('SELECT * FROM legacy_requests ORDER BY request_id').fetchall(),self.ledger)
+            self.assertEqual(db.execute('SELECT count(*) FROM requests WHERE user_id=?',(user_id,)).fetchone()[0],0)
+            self.assertEqual(db.execute('SELECT count(*) FROM current WHERE user_id=?',(user_id,)).fetchone()[0],0)
+        with open_db(self.backups()[0]) as backup:
+            self.assertEqual(backup.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),self.row)
+            self.assertEqual(backup.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
+        self.assertEqual(len(self.backups()),1)
 
     def test_backup_failure_preserves_old_bytes(self):
         before=(self.data/'game.db').read_bytes()
-        with patch('game.storage.tempfile.mkstemp',side_effect=OSError('backup denied')):
-            with self.assertRaises(OSError):Store(self.data,clock=lambda:NOW+28800)
+        with patch('game.legacy.backup_verified',side_effect=OSError('backup denied')):
+            with self.assertRaises(OSError):legacy.migrate_multiuser(self.data)
         self.assertEqual((self.data/'game.db').read_bytes(),before)
+        self.assertTrue(legacy.legacy_format_present(self.data))
+        # A failure inside the real verified backup (final fsync) leaves no partial backup and the original intact.
+        with patch('game.legacy.fsync_file',side_effect=OSError('fsync denied')):
+            with self.assertRaises(OSError):legacy.migrate_multiuser(self.data)
+        self.assertEqual((self.data/'game.db').read_bytes(),before)
+        self.assertEqual(self.backups(),[])
+        self.assertFalse((self.data/'.migrate.lock').exists())
+        self.assertFalse((self.data/'game.db.migrating').exists())
 
     def test_non_integral_stage_ratio_and_unspent_overflow_preserved(self):
         with open_db(self.data/'game.db') as db:
@@ -185,27 +238,52 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
             g=w['r3']['growth'];g['balance_micro']=50000*growth.MICRO+123;g['remainder']=1;g['rate_num']=540*growth.MICRO*65*10000
             raw_original=copy.deepcopy(raw)
             db.execute('UPDATE current SET state=?,slot=?',(json.dumps(raw),json.dumps(raw)))
-        migrated=Store(self.data,clock=lambda:NOW).snapshot()['state'];g=migrated['world']['r3']['growth']
+        app,user_id,_,_=self.migrate_and_claim(NOW)
+        migrated=Store(app.db,user_id,clock=lambda:NOW).snapshot()['state'];g=migrated['world']['r3']['growth']
         expected=Fraction(raw_original['world']['r3']['growth']['balance_micro']*growth.DENOMINATOR+1,growth.DENOMINATOR)*Fraction(8,7)
         actual=Fraction(g['balance_micro']*g['remainder_denominator']+g['remainder'],g['remainder_denominator'])
         self.assertEqual(actual,expected);self.assertGreater(migrated['world']['xp'],28080)
         self.assertEqual(g['total_micro'],raw_original['world']['r3']['growth']['total_micro'])
 
     def test_competing_startups_upgrade_once_and_keep_request_ledger(self):
-        def launch(_):return Store(self.data,clock=lambda:NOW+28800)
-        with ThreadPoolExecutor(max_workers=2) as pool:stores=list(pool.map(launch,range(2)))
-        self.assertEqual(sum(s.migration_backup is not None for s in stores),1)
-        self.assertEqual(len(list(self.data.glob('*.bak.db'))),1)
-        self.assertEqual({s.snapshot()['revision'] for s in stores},{self.row[1]+1})
+        # Two operators claim the same unclaimed progress for two accounts at the same time: exactly one wins.
+        imported=legacy.migrate_multiuser(self.data)
+        app=self.open_app(NOW+28800)
+        ids=[app.auth.create_account(name,'migrator-pass-1') for name in ('claim_a','claim_b')]
+        def launch(name):
+            try:return legacy.claim(Database(self.data,clock=lambda:NOW+28800),name,clock=lambda:NOW+28800)
+            except legacy.LegacyError as exc:return exc
+        with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(launch,('claim_a','claim_b')))
+        winners=[r for r in results if isinstance(r,legacy.LegacyRecord)]
+        self.assertEqual(len(winners),1,results)
+        self.assertEqual(len(self.backups()),1)
+        winner=winners[0].claimed_by;loser=[i for i in ids if i!=winner][0]
+        self.assertIn(winner,ids)
+        row,ledger=self.progress(app,winner)
+        self.assertEqual(row[1],self.row[1]+1);self.assertEqual(ledger,self.ledger)
+        self.assertEqual(Store(app.db,winner,clock=lambda:NOW+28800).snapshot()['revision'],self.row[1]+1)
+        # The losing account received nothing: no ledger copy, no progress.
+        self.assertEqual(self.progress(app,loser)[1],[])
+        with app.db.read() as db:
+            self.assertFalse(ProgressRepo.has_progress(db,loser))
         with open_db(self.data/'game.db') as db:
-            self.assertEqual(db.execute('SELECT * FROM requests ORDER BY request_id').fetchall(),self.ledger)
+            self.assertEqual(db.execute('SELECT * FROM legacy_requests ORDER BY request_id').fetchall(),self.ledger)
+            self.assertEqual(db.execute('SELECT sha256 FROM legacy_progress').fetchone()[0],imported.sha256)
 
     def test_upgraded_checkpoint_never_restores_old_growth_or_reservation(self):
-        s=Store(self.data,clock=lambda:NOW+28800);before=s.snapshot()
-        after=s.write('load',{'request_id':'r4-load','expected_revision':before['revision']})
+        # The manual restore endpoint is retired (unknown operation); the equivalent guarantee is that the
+        # upgraded progress survives a service restart unchanged and never regresses to the old growth/reservation.
+        app,user_id,_,_=self.migrate_and_claim(NOW+28800)
+        before=Store(app.db,user_id,clock=lambda:NOW+28800).snapshot()
+        with self.assertRaises(rules.GameError) as raised:
+            Store(app.db,user_id,clock=lambda:NOW+28800).write('load',{'request_id':'r4-load','expected_revision':before['revision']})
+        self.assertEqual(raised.exception.status,400)
+        after=Store(self.open_app(NOW+28800).db,user_id,clock=lambda:NOW+28800).snapshot()
+        self.assertEqual(after['revision'],before['revision'])
         self.assertEqual(after['state'],before['state'])
         self.assertEqual(after['state']['world']['battle']['turn'],1)
         self.assertEqual(after['state']['world']['r3']['cadence']['available'],2)
+        self.assertEqual(after['state']['world']['r3']['growth']['curve_version'],2)
 
     def test_sealed_realm_preserves_actual_reserve_and_historical_production(self):
         old=json.loads(self.row[2]);w=old['world'];w['battle']=None;w['dungeon']=None
@@ -220,16 +298,27 @@ class ReleasedArchiveMigrationTests(unittest.TestCase):
         self.assertEqual(new['world']['xp'],w['xp'])
 
     def test_free_and_empty_databases_do_not_upgrade_or_create_backup(self):
+        # Empty progress: a fresh account reads revision 0 and neither opening nor re-opening makes any backup.
         with tempfile.TemporaryDirectory() as folder:
-            store=Store(folder,clock=lambda:NOW)
-            self.assertIsNone(Store(folder,clock=lambda:NOW+28800).migration_backup)
+            store=fast_store(folder,clock=lambda:NOW)
             self.assertEqual(store.snapshot()['revision'],0)
+            self.assertEqual(fast_store(folder,clock=lambda:NOW+28800).snapshot()['revision'],0)
+            self.assertEqual(list(Path(folder).glob('*.bak.db')),[])
             store.write('new-game',{'request_id':'free','expected_revision':0,'name':'旧自由','mode':'free'})
-            before=store.path.read_bytes()
-            again=Store(folder,clock=lambda:NOW+28800)
-            self.assertEqual(again.path.read_bytes(),before)
-            self.assertEqual(again.snapshot()['revision'],1)
-            self.assertIsNone(again.migration_backup)
+            with store.db.read() as db:
+                free_row=db.execute('SELECT schema_version,revision,state,slot FROM current WHERE user_id=?',(store.user_id,)).fetchone()
+        # A free-mode old file is imported and claimed with no content upgrade: same revision, same bytes.
+        free_ledger=[('free',encode({'endpoint':'new-game','payload':{'request_id':'free','expected_revision':0,'name':'旧自由','mode':'free'}}))]
+        write_old_database(self.data/'game.db',free_row,free_ledger,replace=True)
+        app,user_id,imported,_=self.migrate_and_claim(NOW+28800)
+        self.assertEqual(imported.revision,free_row[1])
+        row,ledger=self.progress(app,user_id)
+        self.assertEqual(row,free_row);self.assertEqual(ledger,free_ledger)
+        self.assertEqual(len(self.backups()),1)  # only the verified pre-import backup
+        with open_db(self.backups()[0]) as db:
+            self.assertEqual(db.execute('SELECT schema_version,revision,state,slot FROM current').fetchone(),free_row)
+        self.assertEqual(list(self.data.glob('game.pre-claim.*')),[])
+        self.assertEqual(Store(app.db,user_id,clock=lambda:NOW+28800).snapshot()['revision'],free_row[1])
 
 
 class CrossModuleReviewTests(unittest.TestCase):

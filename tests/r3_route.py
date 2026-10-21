@@ -17,31 +17,15 @@ class R3Planner(WorldPlanner):
         return next(s['value'] for s in page['stats'] if s['label']==label)
 
     def win(self):
-        for _ in range(100):
-            w = self.world()
-            if w['battle'] is None:
-                assert w['hp'] > 1, ('defeated, not a completed victory', self.trace[-15:])
-                return
-            b = w['battle']
-            attack = int(self.character_stat('攻击'))
-            if b['kind']=='guard' or b['kind']=='dungeon' and w['dungeon']['round']==2:
-                attack += 6*w['arrays']['seal']*w['arrays_enabled']['seal']
-            ordinary = attack + (4*w['skills']['flame'] if w['skill']=='flame' else 0)
-            strong = attack*(20+w['skills']['origin'])//10 if w['skill']=='origin' else attack*2
-            if b['hp'] <= ordinary:
-                self.perform('world_attack')
-            elif w['mp'] >= 24 and b['hp'] <= strong:
-                self.perform('world_power')
-            elif b['turn']%3==1 and self.inventory('pill') and (w['hp']<150 or w['mp']<24):
-                self.perform('world_pill')
-            elif w['mp'] >= 24:
-                self.perform('world_power')
-            elif b['turn']%3==2 and w['hp'] < b['heavy']*2:
-                self.perform('world_defend')
-            else:
-                self.perform('world_attack')
-        raise AssertionError(('combat did not finish', self.world()['battle']))
-
+        """One public auto-battle submission resolves the whole fight; defeat resets hp to 1."""
+        world = self.world()
+        if world['battle'] is None:
+            assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
+            return
+        self.perform('world_auto_battle', strategy='balanced')
+        world = self.world()
+        assert world['battle'] is None, ('auto battle left the fight open', world['battle'])
+        assert world['hp'] > 1, ('unexpected defeat in public route', self.trace[-15:])
     def prepare(self):
         self.perform('world_root', choice='fire')
         self.perform('world_constitution', choice='sturdy')
@@ -88,7 +72,7 @@ class R3Planner(WorldPlanner):
         assert f'{dungeon}:{chapter}:{difficulty}' in self.world()['dungeon_wins']
         return run
 
-    def full_growth(self, clock, checkpoint=None):
+    def full_growth(self, clock, restart=None):
         self.prepare()
         self.common_social('sword','healer')
         for quest in ['first_art','alliance','lineage']:
@@ -98,7 +82,7 @@ class R3Planner(WorldPlanner):
         self.craft('soul_talisman')
         # R4 approved curve replaces the default longline progression; old release evidence remains archived.
         costs = [270,1215,3564,8640,17010,28080,43740,71280]
-        checkpoints=[]
+        milestones=[]
         for stage,cost in enumerate(costs):
             assert self.world()['stage']==stage
             if stage==2:
@@ -118,16 +102,14 @@ class R3Planner(WorldPlanner):
             self.perform('world_gather',item='ore')
             assert self.world()['xp']>=cost
             if stage<7:
-                saved_before = self.world()['xp']
-                if checkpoint:
-                    checkpoint('save')
+                xp_before_advance = self.world()['xp']
                 self.perform('world_advance')
-                assert self.world()['xp']==saved_before-cost
-                if checkpoint:
+                assert self.world()['xp']==xp_before_advance-cost
+                if restart:
                     after_advance=self.world()
-                    checkpoint('load')
-                    assert self.world()==after_advance, 'old checkpoint returned spent breakthrough XP or stage'
-            checkpoints.append({'stage':stage,'elapsed_seconds':clock(),'xp':self.world()['xp']})
+                    restart()
+                    assert self.world()==after_advance, 'restart returned spent breakthrough XP or stage'
+            milestones.append({'stage':stage,'elapsed_seconds':clock(),'xp':self.world()['xp']})
         for secret,region in [('mist','qinglan'),('desert','chisha'),('tide','xuanchao')]:
             self.secret(secret,region)
         self.perform('world_quest_accept',quest='seal_gate')
@@ -136,4 +118,4 @@ class R3Planner(WorldPlanner):
         self.perform('world_finish')
         assert self.world()['xp']==before-costs[-1]
         assert self.world()['ending'] and self.world()['stage']==7
-        return checkpoints
+        return milestones

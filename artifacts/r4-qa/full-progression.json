@@ -1,7 +1,7 @@
 {
   "passed": true,
   "kind": "legal real HTTP with injected UTC, not human month observation",
-  "early_checkpoints": [
+  "early_milestones": [
     {
       "hours": 12.0,
       "stage": 1,
@@ -19,7 +19,7 @@
     }
   ],
   "elapsed_seconds": 3847902,
-  "world_actions": 404,
+  "world_actions": 368,
   "stage": 7,
   "remaining_xp": 0,
   "ending": true,

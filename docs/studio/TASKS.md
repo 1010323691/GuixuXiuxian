@@ -153,3 +153,32 @@ R5独立交付：`dist/guixu-r5-combat-lab.zip`，71文件/7,787,575字节，SHA
 | V3-05 回归 | QA 白盒全量 + 浏览器面板实测 | 181 项通过；8 种视口 × 11 页 × 全页签无溢出/无滚动 | 已完成 |
 
 白盒测试修复：上轮新增的测试快照缓存用排序后的 JSON 作键，写入响应（内存中的字典顺序）会被复用给随后从 SQLite 读出的同一存档（键已排序），导致人物页背包行顺序偶发不同，`test_all_projected_actions_reject_extra_state_overrides_without_mutation` 约 1/3 概率失败。缓存键改为保留字典顺序后，该用例连跑 8 次、全量连跑 3 次均通过（181/181，约20秒）。
+
+## V4 设计系统「青绿金碧」（2026-10-20，用户要求统一视觉语言、加入服务信息的特效、优化布局与响应式）
+规范见 `docs/iterations/V4_DESIGN_SYSTEM.md`。继承 V2 只做亮色、V3 一屏不滚动的裁决；后端、接口、存档、R5 实验室未改动。
+
+| 任务 | 负责人/文件归属 | 完成标准 | 状态 |
+| --- | --- | --- | --- |
+| V4-01 设计系统规范 | 视觉 V4_DESIGN_SYSTEM.md | 基础色板/语义层/类别与品质编码、字号阶与层级、4px 间距、圆角/阴影/层级、按钮四级+锁定、特效清单（每项写明传达的信息）、对比度表 | 已完成 |
+| V4-02 样式重构 | 视觉 static/styles.css、index.html | token 唯一来源；组件统一；页头存读与卷宗页签改为 sprite 图标；修复根底色遮挡远山、锁定原因截断、进行中按钮被禁用样式吞掉、序章说明与目标条重叠、战报对话框内部滚动 | 已完成 |
+| V4-03 表现层脚本 | 视觉 static/app.js | 境界灵气粒子（30fps、不可见即停）、获得飞入、事项金光、按钮转圈、涟漪、槽位残影/低值、页签/翻页/场景过渡、成功回执自动收起；不改请求、状态与分页逻辑 | 已完成 |
+| V4-04 回归 | PM 白盒全量 + 浏览器面板实测 | 197 项通过；10 种视口 × 11 页 × 全页签一屏巡检 0 问题；关键流程截图检查 | 已完成；四套 Playwright 浏览器套件本机未装未运行，减少动态效果未实测 |
+
+## MU 多用户在线化（2026-10-21，用户要求服务化多账号、单库、自动保存）
+历史段落中“单机/存档/载入/检查点”描述的是v1.2的旧行为，现行行为以 `docs/iterations/MU_PRD.md`、`MU_DESIGN.md`（v2，方案B）、`MU_HANDOFF.md` 与 `docs/API.md` 为准。本节为历史记录的追加，既有条目未改写。
+
+目标：①账号隔离（注册/登录/登出/改密，进度按 `user_id` 隔离）；②服务端自动保存，提交后才返回成功，删除手动存档/载入；③存量单机库进入待认领区并由运维认领。方案变更：隔离方案由A（每用户一库）改为B（单库 `data/game.db` + `user_id` + WAL），见 DECISIONS 的MU条目。
+
+| 任务 | 负责人/文件归属 | 完成标准 | 状态 |
+| --- | --- | --- | --- |
+| MU-PRD 需求与AC | PM：iterations/MU_PRD.md | 21条可测AC、默认值与待决问题清单 | 已完成 |
+| MU-DESIGN 设计 | 架构：MU_DESIGN.md、MU_sequence/MU_class.mermaid | 方案B增量设计、改造清单、A半成品处置表、任务拆分 | v2已落盘 |
+| T01 存储与迁移（B版） | 架构/开发：game/storage.py、legacy.py、growth.py；删除userstore.py | `Database`/`ProgressRepo`/`Store`、短事务乐观提交、`--migrate-multiuser`/`--claim-legacy`；跨用户SQL隔离三重兜底 | 实现进行中，以QA实测为准 |
+| T02 认证与服务入口 | 架构：settings.py、auth.py、admin.py、server.py、scripts/launch.py | 注册/登录/登出/改密/会话/限流、`--backup` 等运维命令、Host/Origin 可配置 | 实现进行中，以QA实测为准 |
+| T03 文案服务化 | 开发：game 下六个规则文件 | 玩家可见字符串去除旧词（仅改字符串） | 已完成（工程师报告通过，未跑测试） |
+| T04 前端 | 视觉：static/* | 登录/注册面板、账号菜单、同步状态5态、401与离线重连、删除存读按钮；一屏不滚动保持 | 进行中，以QA实测为准 |
+| T05 测试、脚本与文档 | QA：tests/*、scripts/verify_release.py、r4_design_route.py；PM文档车道：README.md、AGENTS.md、docs/* | 夹具改为多账号；新增隔离/并发/自动保存/迁移认领/文案扫描测试；README、API、AGENTS、studio 同步 | 文档车道已完成（README、docs/API.md、AGENTS.md、docs/studio、现行玩法手册与UI说明）；测试车道以QA记录为准 |
+
+文档车道范围与原则：现行文档（README、API.md、PLAYING/R3_PLAYING/R4_PLAYING、UI、AGENTS）改到新语义并使用术语表替代词；`docs/GDD.md`、`REVIEW.md`、`BALANCE.md`、`TESTING.md`、`ARCHITECTURE.md`（序章历史）、`DELIVERY.md` 及 `docs/iterations/` 下既有冻结文档保留原文，仅加头注或附“多用户化增量”章节。
+
+未验证项（均不得写成已通过）：白盒全量及新增 `test_auth_*`、`test_isolation`、`test_concurrency`、`test_sql_isolation`、`test_autosave`、`test_legacy_claim`、`test_terminology` 的通过数；Playwright 浏览器套件；scrypt 在目标机的耗时与 `synchronous=FULL` 下写事务 P99；HTTPS 反代与 `--secure-cookies`/`--trust-proxy` 实际表现；真实旧库的迁移与认领演练；多用户版发行包的构建与独立解包验证。已知环境约束：子代理须显式指定可用模型；浏览器套件依赖本机 Playwright。

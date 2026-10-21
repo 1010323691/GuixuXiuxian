@@ -1,0 +1,219 @@
+classDiagram
+    direction LR
+
+    class Settings {
+        <<dataclass frozen>>
+        +tuple~str~ allowed_hosts
+        +bool secure_cookies
+        +bool registration_open
+        +bool trust_proxy
+        +int session_idle_seconds = 604800
+        +int session_absolute_seconds = 2592000
+        +int session_touch_interval = 60
+        +int max_sessions_per_account = 10
+        +int login_max_failures = 5
+        +int lockout_seconds = 300
+        +int failure_window_seconds = 900
+        +int register_per_ip_hour = 10
+        +int kdf_n = 32768
+        +int kdf_r = 8
+        +int kdf_p = 1
+        +int hash_concurrency = 4
+        +from_args(args) Settings
+    }
+
+    class App {
+        +Path data_dir
+        +Settings settings
+        +Database db
+        +AuthService auth
+        +clock() float
+        +__init__(data_dir, settings, clock)
+        +store_for(user_id) Store
+    }
+
+    class Database {
+        <<storage.py 唯一连接与布局管理>>
+        +Path path = data/game.db
+        +int DB_LAYOUT_VERSION = 1
+        +int BUSY_TIMEOUT_MS = 5000
+        +__init__(data_dir, clock)
+        +connect() Connection
+        +read() ContextManager
+        +tx() ContextManager
+        +write_tx_active() bool
+        +ping() dict
+        +backup(dest) Path
+        -_create_layout(tmp_path) void
+        -_detect_layout() str
+        -_run_migrations(from_version) void
+    }
+
+    class ProgressRepo {
+        <<storage.py 唯一允许含 current/requests SQL>>
+        +ensure_row(db, user_id, now) void
+        +load(db, user_id) tuple
+        +ledger_get(db, user_id, request_id) str
+        +commit(db, user_id, expected_revision, schema_version, state, slot, request_id, canonical, now) CommitOutcome
+        +import_legacy(db, user_id, state, slot, revision, ledger, force) void
+        -_exec(db, sql, params, user_id) Cursor
+    }
+
+    class CommitOutcome {
+        <<enumeration>>
+        COMMITTED
+        DUPLICATE
+        STALE
+    }
+
+    class Store {
+        <<用户作用域门面 无缓存>>
+        +int user_id
+        +Database db
+        +__init__(db, user_id, clock)
+        +snapshot() dict
+        +write(endpoint, payload) dict
+        -_snapshot(revision, state, slot, events, duplicate, battle_report) dict
+        -_compute(endpoint, payload, state, slot, now) tuple
+        -_now() int
+        -_context(state, now) dict
+    }
+
+    class Principal {
+        <<value object>>
+        +int account_id
+        +str username
+        +int session_id
+    }
+
+    class PasswordHasher {
+        +str algo = "scrypt"
+        +hash(password, params) tuple
+        +verify(password, salt, expected, params) bool
+        +needs_rehash(params) bool
+    }
+
+    class AuthService {
+        +__init__(db, settings, clock)
+        +register(username, password, client_ip) tuple~Principal,str~
+        +login(username, password, client_ip) tuple~Principal,str~
+        +authenticate(cookie_header) Principal
+        +logout(token_hash) void
+        +change_password(principal, old_password, new_password, client_ip) void
+        +set_password(username, new_password) void
+        +create_account(username, password) int
+        +find_account(username) int
+        +cookie_for(token, max_age) str
+        +session_info(cookie_header) dict
+        +normalize_username(raw) tuple~str,str~
+        -_check_lock(db, checks, now) void
+        -_record_failure(db, scope, key, limit, now) void
+        -_purge(db, now) void
+    }
+
+    class RateLimiter {
+        <<login_attempts 表 同库>>
+        +check(scope, key) void
+        +fail(scope, key) void
+        +clear(scope, key) void
+    }
+
+    class LegacyManager {
+        <<legacy.py>>
+        +migrate_multiuser(data_dir, confirm_v1) LegacyRecord
+        +claim(db, user_id, force) void
+        +status(db) LegacyRecord
+        +upgrade_progress(state, slot, now) tuple
+        +legacy_format_present(data_dir) bool
+        +backup_verified(src, dst_dir, prefix) Path
+    }
+
+    class LegacyRecord {
+        <<row legacy_progress>>
+        +str status
+        +int source_schema
+        +int revision
+        +int ledger_count
+        +str sha256
+        +str backup_file
+        +int claimed_by
+    }
+
+    class AdminCLI {
+        <<admin.py>>
+        +create_user(username) void
+        +reset_password(username) void
+        +backup() Path
+        +run(args, app) int
+    }
+
+    class Router {
+        <<server.py>>
+        +dispatch_full(app, method, target, headers, body, server_address, client_ip) tuple
+        +dispatch(app, method, target, headers, body, server_address) tuple
+        +check_host(headers, server_address, settings) str
+        +check_csrf(headers, host, settings) void
+        +error_body(code, message, revision, field, retry_after) dict
+    }
+
+    class GameServer {
+        <<ThreadingHTTPServer>>
+        +App app
+        +__init__(address, app)
+    }
+
+    class Handler {
+        <<BaseHTTPRequestHandler>>
+        +do_GET() void
+        +do_POST() void
+        +send(status, body, ctype, headers) void
+    }
+
+    class GameError {
+        <<rules.GameError>>
+        +str code
+        +str message
+        +int status
+        +str field
+        +int retry_after
+    }
+
+    class FrontEnd {
+        <<static/app.js>>
+        +string syncState
+        +object pending
+        +string accountName
+        +boot() void
+        +request(path, options) Response
+        +showAuthDialog(reason) void
+        +beginWrite(path, payload) void
+        +sendPending() void
+        +startReconnect() void
+        +setSync(state) void
+        +logout() void
+    }
+
+    App "1" *-- "1" Settings
+    App "1" *-- "1" Database : 单库 data/game.db
+    App "1" *-- "1" AuthService
+    App ..> Store : store_for(user_id) 每次新建
+    Store "1" --> "1" Database : 使用
+    Store ..> ProgressRepo : 唯一进度表访问
+    ProgressRepo ..> CommitOutcome : 返回
+    AuthService "1" --> "1" Database : connect()/tx()
+    AuthService ..> PasswordHasher : 使用
+    AuthService *-- RateLimiter
+    AuthService ..> Principal : 创建
+    Router ..> App : 依赖
+    Router ..> GameError : 捕获
+    AuthService ..> GameError : 抛出
+    GameServer "1" o-- "1" App
+    Handler ..> Router : 调用 dispatch_full
+    GameServer ..> Handler : 创建
+    LegacyManager ..> Database : 建库 导入待认领区
+    LegacyManager ..> ProgressRepo : 认领时 import_legacy 单事务
+    LegacyManager ..> LegacyRecord : 读写
+    AdminCLI ..> AuthService
+    AdminCLI ..> LegacyManager
+    AdminCLI ..> Database : backup()
+    FrontEnd ..> Router : HTTP JSON + Cookie

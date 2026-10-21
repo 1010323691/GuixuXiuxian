@@ -2,7 +2,8 @@
 
 (() => {
   const $ = (id) => document.getElementById(id);
-  const storageKey = "guixu.pending.v1";
+  const storageKey = "guixu.pending.v2";
+  const legacyStorageKey = "guixu.pending.v1";
   let snapshot = null;
   let busy = false;
   let pending = null;
@@ -25,7 +26,20 @@
   let selectedLootUid = "";
   let selectedDungeonKey = "";
   let newRevisionObserved = false;
-  const battleActionIds = new Set(["world_attack", "world_power", "world_defend", "world_pill", "world_fire", "world_guard", "world_soul", "world_flee"]);
+  // 账号与同步状态（密码与令牌从不进入脚本可读存储；会话 Cookie 为 HttpOnly）
+  let account = null;
+  let registrationOpen = true;
+  let authLocked = true;
+  let authMode = "login";
+  let authSubmitting = false;
+  let offline = false;
+  let syncState = "idle";
+  let lastSyncedAt = "";
+  let syncFadeTimer = 0;
+  let reconnectTimer = 0;
+  let reconnectDelay = 2000;
+  const retryDelays = [1000, 2000, 4000];
+  const battleActionIds = new Set(["world_auto_battle", "auto_battle"]);
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -77,13 +91,19 @@
   function sceneBanner(target, id) {
     const node = $(target);
     if (!node || node.dataset.scene === id) return;
+    const changed = !!node.dataset.scene;
     node.dataset.scene = id;
+    if (changed && !reducedMotion()) {
+      node.classList.remove("scene-in");
+      void node.offsetWidth;
+      node.classList.add("scene-in");
+    }
     node.innerHTML = `<svg viewBox="0 0 800 180" preserveAspectRatio="xMidYMax slice" focusable="false"><defs><linearGradient id="${target}-sky" x1="0" y1="0" x2="0" y2="1"><stop class="sb-s1" offset="0"/><stop class="sb-s2" offset="1"/></linearGradient></defs><rect width="800" height="180" fill="url(#${target}-sky)"/><circle class="sb-sun" cx="690" cy="46" r="22"/><path class="sb-cloud" d="M60 52h120M100 40h60M560 30h90M600 42h70" fill="none"/><path class="sb-far" d="M0 150 L70 88 L130 120 L200 70 L280 128 L360 92 L460 132 L560 80 L650 118 L730 84 L800 112 V180 H0Z"/><path class="sb-mid" d="M0 162 Q90 120 170 146 T340 140 T520 150 T700 132 T800 146 V180 H0Z"/>${sceneMarks[id] || sceneMarks.world}<path class="sb-near" d="M0 172 Q120 152 260 168 T560 166 T800 160 V180 H0Z"/></svg>`;
   }
 
   function actionKind(action, pageId) {
     const id = action.id || "";
-    if (action.group === "battle" || battleActionIds.has(id) || /attack|boss|dungeon|elite|arena|duel|challenge|fight|hunt|flee/.test(id) || pageId === "arena") return "combat";
+    if (action.group === "battle" || battleActionIds.has(id) || /attack|boss|dungeon|elite|arena|duel|challenge|fight|hunt/.test(id) || pageId === "arena") return "combat";
     if (pageId === "market" || /buy|sell|auction|trade|market|shop/.test(id)) return "trade";
     if (["social", "sects"].includes(pageId) || /visit|gift|talk|friend|disciple|master|family|sect/.test(id)) return "social";
     if (["craft", "estate"].includes(pageId) || /craft|alchemy|forge|array|talisman|estate|plant/.test(id)) return "craft";
@@ -113,17 +133,268 @@
   }
 
   function showBreakthrough(realm) {
+    const avatarRealm = $("realm");
+    avatarRealm.classList.remove("flash");
     if (reducedMotion()) return;
+    void avatarRealm.offsetWidth;
+    avatarRealm.classList.add("flash");
     const layer = $("fx-layer");
     layer.querySelector(".breakthrough")?.remove();
     const overlay = element("div", "breakthrough");
-    overlay.append(element("span", "breakthrough-ring"), element("strong", "breakthrough-title", `突破 · ${realm}`));
+    overlay.append(element("span", "breakthrough-ring"), element("span", "breakthrough-ring"), element("strong", "breakthrough-title", `突破 · ${realm}`));
     layer.append(overlay);
-    setTimeout(() => overlay.remove(), 1400);
+    fx.burst(innerWidth / 2, innerHeight / 2, token("--aura-7"), 64, 260);
+    setTimeout(() => overlay.remove(), 1600);
   }
 
+  /* ---------- 演出引擎：灵气粒子 · 获得飞入 · 点击涟漪（只用 transform/opacity/canvas，不改布局） ----------
+     粒子只承载信息：舞台灵气的颜色与密度随境界递进；获得飞入从被执行的事项飞向实际增加的资源。 */
+  const tokenCache = new Map();
+  function token(name) {
+    if (!tokenCache.has(name)) tokenCache.set(name, getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#E8B84A");
+    return tokenCache.get(name);
+  }
+
+  function rgb(hex) {
+    const value = hex.replace("#", "");
+    const full = value.length === 3 ? [...value].map((c) => c + c).join("") : value.padEnd(6, "0");
+    return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) || 0);
+  }
+
+  const aura = (() => {
+    const canvas = element("canvas", "aura-canvas");
+    canvas.setAttribute("aria-hidden", "true");
+    const context = canvas.getContext("2d");
+    let host = null, tier = -1, color = [63, 165, 133], width = 0, height = 0, motes = [], frameId = 0, last = 0;
+    const observer = globalThis.ResizeObserver ? new ResizeObserver(() => resize()) : null;
+    const visible = () => !!host && host.isConnected && !document.hidden && !reducedMotion() && host.getClientRects().length > 0 && !host.closest("[hidden]");
+    function mote(anywhere) {
+      const speed = 1 + tier * .09;
+      return { x: Math.random() * width, y: anywhere ? Math.random() * height : height + 4, r: .7 + Math.random() * 1.7, vy: -(5 + Math.random() * 12) * speed, vx: (Math.random() - .5) * 5, phase: Math.random() * 6.283, twinkle: 1.2 + Math.random() * 2 };
+    }
+    function seed() {
+      const count = Math.round(Math.max(8, Math.min(42, width * height / 8000)) * (.55 + tier * .07));
+      motes = Array.from({ length: count }, () => mote(true));
+    }
+    function resize() {
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      const ratio = Math.min(1.5, globalThis.devicePixelRatio || 1);
+      canvas.width = Math.max(1, Math.round(width * ratio));
+      canvas.height = Math.max(1, Math.round(height * ratio));
+      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+      seed();
+      start();
+    }
+    function frame(now) {
+      frameId = 0;
+      if (!context || !visible()) { context?.clearRect(0, 0, width, height); return; }
+      if (now - last < 32) { frameId = requestAnimationFrame(frame); return; }
+      const dt = Math.min(.07, (now - last) / 1000);
+      last = now;
+      context.clearRect(0, 0, width, height);
+      const [r, g, b] = color;
+      for (const m of motes) {
+        m.phase += dt * m.twinkle;
+        m.x += (m.vx + Math.sin(m.phase) * 3) * dt;
+        m.y += m.vy * dt;
+        if (m.y < -6 || m.x < -6 || m.x > width + 6) Object.assign(m, mote(false));
+        const fade = Math.min(1, m.y / (height * .35));
+        const alpha = (.35 + .4 * Math.sin(m.phase) ** 2) * Math.max(0, fade);
+        context.fillStyle = `rgba(${r},${g},${b},${alpha * .22})`;
+        context.beginPath(); context.arc(m.x, m.y, m.r * 3.2, 0, 6.283); context.fill();
+        context.fillStyle = `rgba(255,253,240,${alpha})`;
+        context.beginPath(); context.arc(m.x, m.y, m.r * .8, 0, 6.283); context.fill();
+        context.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        context.beginPath(); context.arc(m.x, m.y, m.r * 1.3, 0, 6.283); context.fill();
+      }
+      frameId = requestAnimationFrame(frame);
+    }
+    function start() {
+      if (!frameId && visible()) { last = performance.now(); frameId = requestAnimationFrame(frame); }
+    }
+    function mount(nextHost, nextTier) {
+      if (!nextHost || !context) return;
+      if (host !== nextHost) {
+        if (host) observer?.unobserve(host);
+        host = nextHost;
+        const banner = host.querySelector(":scope > .scene-banner");
+        if (banner) banner.after(canvas); else host.prepend(canvas);
+        observer?.observe(host);
+        resize();
+      }
+      if (tier !== nextTier) {
+        tier = nextTier;
+        color = rgb(token(`--aura-${Math.max(0, Math.min(8, tier))}`));
+        seed();
+      }
+      start();
+    }
+    document.addEventListener("visibilitychange", start);
+    return { mount, start };
+  })();
+
+  const fx = (() => {
+    const canvas = element("canvas", "fx-canvas");
+    canvas.setAttribute("aria-hidden", "true");
+    const context = canvas.getContext("2d");
+    let flights = [], sparks = [], frameId = 0, last = 0, ratio = 1;
+    function fit() {
+      ratio = Math.min(1.5, globalThis.devicePixelRatio || 1);
+      canvas.width = Math.round(innerWidth * ratio);
+      canvas.height = Math.round(innerHeight * ratio);
+      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    function ensure() {
+      if (!context || reducedMotion()) return false;
+      if (!canvas.isConnected) { $("fx-layer").prepend(canvas); fit(); }
+      if (canvas.width !== Math.round(innerWidth * ratio)) fit();
+      if (!frameId) { last = performance.now(); frameId = requestAnimationFrame(frame); }
+      return true;
+    }
+    function frame(now) {
+      frameId = 0;
+      const dt = Math.min(.05, (now - last) / 1000);
+      last = now;
+      context.clearRect(0, 0, innerWidth, innerHeight);
+      flights = flights.filter((p) => {
+        p.t += dt;
+        const k = Math.max(0, Math.min(1, (p.t - p.delay) / p.duration));
+        if (k <= 0) return true;
+        const e = k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+        const x = (1 - e) ** 2 * p.x0 + 2 * (1 - e) * e * p.cx + e * e * p.x1;
+        const y = (1 - e) ** 2 * p.y0 + 2 * (1 - e) * e * p.cy + e * e * p.y1;
+        const [r, g, b] = p.color;
+        context.fillStyle = `rgba(${r},${g},${b},.25)`;
+        context.beginPath(); context.arc(x, y, p.size * 2.6, 0, 6.283); context.fill();
+        context.fillStyle = `rgba(${r},${g},${b},1)`;
+        context.beginPath(); context.arc(x, y, p.size, 0, 6.283); context.fill();
+        if (k >= 1) { p.arrive?.(); return false; }
+        return true;
+      });
+      sparks = sparks.filter((s) => {
+        s.life -= dt;
+        if (s.life <= 0) return false;
+        s.vy += 140 * dt;
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        const [r, g, b] = s.color;
+        context.fillStyle = `rgba(${r},${g},${b},${Math.min(1, s.life / s.span * 1.4)})`;
+        context.beginPath(); context.arc(s.x, s.y, s.size * (s.life / s.span), 0, 6.283); context.fill();
+        return true;
+      });
+      if (flights.length || sparks.length) frameId = requestAnimationFrame(frame);
+    }
+    function burst(x, y, hex, count = 16, power = 120) {
+      if (!ensure()) return;
+      const color = rgb(hex);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * 6.283;
+        const speed = power * (.35 + Math.random() * .65);
+        const span = .5 + Math.random() * .6;
+        sparks.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - power * .3, life: span, span, size: 1.5 + Math.random() * 2.2, color });
+      }
+    }
+    function fly(from, to, hex, count, arrive) {
+      if (!ensure()) { arrive?.(); return; }
+      const color = rgb(hex);
+      let arrived = false;
+      for (let i = 0; i < count; i++) {
+        const x0 = from.x + (Math.random() - .5) * 24, y0 = from.y + (Math.random() - .5) * 12;
+        const x1 = to.x + (Math.random() - .5) * 8, y1 = to.y + (Math.random() - .5) * 6;
+        const lift = Math.min(160, Math.abs(x1 - x0) * .25 + 60);
+        flights.push({ t: 0, delay: i * .035, duration: .62 + Math.random() * .22, x0, y0, x1, y1, cx: (x0 + x1) / 2 + (Math.random() - .5) * 120, cy: Math.min(y0, y1) - lift, size: 1.8 + Math.random() * 1.6, color, arrive: () => { if (!arrived) { arrived = true; arrive?.(); } } });
+      }
+    }
+    addEventListener("resize", () => { if (canvas.isConnected) fit(); });
+    return { burst, fly };
+  })();
+
+  function resourceColor(id) {
+    if (/hp/.test(id)) return token("--hp");
+    if (/mp/.test(id)) return token("--mp");
+    if (/xp|cultivation/.test(id)) return token("--aura-7");
+    if (/stone|spirit|coin/.test(id)) return token("--gold-400");
+    return token("--jade-500");
+  }
+
+  function pulse(node) {
+    if (!node) return;
+    node.classList.remove("pulse");
+    void node.offsetWidth;
+    node.classList.add("pulse");
+    setTimeout(() => node.classList.remove("pulse"), 760);
+  }
+
+  function animate(node, className) {
+    if (!node || reducedMotion()) return;
+    node.classList.remove(className);
+    void node.offsetWidth;
+    node.classList.add(className);
+    clearTimeout(node.animateTimer);
+    node.animateTimer = setTimeout(() => node.classList.remove(className), 700);
+  }
+
+  function celebrate(source, gains) {
+    if (!source || reducedMotion()) return;
+    const from = { x: source.left + source.width / 2, y: source.top + source.height / 2 };
+    fx.burst(from.x, from.y, token("--gold-400"), 14, 110);
+    for (const id of gains) {
+      const target = [...document.querySelectorAll(".resource")].find((node) => node.dataset.id === id);
+      const rect = target?.getBoundingClientRect();
+      if (!rect?.width) continue;
+      fx.fly(from, { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }, resourceColor(id), 9, () => pulse(target));
+    }
+  }
+
+  /* 点击涟漪：只加在自身裁切溢出的控件上，不影响分页测量 */
+  document.addEventListener("pointerdown", (event) => {
+    const target = event.target.closest?.("button, .world-action.has-fields > summary");
+    if (!target || target.disabled || reducedMotion() || getComputedStyle(target).overflow !== "hidden") return;
+    const rect = target.getBoundingClientRect();
+    const ripple = element("span", "ripple");
+    ripple.setAttribute("aria-hidden", "true");
+    ripple.style.left = `${event.clientX - rect.left}px`;
+    ripple.style.top = `${event.clientY - rect.top}px`;
+    ripple.style.setProperty("--ripple-scale", String(Math.ceil(Math.hypot(rect.width, rect.height) / 6)));
+    target.append(ripple);
+    setTimeout(() => ripple.remove(), 560);
+  }, { passive: true });
+
+  let lastGains = [];
+  let pressed = null;
+  let writeSource = null;
+  document.addEventListener("pointerdown", (event) => {
+    const node = event.target.closest?.("button");
+    if (node) pressed = { node, at: performance.now() };
+  }, { passive: true, capture: true });
+  document.addEventListener("keydown", (event) => {
+    if ((event.key === "Enter" || event.key === " ") && event.target.matches?.("button")) pressed = { node: event.target, at: performance.now() };
+  }, true);
+
+  /* 成功回执：被执行的事项金光一闪，获得的资源由此飞入 HUD */
+  function celebrateWrite(source) {
+    if (!source) return;
+    let card = null;
+    if (source.key) {
+      const form = [...document.querySelectorAll(".world-action-form")].find((node) => node.dataset.actionKey === source.key);
+      const button = [...document.querySelectorAll(".action-button")].find((node) => node.dataset.actionKey === source.key);
+      card = form?.closest(".world-action") || button?.closest(".action-row") || null;
+    }
+    const rect = card?.getClientRects().length ? card.getBoundingClientRect() : source.rect;
+    if (card && !reducedMotion()) {
+      card.classList.remove("just-done");
+      void card.offsetWidth;
+      card.classList.add("just-done");
+      setTimeout(() => card.classList.remove("just-done"), 1500);
+    }
+    celebrate(rect, lastGains);
+  }
   function floatNumbers(resources) {
     const current = new Map(resources.map((resource) => [resource.id, Number(resource.value)]));
+    lastGains = [];
     if (previousResourceValues && !reducedMotion()) {
       for (const [id, value] of current) {
         const before = previousResourceValues.get(id);
@@ -131,6 +402,7 @@
         const host = [...document.querySelectorAll(".resource")].find((node) => node.dataset.id === id);
         if (!host) continue;
         const delta = Math.round((value - before) * 1000) / 1000;
+        if (delta > 0) lastGains.push(id);
         const float = element("span", `float-num ${delta > 0 ? "gain" : "loss"}`, `${delta > 0 ? "+" : ""}${delta}`);
         float.setAttribute("aria-hidden", "true");
         host.append(float);
@@ -138,6 +410,29 @@
       }
     }
     previousResourceValues = current;
+  }
+
+  /* 槽位：新旧值之间平滑过渡；减少时保留泥金残影，提示本次损失量 */
+  function setMeter(meter, percent, previousPercent) {
+    let fill = meter.querySelector(":scope > span:not(.meter-ghost)");
+    if (!fill) { fill = element("span"); meter.append(fill); }
+    let ghost = meter.querySelector(":scope > .meter-ghost");
+    if (!ghost) { ghost = element("span", "meter-ghost"); meter.prepend(ghost); }
+    const start = Number.isFinite(previousPercent) ? previousPercent : percent;
+    if (reducedMotion() || start === percent) {
+      fill.style.width = ghost.style.width = `${percent}%`;
+      return;
+    }
+    if (!fill.style.width) { fill.style.width = `${start}%`; ghost.style.width = `${Math.max(start, percent)}%`; }
+    else ghost.style.width = `${Math.max(start, percent)}%`;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      fill.style.width = `${percent}%`;
+      ghost.style.width = `${percent}%`;
+    }));
+  }
+
+  function meterPercent(value, max) {
+    return max > 0 ? Math.max(0, Math.min(100, value / max * 100)) : 0;
   }
 
   function syncHudHeight() {
@@ -193,7 +488,7 @@
   }
 
   /* ---------- 一屏翻页：内容超出区域时分页，绝不出现滚动条 ---------- */
-  const atomic = ".manual-save, .world-action, .r3-goal, .r4-story, .world-data-row, .r3-compare-row, .r3-slot, .r4-credit-strip, .tracked-quest, .action-row, li, .world-page-stats, .field-pair, .r3-battle-statuses, form, p, h3, h4, label, select, button, input, details";
+  const atomic = ".world-action, .r3-goal, .r4-story, .world-data-row, .r3-compare-row, .r3-slot, .r4-credit-strip, .tracked-quest, .action-row, li, .world-page-stats, .field-pair, .r3-battle-statuses, form, p, h3, h4, label, select, button, input, details";
   const pagers = new Map();
   let flipAt = 0;
 
@@ -352,6 +647,7 @@
     const hadFocus = pager.region.contains(document.activeElement);
     pager.page = target;
     showPage(pager);
+    animate(pager.region, delta > 0 ? "turn-next" : "turn-prev");
     if (hadFocus) (delta > 0 ? pager.next : pager.prev).focus({ preventScroll: true });
   }
 
@@ -439,8 +735,10 @@
   }
 
   function applyStageTab(key, focusNode) {
+    const changed = stageTabs.get(selectedWorldPage) !== key;
     stageTabs.set(selectedWorldPage, key);
     const panelName = activePanelName(key);
+    if (changed) animate(document.querySelector(`[data-stage-panel="${panelName}"]`), "panel-in");
     document.querySelectorAll("[data-stage-panel]").forEach((panel) => panel.classList.toggle("tab-off", panel.dataset.stagePanel !== panelName));
     for (const section of $("r3-page-context").children) section.classList.toggle("tab-off", `ctx:${section.dataset.tabKey}` !== key);
     $("stage-tabs").querySelectorAll("[data-stage-tab]").forEach((tab) => {
@@ -484,7 +782,11 @@
     if (target.scrollTop || target.scrollLeft) { target.scrollTop = 0; target.scrollLeft = 0; }
   }, true);
 
+  let noticeTimer = 0;
   function notice(message, kind = "", retry = false, refresh = false) {
+    clearTimeout(noticeTimer);
+    // 成功回执 6 秒后自动收起（文字保留供读屏回看），错误与待确认提示保持常驻直到下一次操作
+    if (message && kind === "success") noticeTimer = setTimeout(() => { $("notice").hidden = true; }, 6000);
     $("notice").hidden = !message;
     $("notice").className = `notice ${kind}`;
     $("notice-text").textContent = message;
@@ -494,17 +796,14 @@
   }
 
   function updateControls() {
-    const locked = busy || !!pending || !snapshot || !storageAvailable;
+    const locked = busy || !!pending || !snapshot || !storageAvailable || offline || authLocked;
     const exists = !!snapshot?.view?.character;
-    $("save-button").textContent = isLonglineWorld() ? "保存位置" : "手动存档";
-    $("load-button").textContent = isLonglineWorld() ? "返回检查点" : "载入手札";
-    $("save-button").disabled = locked || !exists;
-    $("load-button").disabled = locked || !snapshot?.save?.exists;
-    $("load-button").title = snapshot?.save?.exists ? savePolicy() : "尚无手动存档";
     $("new-button").disabled = locked || !exists;
     $("create-button").disabled = locked;
     $("retry-button").disabled = busy || !pending;
-    $("refresh-button").disabled = busy;
+    $("refresh-button").disabled = busy || authLocked;
+    $("logout-button").disabled = busy;
+    $("password-button").disabled = busy || offline;
     $("name").disabled = locked;
     $("mode").disabled = locked;
     document.querySelectorAll(".action-button").forEach((button) => {
@@ -514,7 +813,6 @@
       control.disabled = locked || control.dataset.enabled !== "true";
     });
     $("main").setAttribute("aria-busy", String(busy));
-    $("save-status").textContent = busy ? "正在落笔…" : pending ? "操作结果尚未确认" : !snapshot ? "尚未读取进度" : snapshot.view.character ? "当前进度已自动保存" : "等待写下第一笔";
   }
 
   function renderResources(resources) {
@@ -536,13 +834,21 @@
         meter.setAttribute("aria-valuemax", String(resource.max));
         meter.setAttribute("aria-valuenow", String(Math.max(0, Math.min(resource.max, resource.value))));
         meter.setAttribute("aria-valuetext", `${resource.label} ${resource.value} / ${resource.max}`);
-        const fill = element("span");
-        fill.style.width = `${resource.max > 0 ? Math.max(0, Math.min(100, resource.value / resource.max * 100)) : 0}%`;
-        meter.append(fill);
         wrapper.append(meter);
+        $("resources").append(wrapper);
+        const before = previousResourceValues?.get(resource.id);
+        setMeter(meter, meterPercent(resource.value, resource.max), Number.isFinite(before) ? meterPercent(before, resource.max) : undefined);
+        meter.classList.toggle("low", /hp/.test(resource.id) && resource.max > 0 && resource.value / resource.max < .3);
+        continue;
       }
       $("resources").append(wrapper);
     }
+  }
+
+  function setBattleMeter(meter, hp, max) {
+    const previous = parseFloat(meter.querySelector(":scope > span:not(.meter-ghost)")?.style.width);
+    setMeter(meter, meterPercent(hp, max), Number.isFinite(previous) ? previous : undefined);
+    meter.classList.toggle("low", max > 0 && hp / max < .3);
   }
 
   function renderActions(actions) {
@@ -553,14 +859,23 @@
     if (snapshot.view.phase !== "battle") {
       const navigation = $("action-tabs");
       navigation.setAttribute("aria-label", "选择行动分类");
-      for (const [key, label] of [["cultivation", "修行 · 养身问道"], ["exploration", "游历 · 寻缘历练"], ["travel", "山海 · 择地而行"], ["trade", "行囊 · 以物济行"]]) {
+      const place = snapshot.view.location?.name || "此地";
+      // 标签只写"这一栏能做什么"：地区=换地方，首领=打架，其余为日常。
+      for (const [key, label, title, hint] of [
+        ["cultivation", "修炼", "修炼 · 突破境界、调息、炼丹、研习功法", "突破境界、静养调息、炼丹、研习功法"],
+        ["exploration", "探索", `探索 · 在${place}采集药草、探访寻宝`, "采集药草、探访此地获得灵石"],
+        ["travel", "地区", `地区 · 现在身处${place}，可前往其他地方`, "切换所在地区，境界足够才能前往更深处"],
+        ["challenge", "首领", `首领 · ${place}的妖兽与守关者`, "挑战当地妖兽与首领，首胜是突破的前提"],
+        ["trade", "买卖", "买卖 · 出售药草、购买回春丹", "用药草与灵石买卖物资"],
+      ]) {
         const group = element("section", `action-group group-${key}`);
         group.id = `group-${key}`;
         group.hidden = key !== selectedGroup;
-        group.append(element("h3", "action-group-title", label));
+        group.append(element("h3", "action-group-title", title));
         groups.set(key, group);
         group.dataset.pageGroup = "";
-        const choice = element("button", "group-button stage-tab", label.split(" · ")[0]);
+        const choice = element("button", "group-button stage-tab", label);
+        choice.title = hint;
         choice.type = "button";
         choice.dataset.group = key;
         choice.setAttribute("aria-pressed", String(key === selectedGroup));
@@ -578,7 +893,7 @@
       }
     }
     for (const [index, action] of actions.entries()) {
-      const row = element("div", "action-row");
+      const row = element("div", `action-row${action.group === "battle" || battleActionIds.has(action.id) ? " battle-row" : ""}`);
       const copy = element("div", "action-copy");
       const title = element("h4", "action-title", action.label);
       title.id = `action-title-${index}`;
@@ -591,7 +906,9 @@
       reason.id = `action-reason-${index}`;
       reason.hidden = action.enabled;
       copy.append(reason);
-      const button = element("button", `action-button${action.primary ? " primary" : ""}`, action.label);
+      const button = element("button", `action-button${action.primary ? " primary" : ""}`);
+      button.append(element("span", "btn-label", action.group === "battle" || battleActionIds.has(action.id) ? "出手" : action.id === "challenge" ? "迎战" : action.id === "travel" ? "前往" : "施行"));
+      button.setAttribute("aria-label", action.label);
       button.type = "button";
       button.dataset.enabled = String(action.enabled);
       button.dataset.action = action.id;
@@ -600,16 +917,21 @@
       button.setAttribute("aria-describedby", reason.id);
       button.addEventListener("click", () => beginWrite("/api/action", { action: action.id, params: action.params }));
       row.append(copy, button);
-      const fallback = ["buy_pill", "sell_herbs"].includes(action.id) ? "trade" : action.id === "travel" ? "travel" : ["explore", "gather", "challenge"].includes(action.id) ? "exploration" : "cultivation";
+      const fallback = ["buy_pill", "sell_herbs"].includes(action.id) ? "trade" : action.id === "travel" ? "travel" : action.id === "challenge" ? "challenge" : ["explore", "gather"].includes(action.id) ? "exploration" : "cultivation";
       const group = groups.get(action.group) || groups.get(fallback);
       if (action.id === "world_enter") {
         row.classList.add("world-entry-action");
+        row.hidden = !action.enabled;  // 序章未完成时不占位：目标栏已说明条件，避免每个标签顶着一张锁住的卡
         if (action.enabled) button.classList.add("primary");
         $("actions").prepend(row);
       } else if (group) group.append(row);
       else $("actions").append(row);
     }
-    for (const group of groups.values()) if (group.children.length > 1) $("actions").append(group);
+    for (const [key, group] of groups) {
+      if (group.children.length > 1) $("actions").append(group);
+      // 修为圆满、可以突破时，在「修炼」标签上亮一点提示
+      $("action-tabs").querySelector(`[data-group="${key}"]`)?.classList.toggle("ready", !!group.querySelector('.action-button.primary[data-action="breakthrough"]:not([data-enabled="false"])'));
+    }
     if (!actions.length) $("actions").append(element("p", "muted", "此刻暂无可执行的行动。"));
     updateControls();
     paginate(pagers.get("journey"));
@@ -644,10 +966,6 @@
     return snapshot?.view.profile?.mode === "longline" && snapshot?.view.world?.active === true;
   }
 
-  function savePolicy() {
-    return snapshot?.view.profile?.load_policy || (isLonglineWorld() ? "长线位置检查点：只恢复安全位置，成长、境界、资产、物品及奖励权益不回退。完整进度由自动保存与重启恢复。" : "自由行动/序章存档：载入恢复整个世界快照，版本与请求记录不回退。");
-  }
-
   function growthNumber(value) {
     return new Intl.NumberFormat("zh-CN", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(value);
   }
@@ -675,7 +993,7 @@
     }
     if (growth.migrated_from) {
       const line = element("div", "world-data-row");
-      line.append(element("dt", "", "旧档衔接"), element("dd", "", "已保留境界与资产；未封界阶段按新版目标保留完成比例，迁移时已封界的潜修储备保持原余额。"));
+      line.append(element("dt", "", "旧版进度衔接"), element("dd", "", "已保留境界与资产；未封界阶段按新版目标保留完成比例，迁移时已封界的潜修储备保持原余额。"));
       sources.append(line);
     }
     $("growth-sources").replaceChildren(sources);
@@ -923,7 +1241,7 @@
     }
     if (["exploration", "world"].includes(selectedWorldPage) && loot.boss) {
       const boss = loot.boss;
-      const section = contextSection("世界Boss · 十二回合试锋", "本地NPC模拟 · 不要求击杀。每期最多3次正式挑战，取单场最佳，不累计多场伤害；奖励只补已得权益的差额。 ", "首领");
+      const section = contextSection("世界Boss · 十二回合试锋", "NPC模拟 · 不要求击杀。每期最多3次正式挑战，取单场最佳，不累计多场伤害；奖励只补已得权益的差额。 ", "首领");
       section.dataset.context = "world-boss";
       section.append(contextRows([{ label: "本期", value: boss.encounter }, { label: "正式尝试", value: boss.attempts }, { label: "本次有效伤害", value: boss.current_damage }, { label: "个人单场最佳", value: boss.best }, { label: "本期参考伤害", value: boss.reference }, { label: "已领奖权益", value: boss.paid }, { label: "下一档 / 差额", value: boss.next }, { label: "结算与封顶", value: boss.status }]));
       root.append(section);
@@ -1083,8 +1401,10 @@
   function selectWorldPage(id) {
     if (!snapshot?.view.world?.pages.some((page) => page.id === id)) return;
     const navigationFocused = !!document.activeElement?.dataset.worldPage;
+    const changed = selectedWorldPage !== id;
     selectedWorldPage = id;
     renderWorld(snapshot.view.world);
+    if (changed) animate(document.querySelector(".world-page-heading .stage-copy"), "copy-in");
     if (navigationFocused) [...document.querySelectorAll("[data-world-page]")].find((button) => button.dataset.worldPage === id)?.focus({ preventScroll: true });
   }
 
@@ -1164,7 +1484,9 @@
       form.append(fieldWrapper);
       controls.push({ field, control });
     }
-    const submit = element("button", `world-write world-submit${action.primary ? " primary-button" : " secondary-button"}`, action.label);
+    const submit = element("button", `world-write world-submit${action.primary ? " primary-button" : " secondary-button"}`);
+    submit.append(element("span", "btn-label", fields.length ? action.label : battleActionIds.has(action.id) || action.group === "battle" ? "出手" : "施行"));
+    if (!fields.length) submit.setAttribute("aria-label", action.label);
     submit.type = "submit";
     submit.dataset.enabled = String(action.enabled && !conflict);
     submit.dataset.action = action.id;
@@ -1296,7 +1618,7 @@
       battleMeter.setAttribute("aria-valuemin", "0");
       battleMeter.setAttribute("aria-valuemax", String(world.battle.max_hp));
       battleMeter.setAttribute("aria-valuenow", String(world.battle.hp));
-      battleMeter.firstElementChild.style.width = `${world.battle.max_hp > 0 ? Math.max(0, Math.min(100, world.battle.hp / world.battle.max_hp * 100)) : 0}%`;
+      setBattleMeter(battleMeter, world.battle.hp, world.battle.max_hp);
       $("world-battle-counterplay").textContent = world.battle.counterplay || "";
       $("world-battle-statuses").replaceChildren(...(world.battle.statuses || []).map((status) => {
         const line = element("div");
@@ -1315,8 +1637,7 @@
     }
     $("world-quests-link").hidden = !quests;
     $("world-recent-logs").replaceChildren(...[...(snapshot.view.logs || [])].reverse().slice(0, 16).map(logItem));
-    $("world-slot-summary").textContent = snapshot.save?.summary || "尚未留下手动存档。";
-    $("world-save-semantics").textContent = savePolicy();
+    $("world-slot-summary").textContent = `${snapshot.sync?.summary || "尚未开始修行。"}${lastSyncedAt ? ` · 最近同步 ${lastSyncedAt}` : ""}`;
     $("legacy-history").hidden = !historyVisible;
     $("legacy-history-title").textContent = snapshot.view.ending?.title || "归墟序章";
     $("legacy-history-text").textContent = snapshot.view.ending?.text || "从初入山村，到平定归墟，这段经历已成为你的来路。";
@@ -1344,10 +1665,12 @@
   }
 
   function render(data) {
-    if (!data || data.ok !== true || !Number.isInteger(data.revision) || !data.view) throw new Error("服务返回的手札格式不完整。");
+    if (!data || data.ok !== true || !Number.isInteger(data.revision) || !data.view) throw new Error("服务返回的进度格式不完整。");
     if (snapshot && data.revision < snapshot.revision) return;
     const previousBattle = snapshot?.view.world?.battle;
     snapshot = data;
+    lastSyncedAt = clockText(data.sync?.saved_at);
+    if (syncState !== "synced") setSync("synced");
     newRevisionObserved = false;
     $("growth-update-button").hidden = true;
     const view = data.view;
@@ -1381,8 +1704,9 @@
       $("objective").textContent = view.objective;
       $("location-name").textContent = view.location?.name || "修行途中";
       $("location-description").textContent = view.location?.description || "";
+      $("location-description").title = view.location?.description || "";
       $("scene-kicker").textContent = view.phase === "battle" ? "此刻 · 狭路相逢" : "此刻 · 身之所在";
-      $("actions-title").textContent = view.phase === "battle" ? "一招一式，皆有抉择" : "接下来，如何行道";
+      $("actions-title").textContent = view.phase === "battle" ? "自动斗法 · 择定策略" : "接下来，如何行道";
       renderResources(view.resources);
       floatNumbers(view.resources);
       const logs = view.logs || [];
@@ -1405,7 +1729,7 @@
         meter.setAttribute("aria-valuemin", "0");
         meter.setAttribute("aria-valuemax", String(battle.max_hp));
         meter.setAttribute("aria-valuenow", String(battle.hp));
-        meter.firstElementChild.style.width = `${battle.max_hp > 0 ? Math.max(0, Math.min(100, battle.hp / battle.max_hp * 100)) : 0}%`;
+        setBattleMeter(meter, battle.hp, battle.max_hp);
       }
       $("ending").hidden = !view.ending;
       if (view.ending) {
@@ -1414,14 +1738,45 @@
         $("ending-text").title = view.ending.text;
       }
     }
-    $("slot-summary").textContent = data.save?.summary || "尚未留下手动存档。";
     anchorGrowth(view.growth);
     updateControls();
     syncHudHeight();
+    const auraHost = view.phase === "creation" ? $("creation") : worldActive ? document.querySelector(".world-page-heading") : document.querySelector(".journey > .scene");
+    aura.mount(auraHost, realmTier($("realm").textContent));
+    scheduleQi();
   }
 
+  // 序章吐纳由服务端按时间结算：每隔一个周期静默读取一次，只刷新修为与目标；
+  // 若可执行的行动因此变化（如修为圆满可突破）才整体重绘，避免打断悬停与焦点。
+  let qiTimer = 0;
+  function scheduleQi() {
+    clearTimeout(qiTimer);
+    const qi = snapshot?.view?.qi;
+    if (!qi || qi.value >= qi.cap || snapshot.view.world?.active || authLocked) return;
+    qiTimer = setTimeout(softRefresh, Math.max(1, qi.next_in ?? qi.seconds) * 1000 + 200);
+  }
+
+  async function softRefresh() {
+    if (document.hidden || busy || pending || offline || authLocked || $("confirm-dialog").open) { scheduleQi(); return; }
+    const requestedRevision = snapshot.revision;
+    try {
+      const { response, data } = await request("/api/state");
+      if (response.ok && data.ok && !busy && !pending && snapshot.revision === requestedRevision && data.revision === requestedRevision && data.view.qi) {
+        const same = data.view.phase === snapshot.view.phase && JSON.stringify(data.view.actions) === JSON.stringify(snapshot.view.actions);
+        if (same) {
+          snapshot = data;
+          $("objective").textContent = data.view.objective;
+          renderResources(data.view.resources);
+          floatNumbers(data.view.resources);
+        } else render(data);
+      }
+    } catch (_) { /* 静默刷新失败无妨，下一轮再试 */ }
+    scheduleQi();
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleQi(); });
+
   async function refreshGrowth() {
-    if (growthRefreshing || busy || pending || !snapshot?.view.growth?.active || document.hidden || $("confirm-dialog").open) return;
+    if (growthRefreshing || busy || pending || offline || authLocked || !snapshot?.view.growth?.active || document.hidden || $("confirm-dialog").open) return;
     growthRefreshing = true;
     const requestedRevision = snapshot.revision;
     try {
@@ -1479,31 +1834,353 @@
     }
   }
 
-  async function request(path, options = {}) {
+  class AuthError extends Error {
+    constructor(code, message) {
+      super(message);
+      this.name = "AuthError";
+      this.code = code;
+    }
+  }
+
+  const accountKey = (name) => String(name || "").normalize("NFKC").toLowerCase();
+  const postHeaders = { "Content-Type": "application/json", "X-Game-Client": "guixu-web" };
+
+  function clockText(value) {
+    const parsed = value ? new Date(value) : new Date();
+    const date = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    return [date.getHours(), date.getMinutes(), date.getSeconds()].map((part) => String(part).padStart(2, "0")).join(":");
+  }
+
+  const syncTexts = {
+    idle: "尚未开始修行",
+    syncing: "进度同步中…",
+    retrying: "同步失败，正在重试…",
+    offline: "网络中断，正在重连…",
+    failed: "进度保存失败，请稍后重试，当前操作未生效",
+    auth: "请先登录",
+  };
+
+  /** 更新顶栏同步状态指示；synced 约 3 秒后淡化为常驻小标记。 */
+  function setSync(state, text) {
+    clearTimeout(syncFadeTimer);
+    syncState = state;
+    const node = $("save-status");
+    node.dataset.state = state;
+    node.dataset.fade = "0";
+    node.textContent = text || (state === "synced" ? `进度已同步 · ${lastSyncedAt || clockText()}` : syncTexts[state]);
+    node.title = node.textContent;
+    if (state === "synced") {
+      syncFadeTimer = setTimeout(() => {
+        node.dataset.fade = "1";
+        node.textContent = "进度已同步";
+      }, 3000);
+    }
+  }
+
+  function setAccount(name) {
+    account = name;
+    $("account-button").hidden = !name;
+    $("account-name").textContent = name || "";
+    $("account-button").title = name ? `账号：${name}` : "";
+    $("account-button").setAttribute("aria-label", name ? `账号：${name}` : "账号");
+    if (!name) toggleAccountMenu(false);
+  }
+
+  function networkError(cause) {
+    const error = new Error(cause?.name === "AbortError" ? "服务响应超时" : "网络中断");
+    error.network = true;
+    return error;
+  }
+
+  /**
+   * 统一请求入口。raw: 不拦截 401（登录/注册/会话探测自行处理）；
+   * quiet: 网络错误只抛出，不进入全局断线重连（登录对话框内自行提示）。
+   */
+  async function request(path, options = {}, { raw = false, quiet = false } = {}) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
+    let response;
+    let data;
     try {
-      const response = await fetch(path, { ...options, signal: controller.signal, cache: "no-store" });
-      const data = await response.json();
-      if (typeof data.ok !== "boolean") throw new Error("无法识别服务响应。");
-      return { response, data };
+      response = await fetch(path, { ...options, signal: controller.signal, cache: "no-store", credentials: "same-origin" });
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = { ok: false };
+      }
+    } catch (cause) {
+      if (!quiet) markOffline();
+      throw networkError(cause);
     } finally {
       clearTimeout(timeout);
+    }
+    if (offline && !quiet) restoreOnline();
+    if (!raw && response.status === 401) {
+      handleUnauthorized(data?.error?.code);
+      throw new AuthError(data?.error?.code || "AUTH_REQUIRED", data?.error?.message || "请先登录。");
+    }
+    if (typeof data.ok !== "boolean" && response.ok) throw new Error("无法识别服务响应。");
+    return { response, data };
+  }
+
+  /* ---------- 断线重连 ---------- */
+  function markOffline() {
+    if (offline) return;
+    offline = true;
+    reconnectDelay = 2000;
+    setSync("offline");
+    notice("网络中断，正在重连…", "error", false, false);
+    scheduleReconnect(false);
+  }
+
+  function restoreOnline() {
+    offline = false;
+    clearTimeout(reconnectTimer);
+  }
+
+  function scheduleReconnect(immediate) {
+    clearTimeout(reconnectTimer);
+    const wait = immediate ? 0 : reconnectDelay * (0.8 + Math.random() * 0.4);
+    reconnectDelay = Math.min(10000, reconnectDelay * 2);
+    reconnectTimer = setTimeout(probeConnection, wait);
+  }
+
+  async function probeConnection() {
+    if (!offline) return;
+    let data;
+    try {
+      ({ data } = await request("/api/session", {}, { raw: true, quiet: true }));
+    } catch (_) {
+      scheduleReconnect(false);
+      return;
+    }
+    restoreOnline();
+    notice("");
+    await applySession(data);
+    if (pending && !authLocked && snapshot) await sendPending();
+  }
+
+  /* ---------- 登录 / 会话 ---------- */
+  function handleUnauthorized(code) {
+    clearTimeout(qiTimer);
+    showAuth(code === "SESSION_EXPIRED" ? "登录已过期，请重新登录" : "请先登录");
+  }
+
+  function applyAuthMode(mode) {
+    authMode = mode === "register" && registrationOpen ? "register" : "login";
+    const registering = authMode === "register";
+    document.querySelectorAll("[data-auth-tab]").forEach((tab) => {
+      tab.setAttribute("aria-selected", String(tab.dataset.authTab === authMode));
+      if (tab.dataset.authTab === "register") tab.hidden = !registrationOpen;
+    });
+    $("auth-kicker").textContent = registering ? "注 册" : "登 录";
+    $("auth-submit").textContent = registering ? "注册并进入" : "登录";
+    $("auth-password").autocomplete = registering ? "new-password" : "current-password";
+    $("auth-username-hint").hidden = !registering;
+    $("auth-password-hint").hidden = !registering;
+    $("auth-confirm-label").hidden = !registering;
+    $("auth-confirm").hidden = !registering;
+    clearAuthErrors();
+  }
+
+  function fieldMessage(id, message) {
+    const node = $(id);
+    node.textContent = message || "";
+    node.hidden = !message;
+    const input = $(id.replace(/-error$/, ""));
+    if (input) input.setAttribute("aria-invalid", String(!!message));
+  }
+
+  function clearAuthErrors() {
+    for (const id of ["auth-username-error", "auth-password-error", "auth-confirm-error"]) fieldMessage(id, "");
+    $("auth-error").hidden = true;
+  }
+
+  function showAuth(message) {
+    authLocked = true;
+    toggleAccountMenu(false);
+    setSync("auth", message === "登录已过期，请重新登录" ? message : "请先登录");
+    updateControls();
+    const dialog = $("auth-dialog");
+    if ($("password-dialog").open) $("password-dialog").close();
+    if (dialog.open) return;
+    applyAuthMode(authMode);
+    $("auth-error").textContent = message || "";
+    $("auth-error").hidden = !message;
+    $("auth-password").value = "";
+    $("auth-confirm").value = "";
+    dialog.showModal();
+    $("auth-username").focus();
+  }
+
+  function setAuthBusy(value) {
+    authSubmitting = value;
+    for (const id of ["auth-username", "auth-password", "auth-confirm", "auth-submit"]) $(id).disabled = value;
+    document.querySelectorAll("[data-auth-tab]").forEach((tab) => { tab.disabled = value; });
+  }
+
+  function showFormError(error, fields, general) {
+    const message = error?.message || "操作失败，请稍后重试。";
+    const target = error?.field && fields[error.field];
+    if (target) fieldMessage(target, message);
+    else {
+      const node = $(general);
+      node.textContent = error?.code === "RATE_LIMITED" && !error?.message && error?.retry_after ? `尝试次数过多，请 ${Math.max(1, Math.ceil(error.retry_after / 60))} 分钟后再试。` : message;
+      node.hidden = false;
+    }
+  }
+
+  async function submitAuth(event) {
+    event.preventDefault();
+    if (authSubmitting) return;
+    clearAuthErrors();
+    const username = $("auth-username").value.trim();
+    const password = $("auth-password").value;
+    const registering = authMode === "register";
+    if (!username) { fieldMessage("auth-username-error", "请输入用户名。"); return; }
+    if (!password) { fieldMessage("auth-password-error", "请输入密码。"); return; }
+    if (registering && password !== $("auth-confirm").value) { fieldMessage("auth-confirm-error", "两次输入的密码不一致。"); return; }
+    setAuthBusy(true);
+    try {
+      const { response, data } = await request(registering ? "/api/register" : "/api/login", { method: "POST", headers: postHeaders, body: JSON.stringify({ username, password }) }, { raw: true, quiet: true });
+      if (response.ok && data.ok && data.account?.username) {
+        setAuthBusy(false);
+        await onLoggedIn(data.account.username);
+        return;
+      }
+      if (data.error?.code === "REGISTRATION_CLOSED") {
+        registrationOpen = false;
+        applyAuthMode("login");
+      }
+      showFormError(data.error, { username: "auth-username-error", password: "auth-password-error" }, "auth-error");
+    } catch (error) {
+      showFormError({ message: error.network ? "网络中断，请稍后重试。" : error.message }, {}, "auth-error");
+    }
+    setAuthBusy(false);
+    $("auth-password").value = "";
+    $("auth-confirm").value = "";
+    $("auth-password").focus();
+  }
+
+  /** 登录成功：账号变化则整页重载清空界面；同账号则继续并重放待确认操作。 */
+  async function onLoggedIn(name) {
+    const key = accountKey(name);
+    if (pending && pending.account !== key) {
+      pending = null;
+      persistPending(null);
+    }
+    if ((account && accountKey(account) !== key) || (!account && snapshot)) {
+      persistPending(null);
+      location.reload();
+      return;
+    }
+    setAccount(name);
+    authLocked = false;
+    $("auth-password").value = "";
+    $("auth-confirm").value = "";
+    $("auth-dialog").close();
+    updateControls();
+    await readState(true);
+    if (pending && !authLocked && !offline && snapshot) await sendPending();
+  }
+
+  /** 根据 /api/session 的结果进入登录面板或加载进度。 */
+  async function applySession(data) {
+    registrationOpen = data.registration_open !== false;
+    if (!data.authenticated || !data.account?.username) {
+      showAuth(data.reason === "SESSION_EXPIRED" ? "登录已过期，请重新登录" : "");
+      return;
+    }
+    const key = accountKey(data.account.username);
+    if (pending && pending.account !== key) {
+      pending = null;
+      persistPending(null);
+    }
+    if (account && accountKey(account) !== key) {
+      persistPending(null);
+      location.reload();
+      return;
+    }
+    setAccount(data.account.username);
+    authLocked = false;
+    if ($("auth-dialog").open) $("auth-dialog").close();
+    await readState(!storageAvailable);
+  }
+
+  async function logout() {
+    if (busy) return;
+    toggleAccountMenu(false);
+    try {
+      const { response } = await request("/api/logout", { method: "POST", headers: postHeaders, body: "{}" }, { raw: true, quiet: true });
+      // 服务端确认前不能当作已退出：凭证仍有效时重载会直接回到登录状态；401 说明本来就未登录
+      if (!response.ok && response.status !== 401) {
+        notice("暂时无法退出登录，请稍后重试。", "error");
+        return;
+      }
+    } catch (_) {
+      notice("网络中断，暂时无法退出登录，请稍后重试。", "error");
+      return;
+    }
+    // 清空待确认记录并整页重载，丢弃内存中的全部角色数据
+    try { sessionStorage.removeItem(storageKey); } catch (_) { /* 无存储权限时无需清理 */ }
+    location.reload();
+  }
+
+  function toggleAccountMenu(open) {
+    $("account-menu").hidden = !open;
+    $("account-button").setAttribute("aria-expanded", String(open));
+  }
+
+  function openPasswordDialog() {
+    toggleAccountMenu(false);
+    if (busy || offline || authLocked) return;
+    for (const id of ["old-password", "new-password", "new-password-confirm"]) $(id).value = "";
+    for (const id of ["old-password-error", "new-password-error", "new-password-confirm-error"]) fieldMessage(id, "");
+    $("password-error").hidden = true;
+    $("password-dialog").showModal();
+    $("old-password").focus();
+  }
+
+  async function submitPassword(event) {
+    event.preventDefault();
+    for (const id of ["old-password-error", "new-password-error", "new-password-confirm-error"]) fieldMessage(id, "");
+    $("password-error").hidden = true;
+    const oldPassword = $("old-password").value;
+    const newPassword = $("new-password").value;
+    if (!oldPassword) { fieldMessage("old-password-error", "请输入旧密码。"); return; }
+    if (!newPassword) { fieldMessage("new-password-error", "请输入新密码。"); return; }
+    if (newPassword !== $("new-password-confirm").value) { fieldMessage("new-password-confirm-error", "两次输入的新密码不一致。"); return; }
+    $("password-submit").disabled = true;
+    try {
+      const { response, data } = await request("/api/password", { method: "POST", headers: postHeaders, body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }) }, { quiet: true });
+      if (response.ok && data.ok) {
+        $("password-dialog").close();
+        notice("密码已修改，其他设备需重新登录。", "success");
+      } else showFormError(data.error, { old_password: "old-password-error", new_password: "new-password-error" }, "password-error");
+    } catch (error) {
+      if (!(error instanceof AuthError)) showFormError({ message: error.network ? "网络中断，请稍后重试。" : error.message }, {}, "password-error");
+    } finally {
+      $("password-submit").disabled = false;
+      for (const id of ["old-password", "new-password", "new-password-confirm"]) $(id).value = "";
     }
   }
 
   async function readState(keepNotice = false) {
     if (busy) return;
     busy = true;
+    if (!snapshot) setSync("idle", "正在同步你的修行进度…"); else setSync("syncing");
     updateControls();
     try {
       const { response, data } = await request("/api/state");
-      if (!response.ok || !data.ok) throw new Error(data.error?.message || "暂时无法读取手札。");
+      if (!response.ok || !data.ok) throw new Error(data.error?.message || "暂时无法同步你的修行进度。");
       render(data);
+      setSync(data.view.character ? "synced" : "idle");
       if (pending) notice("上次操作结果尚未确认。请重试原操作以安全核对，期间暂停其他行动。", "", true, false);
       else if (!keepNotice) notice("");
     } catch (error) {
-      notice(`读取失败：${error.name === "AbortError" ? "服务响应超时" : error.message}。请检查服务后重新读取。`, "error", !!pending, true);
+      if (error instanceof AuthError || error.network) return;
+      setSync("failed", "同步失败，请稍后重试");
+      notice(`同步失败：${error.message}。请稍后重新同步。`, "error", !!pending, true);
     } finally {
       busy = false;
       updateControls();
@@ -1517,7 +2194,7 @@
       return true;
     } catch (_) {
       storageAvailable = false;
-      notice("浏览器无法保存待确认操作。为避免刷新后重复执行，已暂停写入；请允许本站本地存储后重新打开页面。", "error", false, true);
+      notice("浏览器无法记录待确认操作。为避免刷新后重复执行，已暂停写入；请允许本站使用浏览器存储后重新打开页面。", "error", false, true);
       return false;
     }
   }
@@ -1530,10 +2207,14 @@
   }
 
   async function beginWrite(path, payload = {}) {
-    if (busy || pending || !snapshot || !storageAvailable) return;
-    const candidate = { path, body: { request_id: requestId(), expected_revision: snapshot.revision, ...payload } };
+    if (busy || pending || !snapshot || !storageAvailable || !account || offline || authLocked) return;
+    const candidate = { path, account: accountKey(account), body: { request_id: requestId(), expected_revision: snapshot.revision, ...payload } };
     if (!persistPending(candidate)) return;
     pending = candidate;
+    const active = document.activeElement;
+    const source = active?.matches?.("button") ? active : pressed && performance.now() - pressed.at < 1500 && document.contains(pressed.node) ? pressed.node : null;
+    writeSource = source ? { node: source, rect: source.getBoundingClientRect(), key: source.closest(".world-action-form")?.dataset.actionKey || source.dataset.actionKey || "" } : null;
+    if (source && !reducedMotion()) { source.classList.add("is-pending"); source.setAttribute("aria-busy", "true"); }
     const focusKey = document.activeElement?.dataset?.actionKey;
     const worldFocusKey = document.activeElement?.closest(".world-action-form")?.dataset.actionKey;
     await sendPending();
@@ -1548,59 +2229,87 @@
   }
 
   async function sendPending() {
-    if (!pending || busy) return;
+    if (!pending || busy || authLocked || offline) return;
     busy = true;
     notice("");
+    setSync("syncing");
     updateControls();
     let refreshConflict = false;
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     try {
-      const { response, data } = await request(pending.path, { method: "POST", headers: { "Content-Type": "application/json", "X-Game-Client": "guixu-web" }, body: JSON.stringify(pending.body) });
-      if (response.ok && data.ok) {
-        if (pending.path === "/api/new-game" || pending.path === "/api/load") worldDrafts.clear();
-        if (pending.path === "/api/new-game") {
-          selectedWorldPage = "world";
-          historyVisible = false;
-          worldActionFilters.clear();
-          worldSectionOpen.clear();
-          $("legacy-history-button").setAttribute("aria-expanded", "false");
+      for (let attempt = 0; ; attempt += 1) {
+        let result;
+        try {
+          result = await request(pending.path, { method: "POST", headers: postHeaders, body: JSON.stringify(pending.body) });
+        } catch (error) {
+          // 登录失效：保留待确认记录，登录后以同一操作编号重放；断线：由重连流程恢复后重放
+          if (error instanceof AuthError || error.network) return;
+          result = { response: { ok: false, status: 502 }, data: { ok: false } };
         }
-        if (submittedWorldKey) worldDrafts.delete(submittedWorldKey);
-        submittedWorldKey = null;
-        render(data);
-        pending = null;
-        if (persistPending(null)) notice(data.duplicate ? "该操作已处理，已同步最新进度。" : data.events?.length ? data.events.join(" · ") : "手札已保存。", "success");
-      } else if (data.ok === false && data.error) {
-        pending = null;
-        submittedWorldKey = null;
-        const cleared = persistPending(null);
-        if (cleared) {
-          refreshConflict = response.status === 409;
-          notice(refreshConflict ? `${data.error.message} 已重新读取进度，请确认后重新选择行动。` : data.error.message, "error", false, !refreshConflict);
+        const { response, data } = result;
+        if (response.ok && data.ok) {
+          if (pending.path === "/api/new-game") {
+            worldDrafts.clear();
+            selectedWorldPage = "world";
+            historyVisible = false;
+            worldActionFilters.clear();
+            worldSectionOpen.clear();
+            $("legacy-history-button").setAttribute("aria-expanded", "false");
+          }
+          if (submittedWorldKey) worldDrafts.delete(submittedWorldKey);
+          submittedWorldKey = null;
+          render(data);
+          setSync("synced");
+          pending = null;
+          if (persistPending(null)) notice(data.duplicate ? "该操作已处理，已同步最新进度。" : data.battle_report ? data.events.slice(0, 2).join(" · ") : data.events?.length ? data.events.join(" · ") : "进度已同步。", "success");
+          if (data.battle_report && !data.duplicate) globalThis.BattleReplay?.open(data.battle_report);
+          else if (!data.duplicate) celebrateWrite(writeSource);
+          break;
         }
-      } else throw new Error("服务响应不完整");
-    } catch (error) {
-      notice(`操作结果尚未确认（${error.name === "AbortError" ? "连接超时" : "连接中断或响应异常"}）。重试将使用同一操作编号，不会重复结算。`, "error", true, false);
+        if (data.ok === false && data.error && response.status < 500) {
+          // 业务错误（含 409）：操作确定未生效，清除待确认记录
+          pending = null;
+          submittedWorldKey = null;
+          if (persistPending(null)) {
+            refreshConflict = response.status === 409;
+            notice(refreshConflict ? "进度已在其他页面更新，已为你刷新到最新" : data.error.message, "error", false, !refreshConflict);
+          }
+          if (!refreshConflict) setSync(snapshot?.view?.character ? "synced" : "idle");
+          break;
+        }
+        // 5xx / 503 SAVE_FAILED / 响应异常：同一操作编号退避重试
+        if (attempt >= retryDelays.length) {
+          setSync("failed");
+          notice(data.error?.message || "进度保存失败，请稍后重试，当前操作未生效。", "error", true, false);
+          break;
+        }
+        setSync("retrying");
+        await sleep(retryDelays[attempt]);
+        if (authLocked || offline) return;
+      }
     } finally {
       busy = false;
+      if (writeSource?.node?.isConnected) { writeSource.node.classList.remove("is-pending"); writeSource.node.removeAttribute("aria-busy"); }
+      writeSource = null;
       updateControls();
     }
     if (refreshConflict) await readState(true);
   }
 
+  /** 「另起一卷」确认弹窗（世界事项的二次确认走各自的流程）。 */
   function openConfirmation(kind) {
-    if (busy || pending || !snapshot) return;
+    if (busy || pending || !snapshot || kind !== "new") return;
     confirmation = kind;
     previousFocus = document.activeElement;
-    const isNew = kind === "new";
-    $("confirm-title").textContent = isNew ? "另起一卷修行？" : "回到手动留卷之时？";
-    $("confirm-description").textContent = isNew ? "当前角色与手动存档将被新的角色替代，此操作无法撤销。修行方式只影响新角色，不会自动转换旧档。" : `${savePolicy()}\n${snapshot.save.summary || ""}\n${isLonglineWorld() ? "只恢复兼容的安全位置；进行中的战斗与探索不会被旧档重置。" : "当前世界进度将由手动存档覆盖，自动保存不能撤销此次载入。"}`;
-    $("new-name-field").hidden = !isNew;
+    $("confirm-title").textContent = "另起一卷修行？";
+    $("confirm-description").textContent = "当前角色及其进度将被新的角色替代，此操作无法撤销。修行方式只影响新角色。";
+    $("new-name-field").hidden = false;
     $("new-name").required = false;
-    $("new-name").disabled = !isNew;
+    $("new-name").disabled = false;
     $("new-name").value = "归墟客";
     $("new-mode").value = "longline";
-    $("new-mode").disabled = !isNew;
-    $("accept-confirm").textContent = isNew ? "确认 · 开启新卷" : "确认 · 载入手札";
+    $("new-mode").disabled = false;
+    $("accept-confirm").textContent = "确认 · 开启新卷";
     $("confirm-dialog").showModal();
     $("cancel-confirm").focus();
   }
@@ -1611,8 +2320,6 @@
     beginWrite("/api/new-game", { name, mode: $("mode").value });
   });
   $("name").addEventListener("input", () => $("name").setCustomValidity(""));
-  $("save-button").addEventListener("click", () => beginWrite("/api/save"));
-  $("load-button").addEventListener("click", () => openConfirmation("load"));
   $("new-button").addEventListener("click", () => openConfirmation("new"));
   $("retry-button").addEventListener("click", sendPending);
   $("refresh-button").addEventListener("click", () => readState());
@@ -1696,7 +2403,6 @@
     const name = $("new-name").value.trim() || "归墟客";
     $("confirm-dialog").close();
     if (kind === "new") beginWrite("/api/new-game", { name, mode: $("new-mode").value });
-    else if (kind === "load") beginWrite("/api/load");
     else if (kind?.path) {
       submittedWorldKey = kind.key;
       beginWrite(kind.path, kind.payload);
@@ -1704,21 +2410,51 @@
   });
   $("new-name").addEventListener("input", () => $("new-name").setCustomValidity(""));
   $("mode").addEventListener("change", () => {
-    $("mode-description").textContent = $("mode").value === "longline" ? "序章后开启持续潜修，以装备和法宝养成推进月余修行。" : "保留旧版行动成长与完整世界存档规则，无离线增长。";
+    $("mode-description").textContent = $("mode").value === "longline" ? "序章后开启持续潜修，以装备和法宝养成推进月余修行。" : "保留旧版行动成长规则，无离线增长。";
   });
   $("growth-update-button").addEventListener("click", () => readState());
+  $("account-button").addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleAccountMenu($("account-menu").hidden);
+  });
+  $("password-button").addEventListener("click", openPasswordDialog);
+  $("logout-button").addEventListener("click", logout);
+  document.addEventListener("click", (event) => {
+    if (!$("account-menu").hidden && !event.target.closest(".account-wrap")) toggleAccountMenu(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("account-menu").hidden) { toggleAccountMenu(false); $("account-button").focus(); }
+  });
+  document.querySelectorAll("[data-auth-tab]").forEach((tab) => tab.addEventListener("click", () => applyAuthMode(tab.dataset.authTab)));
+  $("auth-form").addEventListener("submit", submitAuth);
+  // 未登录时没有可返回的内容，登录面板不可用 Esc 关闭
+  $("auth-dialog").addEventListener("cancel", (event) => event.preventDefault());
+  $("password-form").addEventListener("submit", submitPassword);
+  $("password-cancel").addEventListener("click", () => $("password-dialog").close());
+  window.addEventListener("online", () => { if (offline) scheduleReconnect(true); });
+  window.addEventListener("offline", markOffline);
+
   try {
+    // 旧版键不含账号信息，无法校验归属，直接清除
+    sessionStorage.removeItem(legacyStorageKey);
     const saved = sessionStorage.getItem(storageKey);
     if (saved) {
       const value = JSON.parse(saved);
-      if (!["/api/action", "/api/save", "/api/load", "/api/new-game"].includes(value.path) || typeof value.body?.request_id !== "string" || !Number.isInteger(value.body?.expected_revision)) throw new Error("invalid pending");
+      if (!["/api/action", "/api/new-game"].includes(value.path) || typeof value.account !== "string" || !value.account || typeof value.body?.request_id !== "string" || !Number.isInteger(value.body?.expected_revision)) throw new Error("invalid pending");
       pending = value;
     }
   } catch (_) {
     storageAvailable = false;
-    notice("本地待确认操作记录不可读取。为保护进度，已暂停写入；请保留本站存储并检查浏览器设置。", "error", false, true);
+    notice("待确认操作记录不可读取。为保护进度，已暂停写入；请检查浏览器的存储设置。", "error", false, true);
   }
-  readState(!storageAvailable);
+  (async () => {
+    try {
+      const { data } = await request("/api/session", {}, { raw: true });
+      await applySession(data);
+    } catch (_) {
+      // 断线时由重连流程继续探测会话
+    }
+  })();
   setInterval(tickGrowth, 250);
   setInterval(refreshGrowth, 15000);
 })();

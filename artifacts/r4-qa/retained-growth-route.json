@@ -2,49 +2,49 @@
   "passed": true,
   "kind": "injected-clock legal HTTP, not real forty-day observation",
   "elapsed_seconds": 3845699,
-  "checkpoints": [
+  "milestones": [
     {
       "stage": 0,
-      "elapsed_seconds": 1800042730,
+      "elapsed_seconds": 1800043690,
       "xp": 0
     },
     {
       "stage": 1,
-      "elapsed_seconds": 1800170920,
+      "elapsed_seconds": 1800171880,
       "xp": 0
     },
     {
       "stage": 2,
-      "elapsed_seconds": 1800427300,
+      "elapsed_seconds": 1800428260,
       "xp": 0
     },
     {
       "stage": 3,
-      "elapsed_seconds": 1800854600,
+      "elapsed_seconds": 1800855560,
       "xp": 0
     },
     {
       "stage": 4,
-      "elapsed_seconds": 1801452820,
+      "elapsed_seconds": 1801453780,
       "xp": 0
     },
     {
       "stage": 5,
-      "elapsed_seconds": 1802136500,
+      "elapsed_seconds": 1802137460,
       "xp": 0
     },
     {
       "stage": 6,
-      "elapsed_seconds": 1802905639,
+      "elapsed_seconds": 1802906599,
       "xp": 0
     },
     {
       "stage": 7,
-      "elapsed_seconds": 1803845699,
+      "elapsed_seconds": 1803846659,
       "xp": 71280
     }
   ],
-  "actions": 418,
+  "actions": 385,
   "ending": true,
   "stage": 7,
   "xp_remaining": 0,

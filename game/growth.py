@@ -61,7 +61,7 @@ def validate(state, check_balance=False):
     if check_balance and state['world']['active'] and g['last_settled'] is None:
         raise ValueError('已入世角色缺少修炼时间水位')
     if check_balance and g['rate_num'] != rate_num(state):
-        raise ValueError('存档修炼速率与当前境界装备不一致')
+        raise ValueError('进度数据修炼速率与当前境界装备不一致')
 
 
 def rate_num(state):
@@ -167,26 +167,3 @@ def preview(state, now):
         offline_gain=(g['balance_micro']-old['balance_micro']) / MICRO,
         rate=dict(per_day=per_second*86400, per_hour=per_second*3600,
                   numerator=str(g['rate_num']), denominator=DENOMINATOR))
-
-
-def load_checkpoint(current, slot):
-    """Longline restores safe position only; all progression/ownership stays current."""
-    from .rules import GameError
-    if not is_longline(current):
-        if is_longline(slot):
-            raise GameError('INCOMPATIBLE_SAVE', '检查点模式不属于当前角色。')
-        return clone(slot), ['已载入手动检查点。']
-    if not is_longline(slot) or current['world']['r3']['profile_id'] != slot['world']['r3']['profile_id']:
-        raise GameError('INCOMPATIBLE_SAVE', '检查点不属于当前长线角色。')
-    if not current['world']['active']:
-        if slot['world']['active']:
-            raise GameError('INCOMPATIBLE_SAVE', '检查点入世状态不兼容。')
-        return clone(slot), ['已恢复序章检查点；尚未开始凡界持续修炼。']
-    if not slot['world']['active']:
-        raise GameError('INCOMPATIBLE_SAVE', '已入世角色不能退回序章；成长与资产保留。')
-    s = clone(current)
-    if any(s['world'][key] is not None for key in ('battle', 'exploration', 'dungeon')):
-        return s, ['当前正在战斗或探索，保留当前位置与完整进度；修为、境界花费、资产及奖励资格均未回退。']
-    # Only position is a checkpoint; no quest reward or battle cursor is restored.
-    s['world']['region'] = slot['world']['region']
-    return s, ['已恢复安全位置；保留当前剧情、战斗进度、修为、境界花费、资产、世界时间与奖励资格。']
