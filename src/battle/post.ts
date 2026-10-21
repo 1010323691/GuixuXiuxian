@@ -1,6 +1,7 @@
 // Post-processing via pmndrs/postprocessing: HDR bloom, AgX tone mapping, a light painterly grade,
 // vignette, impact flash and chromatic aberration. Lower quality tiers drop the costly passes.
 import * as THREE from 'three';
+import { clamp, lerp } from './util';
 import {
   EffectComposer, RenderPass, EffectPass, BloomEffect, ChromaticAberrationEffect, VignetteEffect, ToneMappingEffect, ToneMappingMode,
   HueSaturationEffect, BrightnessContrastEffect, Effect, BlendFunction, KernelSize,
@@ -16,7 +17,7 @@ class FlashEffect extends Effect {
   }
 }
 
-export interface Post { composer: EffectComposer; flash(amount: number, color?: THREE.ColorRepresentation): void; aberrate(amount: number): void; update(dt: number): void; setSize(w: number, h: number): void; dispose(): void }
+export interface Post { composer: EffectComposer; flash(amount: number, color?: THREE.ColorRepresentation): void; aberrate(amount: number): void; desaturate(amount: number): void; update(dt: number): void; setSize(w: number, h: number): void; dispose(): void }
 
 export function buildPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, quality: number, reduced: boolean): Post {
   renderer.toneMapping = THREE.NoToneMapping;
@@ -37,6 +38,8 @@ export function buildPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, cam
     composer,
     flash(amount, color = 0xffffff) { flashAmt = Math.max(flashAmt, amount * (reduced ? .3 : 1)); flashTint.set(color).lerp(new THREE.Color(1, 1, 1), .5); },
     aberrate(amount) { ab = Math.min(.012, Math.max(ab, amount)); },
+    /** 0 = the normal grade, 1 = drained of colour (defeat). */
+    desaturate(amount) { sat.saturation = lerp(.16, -.85, clamp(amount, 0, 1)); },
     update(dt) {
       flashAmt = Math.max(0, flashAmt - dt * 3.2);
       ab = Math.max(0, ab - dt * .04);

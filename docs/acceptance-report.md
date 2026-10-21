@@ -1,3 +1,24 @@
+# 验收报告（云海御空 v2 阶段二：战报精确同步 · 2026-10-21，分支 feat/flight-battle-v2）
+
+## 已完成且已验证（本轮实际运行）
+| 项 | 证据 |
+|---|---|
+| 白盒全量 | `python -m tests.parallel`：**400 项通过，0 跳过**（`test_fx3d` 改为校验新斗法台源码/bundle、旧 `battle3d.js` 与 `vendor/addons` 返回 404） |
+| 构建 | `npm run typecheck` 无错误；`npm run build` 生成 `static/arena3d.js`，`test_frontend_build` 校验源码哈希一致 |
+| 浏览器套件（本机 Edge，Playwright） | `browser_smoke`、`browser_world`、`browser_r3`、`browser_r4`、`browser_fx3d` **全部 passed**（D020 改动后重跑） |
+| 真实战报回放 | 新增 `tests.browser_fx3d_real`：沿 R4 合法路线打出 序章（守阵石傀，8 拍胜）/野外（1 拍胜）/秘境副本镇守 Boss（3 拍胜）/支线精英商路炉甲（3 拍，含破盾）/世界 Boss（12 拍时限 defeat）真实战报，在 GPU 浏览器回放：三维启用、终局状态与战报一致（胜局敌方消散、时限 defeat 不倒下）、无页面异常；截图 `artifacts/fx3d-qa/real/`（不入库）；**passed** |
+| 同步 | 命中时刻与飘字一致（D019 表）；慢帧分步追赶（SwiftShader 4fps 下不脱拍）；第 0 拍三维就绪后按 2.3 s 入场重排第一拍 |
+| 文字战报退役（D020） | 回放卡只保留舞台/HUD/控制条/终局铭牌；五套浏览器套件在此改动后通过 |
+| 降级 | 禁用 WebGL：无三维画布、SVG 版式可用；`reduced-motion` 不加载三维（`browser_fx3d`） |
+
+## 未验证 / 限制
+- GPU 浏览器（本机无头 Edge，`--use-angle=d3d11`）回放约 218–240fps，非受控测量；低端 GPU、移动端真机与长时内存**未测**。
+- 所有敌形暂用紫晶翼狮王（D018），体型按首领区分；敌形专属外观待更多设定图。
+- 冲击瞬间色差/泛光偏强（截图中可见），属观感调参，待用户视觉验收意见。
+- 境界（tier）目前只影响主角灵气粒子与飞剑数，未像旧斗法台那样切换天时。
+
+---
+
 # 验收报告（三维斗法台「云海御空」· 2026-10-21，分支 feat/3d-battle-arena）
 
 ## 已完成且已验证（本轮实际运行）

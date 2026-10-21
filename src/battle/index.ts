@@ -1,5 +1,5 @@
-// 「云海御空」 arena, stage 1: a single-foe duel staged from action templates on a fixed timeline.
-// Rules never live here: in stage 2 the Python battle report will drive the same templates.
+// 「云海御空」 arena. createArena() is the stage-1 lab duel on a fixed timeline (static/battle-lab.html);
+// buildArena() (replay.ts) is the same stage driven by the Python battle report for the game's replay.
 import * as THREE from 'three';
 import { makeCultivator, makeDemon, type Actor } from './actors';
 import { LION_COLOR, disposeTextures, loadArt, loadLionArt, makeArtCultivator, makeArtLion } from './art';
@@ -8,6 +8,8 @@ import { buildEnvironment } from './env';
 import { FxSystem } from './fx';
 import { buildPost } from './post';
 import { V, disposeOutlines, disposeShared, lerp, easeInOut, easeOut } from './util';
+
+export { buildArena, hitDelay } from './replay';
 
 export interface ArenaOptions { quality?: 0 | 1 | 2; reducedMotion?: boolean; skill?: THREE.ColorRepresentation; hero?: 'art' | 'toon'; foe?: 'lion' | 'demon' }
 

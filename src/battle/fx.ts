@@ -350,14 +350,16 @@ export class FxSystem {
 
   // ---------------------------------------------------------------- signature spells
   /** 剑阵: swords fan out behind the caster, then dive at the target along curved paths. */
-  swordSwarm(from: () => THREE.Vector3, back: () => THREE.Vector3, target: () => THREE.Vector3, color: THREE.ColorRepresentation, count: number, onHit: (i: number) => void) {
+  /** timing: seconds to form the fan, to fly, and between swords; the first sword lands at form + fly. */
+  swordSwarm(from: () => THREE.Vector3, back: () => THREE.Vector3, target: () => THREE.Vector3, color: THREE.ColorRepresentation, count: number, onHit: (i: number) => void, timing = { form: .55, fly: .75, stagger: .07 }) {
+    const { form, fly, stagger } = timing;
     const r = rng(77);
     const swords = Array.from({ length: count }, (_, i) => {
       const mesh = this.sword(color, .9);
       const trail = new Trail(22, .16, color);
       this.group.add(mesh, trail.mesh);
-      const fan = (i / (count - 1) - .5) * 2;
-      return { mesh, trail, fan, delay: .55 + i * .07 + r.range(0, .05), lift: r.range(1.2, 3.2), swing: r.range(.6, 1.4), hit: false, curve: null as THREE.CubicBezierCurve3 | null };
+      const fan = count > 1 ? (i / (count - 1) - .5) * 2 : 0;
+      return { mesh, trail, fan, delay: form + i * stagger + (i ? r.range(0, .05) : 0), lift: r.range(1.2, 3.2), swing: r.range(.6, 1.4), hit: false, curve: null as THREE.CubicBezierCurve3 | null };
     });
     let t = 0;
     const p = V(), ahead = V();
@@ -369,7 +371,7 @@ export class FxSystem {
         for (const s of swords) {
           const fanPos = V(behind.x, behind.y + 1.2 + Math.abs(s.fan) * -.4 + s.lift * .25, behind.z).add(V(-(aim.z - origin.z), 0, aim.x - origin.x).normalize().multiplyScalar(s.fan * 3.2));
           if (t < s.delay) { // materialise into the fan, hilts toward the caster
-            const u = easeOut(t / .5);
+            const u = easeOut(Math.min(1, t / (form * .9)));
             p.lerpVectors(origin, fanPos, u);
             s.mesh.position.copy(p); s.mesh.scale.setScalar(Math.max(.02, .9 * u));
             s.mesh.lookAt(aim); s.mesh.rotateY(-Math.PI / 2);
@@ -382,12 +384,12 @@ export class FxSystem {
             s.curve = new THREE.CubicBezierCurve3(fanPos.clone(), fanPos.clone().add(V(0, s.lift * 2, 0)).add(side), aim.clone().add(side.multiplyScalar(.6)).add(V(0, s.lift * 3, 0)), aim.clone());
           }
           s.curve.v3.copy(aim);
-          const u = clamp((t - s.delay) / .75);
+          const u = clamp((t - s.delay) / fly);
           if (u >= 1) {
             if (!s.hit) { s.hit = true; s.mesh.visible = false; onHit(swords.indexOf(s)); }
-            s.trail.fade = Math.max(0, 1 - (t - s.delay - .75) * 3);
+            s.trail.fade = Math.max(0, 1 - (t - s.delay - fly) * 3);
             s.trail.push(aim, this.camera);
-            if (t - s.delay < 1.2) alive = true;
+            if (t - s.delay < fly + .45) alive = true;
             continue;
           }
           const k = easeIn(u) * .7 + u * .3;
@@ -403,7 +405,8 @@ export class FxSystem {
   }
 
   /** 符箓: paper talismans spin out in a fan, ignite and detonate in gold. */
-  talismans(from: () => THREE.Vector3, target: () => THREE.Vector3, count: number, onHit: (i: number) => void) {
+  talismans(from: () => THREE.Vector3, target: () => THREE.Vector3, count: number, onHit: (i: number) => void, timing = { fly: .9, stagger: .09 }) {
+    const { fly, stagger } = timing;
     const r = rng(13);
     const mat = new THREE.MeshBasicMaterial({ map: this.art?.talisman ?? textures().talisman, side: THREE.DoubleSide, transparent: true, color: C(0xffffff).multiplyScalar(this.art ? 1.4 : 1) });
     const items = Array.from({ length: count }, (_, i) => {
@@ -414,7 +417,7 @@ export class FxSystem {
       mesh.add(halo);
       const trail = new Trail(16, .1, 0xffc040, 1.8);
       this.group.add(mesh, trail.mesh);
-      return { mesh, trail, delay: i * .09, spread: (i / (count - 1) - .5) * 2, arc: r.range(1, 3), spin: r.range(9, 16), hit: false };
+      return { mesh, trail, delay: i * stagger, spread: count > 1 ? (i / (count - 1) - .5) * 2 : 0, arc: r.range(1, 3), spin: r.range(9, 16), hit: false };
     });
     let t = 0;
     const p = V();
@@ -424,13 +427,13 @@ export class FxSystem {
         const a = from(), b = target();
         let alive = false;
         for (const it of items) {
-          const u = clamp((t - it.delay) / .9);
+          const u = clamp((t - it.delay) / fly);
           if (u <= 0) { it.mesh.visible = false; alive = true; continue; }
           it.mesh.visible = !it.hit;
           if (u >= 1) {
             if (!it.hit) { it.hit = true; onHit(items.indexOf(it)); }
-            it.trail.fade = Math.max(0, 1 - (t - it.delay - .9) * 4);
-            if (t - it.delay < 1.3) alive = true;
+            it.trail.fade = Math.max(0, 1 - (t - it.delay - fly) * 4);
+            if (t - it.delay < fly + .4) alive = true;
             continue;
           }
           const side = V(-(b.z - a.z), 0, b.x - a.x).normalize().multiplyScalar(it.spread * 4 * Math.sin(u * Math.PI));

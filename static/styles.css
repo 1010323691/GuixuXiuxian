@@ -1237,7 +1237,7 @@ dialog h2 { font-family: var(--font-display); font-weight: 400; font-size: var(-
    =================================================================== */
 .battle-replay { position: fixed; inset: 0; z-index: var(--z-replay); display: grid; place-items: center; padding: var(--sp-5); background: var(--backdrop); animation: fade-in var(--t) var(--ease-out); }
 .battle-replay[hidden] { display: none; }
-.replay-card { width: min(860px, 100%); max-height: 100%; overflow: hidden; display: grid; grid-template-rows: auto minmax(96px, auto) auto auto auto auto auto auto; gap: var(--sp-4); padding: var(--sp-5) var(--sp-6) var(--sp-6); background: var(--c-surface); border-radius: var(--r-lg); box-shadow: var(--e-panel), var(--e-3); animation: pop-dialog var(--t) var(--ease-spring); }
+.replay-card { width: min(860px, 100%); max-height: 100%; overflow: hidden; display: grid; grid-template-rows: auto minmax(96px, auto) auto auto auto; gap: var(--sp-4); padding: var(--sp-5) var(--sp-6) var(--sp-6); background: var(--c-surface); border-radius: var(--r-lg); box-shadow: var(--e-panel), var(--e-3); animation: pop-dialog var(--t) var(--ease-spring); }
 .replay-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-5); border-bottom: 1px solid var(--c-border); padding-bottom: var(--sp-3); }
 .replay-head .section-number { color: var(--cin-600); }
 .replay-head h2 { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); color: var(--dai-900); }
@@ -1283,24 +1283,17 @@ dialog h2 { font-family: var(--font-display); font-weight: 400; font-size: var(-
 .replay-meter .meter { height: 10px; }
 .replay-meter .meter.hp > span { background: linear-gradient(90deg, var(--hp), var(--hp-hi)); }
 .replay-meter .meter.mp > span { background: linear-gradient(90deg, var(--azure-500), var(--mp-hi)); }
-.replay-now { min-height: 2.6em; font-size: var(--fs-base); color: var(--c-text); overflow-wrap: anywhere; }
 .replay-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4); }
 .replay-controls input[type=range] { flex: 1 1 140px; min-width: 120px; min-height: 32px; padding: 0; border: 0; background: transparent; accent-color: var(--jade-600); box-shadow: none; }
 .replay-result { padding: var(--sp-4) var(--sp-5); border-radius: var(--r-md); background: var(--gold-50); border: 1px solid var(--gold-300); animation: pop-in var(--t-slow) var(--ease-spring); }
 .replay-result h3 { font-family: var(--font-display); font-weight: 400; color: var(--gold-700); }
-/* 战报日志只露出最新几拍（顶部溢出被裁去），回看早先拍次用时间轴，不出现滚动条 */
-.replay-log { height: calc(4 * 1.9em); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; font-size: var(--fs-sm); -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%); mask-image: linear-gradient(180deg, transparent, #000 40%); }
-.replay-log li { flex-shrink: 0; }
 body.replay-open { overflow: hidden; }
 @keyframes replay-bob { 0%, 100% { transform-box: fill-box; translate: 0 0; } 50% { translate: 0 -5px; } }
 @media (max-height: 760px) {
   .replay-stage, .replay-svg { max-height: 32vh; }
-  .replay-intent:empty { display: none; }
-  .replay-log { height: calc(3 * 1.9em); }
 }
 @media (max-height: 560px) {
   .replay-stage, .replay-svg { max-height: 24vh; }
-  .replay-log { height: calc(2 * 1.9em); }
 }
 @media (max-width: 759px) {
   .replay-meters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); font-size: var(--fs-xs); }
@@ -1314,8 +1307,8 @@ body.replay-open { overflow: hidden; }
 .battle-replay.immersive { padding: var(--sp-3); background: rgba(4, 10, 12, .84); }
 .battle-replay.immersive .replay-card {
   width: min(1280px, 100%); height: 100%; max-height: 980px;
-  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
-  grid-template-areas: "head" "stage" "now" "intent" "controls" "log";
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "head" "stage" "controls";
   gap: var(--sp-3); padding: var(--sp-4) var(--sp-5);
   background: linear-gradient(180deg, #11272a, #091416); color: #E7EFE9;
   border: 1px solid rgba(232, 196, 106, .3); box-shadow: 0 30px 80px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06);
@@ -1336,8 +1329,6 @@ body.replay-open { overflow: hidden; }
 .battle-replay.immersive .replay-meter .meter { background: rgba(255, 255, 255, .14); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12); }
 .battle-replay.immersive .replay-meter .meter.enemy-meter > span { background: linear-gradient(90deg, #8A1A1A, #FF5A3A); box-shadow: 0 0 10px rgba(255, 90, 58, .55); }
 .battle-replay.immersive .replay-meter:last-child .meter { direction: rtl; }
-.battle-replay.immersive .replay-now { grid-area: now; min-height: 2.4em; color: #E7EFE9; }
-.battle-replay.immersive .replay-intent { grid-area: intent; color: rgba(231, 239, 233, .66); }
 .battle-replay.immersive .replay-controls { grid-area: controls; }
 .battle-replay.immersive .replay-controls .quiet-note { color: rgba(231, 239, 233, .7); }
 .battle-replay.immersive .small-button { background: rgba(255, 255, 255, .07); color: #F0F4F1; border-color: rgba(255, 255, 255, .2); }
@@ -1350,7 +1341,6 @@ body.replay-open { overflow: hidden; }
 }
 .battle-replay.immersive .replay-result h3 { color: #F3D27A; font-size: var(--fs-xl); letter-spacing: .2em; text-shadow: 0 0 16px rgba(243, 210, 122, .55); }
 .battle-replay.immersive .replay-result .quiet-note { color: rgba(231, 239, 233, .78); }
-.battle-replay.immersive .replay-log { grid-area: log; height: calc(3 * 1.9em); color: rgba(231, 239, 233, .72); }
 .floater3d {
   position: absolute; transform: translate(-50%, -50%); white-space: nowrap; color: #FFF6E0;
   font: 800 26px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: .02em;
@@ -1373,12 +1363,10 @@ body.replay-open { overflow: hidden; }
   .battle-replay.immersive { padding: 0; }
   .battle-replay.immersive .replay-card { padding: var(--sp-3); gap: var(--sp-2); border-radius: 0; max-height: none; }
   .battle-replay.immersive .replay-meters { gap: var(--sp-2); padding: var(--sp-2) var(--sp-2) var(--sp-5); }
-  .battle-replay.immersive .replay-log { height: calc(2 * 1.9em); }
   .floater3d { font-size: 20px; }
   .floater3d.big { font-size: 30px; }
 }
 @media (max-height: 560px) {
-  .battle-replay.immersive .replay-log, .battle-replay.immersive .replay-intent { display: none; }
   .battle-replay.immersive .replay-stage { min-height: 160px; }
   .battle-replay.immersive .replay-result { padding: var(--sp-2) var(--sp-4); margin-bottom: var(--sp-3); }
   .battle-replay.immersive .replay-result .quiet-note { font-size: var(--fs-xs); }

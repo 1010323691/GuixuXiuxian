@@ -20,6 +20,8 @@ export class CameraRig {
   private current: ShotPose = { pos: V(0, 5, 20), look: V(), fov: 45 };
   /** Portrait screens need a wider lens and a little more distance. */
   aspectBoost = 1;
+  /** Foe size relative to the full-size boss: scales the foe-framed shots. */
+  foeScale = 1;
 
   constructor(private reduced: boolean) {
     this.camera = new THREE.PerspectiveCamera(45, 16 / 9, .1, 2400);
@@ -45,8 +47,8 @@ export class CameraRig {
       case 'side': if (far > 1.3) return { pos: mid.clone().addScaledVector(right, 8).addScaledVector(dir, -15).add(V(0, 4 + drift, 0)), look: mid.clone().add(V(0, 2.4, 0)), fov: 44 }; // portrait: diagonal keeps both fighters in frame
         return { pos: mid.clone().addScaledVector(right, 17 * far).addScaledVector(dir, -3).add(V(0, 3 + drift, 0)), look: mid.clone().add(V(0, 2.4, 0)), fov: 40 };
       case 'heroClose': return { pos: hero.clone().addScaledVector(dir, 4.6 * far).addScaledVector(right, .9 + drift * .4).add(V(0, .5, 0)), look: hero.clone().add(V(0, .35, 0)), fov: 38 };
-      case 'demonClose': return { pos: foe.clone().addScaledVector(dir, -10.5 * far).addScaledVector(right, -3.5).add(V(0, .8, 0)), look: foe.clone().add(V(0, 5.6, 0)), fov: 42 };
-      case 'impact': return { pos: foe.clone().addScaledVector(dir, -8 * far).addScaledVector(right, 4).add(V(0, 4.2, 0)), look: foe.clone().add(V(0, 4.2, 0)), fov: 50 };
+      case 'demonClose': { const fs = this.foeScale; return { pos: foe.clone().addScaledVector(dir, -10.5 * far * fs).addScaledVector(right, -3.5 * fs).add(V(0, .8 * fs, 0)), look: foe.clone().add(V(0, 5.6 * fs, 0)), fov: 42 }; }
+      case 'impact': { const fs = this.foeScale; return { pos: foe.clone().addScaledVector(dir, -8 * far * fs).addScaledVector(right, 4 * fs).add(V(0, 4.2 * fs, 0)), look: foe.clone().add(V(0, 4.2 * fs, 0)), fov: 50 }; }
       case 'low': return { pos: hero.clone().addScaledVector(dir, -4.5 * far).addScaledVector(right, 2.4).add(V(0, -2.2, 0)), look: hero.clone().add(V(0, 5, 0)).addScaledVector(dir, 4), fov: 48 };
       case 'wide': {
         const a = this.t * .05;

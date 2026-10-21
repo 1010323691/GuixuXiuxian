@@ -6,7 +6,6 @@
   const make = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
   const svg = (tag, attrs = {}) => { const node = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v)); return node; };
   const OUTCOME = { victory: "胜势已定", defeat: "此战暂退", window: "十二拍 · 试锋已毕", stalemate: "交锋至限，自行撤离", retreat: "撤离战斗" };
-  const ACTOR = { player: "本方", main: "本命法宝", guard: "护持法宝", enemy: "敌方", npc: "同行NPC" };
   // 舞台坐标（viewBox 1000×340）
   const POINT = { player: [200, 190], main: [120, 100], guard: [130, 262], enemy: [800, 180], npc: [300, 280] };
   const FX_TYPES = new Set(["damage", "shield", "shield_absorb", "poison", "heal", "control", "buff", "defend", "mana"]);
@@ -28,8 +27,6 @@
           <div class="replay-meter"><span id="replay-player-mp-text">灵力</span><div class="meter mp" role="meter" id="replay-player-mp" aria-label="本方灵力"><span></span></div></div>
           <div class="replay-meter"><span id="replay-enemy-hp-text">敌方气血</span><div class="meter enemy-meter" role="meter" id="replay-enemy-hp" aria-label="敌方气血"><span></span></div></div>
         </div>
-        <p class="replay-now" id="replay-now" role="status" aria-live="polite"></p>
-        <p class="replay-intent quiet-note" id="replay-intent"></p>
         <div class="replay-controls">
           <button type="button" class="small-button" id="replay-play">暂停播放</button>
           <button type="button" class="small-button" id="replay-speed">速度 1×</button>
@@ -37,8 +34,7 @@
           <label class="sr-only" for="replay-timeline">回看第几拍</label><input id="replay-timeline" type="range" min="0" max="0" value="0">
           <span class="quiet-note" id="replay-round">第 0 拍</span>
         </div>
-        <section class="replay-result" id="replay-result" hidden><h3 id="replay-result-title"></h3><p id="replay-result-text" class="quiet-note"></p></section>
-        <ol class="replay-log logs" id="replay-log" aria-label="斗法事件"></ol>
+        <section class="replay-result" id="replay-result" role="status" aria-live="polite" hidden><h3 id="replay-result-title"></h3><p id="replay-result-text" class="quiet-note"></p></section>
       </div>`;
     document.body.append(root);
     $("replay-close").addEventListener("click", close);
@@ -65,7 +61,7 @@
     import("/fx3d.js").then((mod) => {
       if (token !== fx3dToken || !report || !$("battle-replay") || $("battle-replay").hidden) return;
       fx3d = mod.create($("replay-stage"), { ...context, report, onLost: () => markFx3d(false), onRestore: () => { markFx3d(true); render(false); } });
-      if (fx3d) { fx3d.setSpeed(speed); markFx3d(true); render(false); }
+      if (fx3d) { fx3d.setSpeed(speed); markFx3d(true); render(false); if (playing && cursor === 0) schedule(); }   // 斗法台就绪于开场拍：按三维入场时长重排第一拍
     }).catch(() => { fx3d = null; });
   }
   function stopFx3d() {
@@ -208,10 +204,6 @@
     $(id + "-text").textContent = `${text} ${Math.max(0, value)} / ${max}`;
   }
 
-  function eventText(e) {
-    return `${ACTOR[e.source] || e.source || "交锋"} · ${e.label}${typeof e.amount === "number" && e.type !== "status" ? ` ${e.amount}` : ""}`;
-  }
-
   function render(animate = true) {
     const frame = report.frames[cursor];
     const treasure = report.treasures || {};
@@ -229,14 +221,8 @@
     meter("replay-player-hp", frame.player.hp, report.player.max_hp, "本方气血");
     meter("replay-player-mp", frame.player.mp, report.player.max_mp, "本方灵力");
     meter("replay-enemy-hp", frame.enemy.hp, report.enemy.max_hp, "敌方气血");
-    const events = (frame.events || []).filter((e) => !e.fx_only);
-    $("replay-now").textContent = cursor === 0 ? "双方就位，自动斗法即将开始。" : `第 ${frame.round} 拍 · ${frame.action}${events.length ? "：" + events.map(eventText).join("；") : ""}`;
-    $("replay-intent").textContent = cursor === report.frames.length - 1 ? "" : `敌方下一意图：${frame.intent}`;
     $("replay-round").textContent = `第 ${frame.round} / ${report.rounds} 拍`;
     $("replay-timeline").value = String(cursor);
-    const log = [];
-    for (const f of report.frames.slice(1, cursor + 1)) for (const e of (f.events || []).filter((x) => !x.fx_only)) { const li = make("li", "", `第${f.round}拍 · ${eventText(e)}`); log.push(li); }
-    $("replay-log").replaceChildren(...log.slice(-60));
     const last = cursor === report.frames.length - 1;
     $("replay-result").hidden = !last;
     if (last) {
