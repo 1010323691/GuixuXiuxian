@@ -2,11 +2,12 @@
 import copy
 import unittest
 from game import rules
-from tests.support import baseline_route, battle_round
+from tests.support import baseline_route, battle_round, solo_battles
 
 
 class R3DungeonMechanicTests(unittest.TestCase):
     def setUp(self):
+        solo_battles(self)  # 机制数值按单体首领断言；群战交互见 test_swarm_battle
         self.context={'now':1800000000,'day':'2027-01-15'}
         self.state=rules.new_game('战术反例QA',mode='longline')
         baseline_route(lambda:{'state':self.state},self.act)

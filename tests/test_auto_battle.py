@@ -7,11 +7,12 @@ from pathlib import Path
 from game import loot, rules, world
 from game import r3_config as R
 from server import App, dispatch
-from tests.support import baseline_route, battle_round, test_settings
+from tests.support import baseline_route, battle_round, solo_battles, test_settings
 
 
 class AutoBattleTreasureTests(unittest.TestCase):
     def setUp(self):
+        solo_battles(self)  # 法宝冷却/回护按单体首领精确断言；群攻与小怪小击见 test_swarm_battle
         self.context = {'now': 1800000000, 'day': '2027-01-15'}
         self.state = rules.new_game('御宝QA', mode='longline')
         baseline_route(lambda: {'state': self.state}, self.act)

@@ -499,6 +499,23 @@ class Server:
 
 
 
+def solo_battles(case):
+    """Pin a test case to single-enemy world battles (no swarm minions) for its duration.
+
+    The 11 mechanic assertions (poison, drain, furnace shield, treasure cooldowns) check exact
+    single-enemy numbers, so the pack is removed here. The pack crossed with those same mechanics
+    is asserted by tests/test_swarm_battle.py:
+    SwarmBattleTests.test_venom_with_a_pack_poisons_on_the_heavy_beat_and_the_pack_keeps_chipping,
+    test_mana_seal_with_a_pack_drains_on_the_attack_beat_and_the_pack_keeps_chipping and
+    test_furnace_barrier_absorbs_the_strike_and_the_pack_still_reaches_the_body.
+    """
+    from unittest import mock
+    from game import world_config
+    patcher = mock.patch.dict(world_config.SWARMS['counts'], clear=True)
+    patcher.start()
+    case.addCleanup(patcher.stop)
+
+
 def battle_round(state, action, context=None):
     """White-box access to the internal single-round resolver (no public click action exists any more).
 

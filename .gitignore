@@ -7,3 +7,6 @@ dist/
 backups/
 artifacts/audit-pages/
 artifacts/fx3d-qa/
+
+node_modules/
+artifacts/lab-qa/

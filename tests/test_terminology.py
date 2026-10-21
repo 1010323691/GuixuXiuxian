@@ -206,8 +206,11 @@ class StaticFileTermsTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_javascript_sources_without_comments(self):
-        for name in ('app.js', 'battle_replay.js', 'fx3d.js', 'battle3d.js'):
-            source = (ROOT / 'static' / name).read_text(encoding='utf-8')
+        sources = [ROOT / 'static' / name for name in ('app.js', 'battle_replay.js', 'fx3d.js', 'battle_lab.js')]
+        sources += sorted((ROOT / 'src').rglob('*.ts'))  # TypeScript arena sources (the bundle itself is minified third-party code)
+        for path in sources:
+            name = path.relative_to(ROOT).as_posix()
+            source = path.read_text(encoding='utf-8')
             text, _ = strip_js_comments(source)
             found = []
             for number, line in enumerate(text.splitlines(), 1):

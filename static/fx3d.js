@@ -1,9 +1,9 @@
 // 三维特效管理器：同一页面同一时刻只持有一个 WebGL 上下文。
-//  - battle：三维斗法台「云海御空」（battle3d.js），由战报事件驱动（蓄力 → 飞行 → 命中 → 冲击 → 收尾），不推进任何规则、不决定胜负；
+//  - battle：三维斗法台「云海御空」（arena3d.js，源码 src/battle/replay.ts），由战报事件驱动，招式命中与飘字同拍，不推进任何规则、不决定胜负；
 //  - stage ：舞台氛围（真透视视差的云雾 + 境界色灵气，洞府页按洞府等级点亮灯笼），绑定境界与洞府数据。
 // 战报打开时让出舞台上下文，合上后自动恢复。加载或创建失败时返回 null，调用方继续用原有 SVG/Canvas2D 演出。
 import * as THREE from "/vendor/three.module.min.js";
-import { buildArena } from "/battle3d.js";
+import { buildArena } from "/arena3d.js";
 
 const liveRenderers = new Set();      // 当前存活的渲染器（用于核对“单上下文”与泄漏检测）
 let stageInstance = null, stageSpec = null, battleDepth = 0, battleInstance = null;
