@@ -2,6 +2,9 @@
 
 Recipe mirrors scripts/build.mjs sourceHash(): sorted posix paths of src/battle/** plus package.json,
 each contributing "path\n" and its LF-normalised text plus "\n".
+
+The header also records body-sha256, the hash of everything after that line: src-sha256 alone only
+says which sources the build claimed, so it cannot notice a body edited without a rebuild.
 """
 import hashlib
 import re
@@ -30,6 +33,14 @@ class FrontendBuildTests(unittest.TestCase):
         found = re.search(r'src-sha256: ([0-9a-f]{64})', head)
         self.assertIsNotNone(found, 'bundle header missing; run npm run build')
         self.assertEqual(found.group(1), source_hash(), 'static/arena3d.js is stale: run npm run build and commit it')
+
+    def test_bundle_body_matches_its_recorded_hash(self):
+        raw = BUNDLE.read_bytes().replace(b'\r\n', b'\n')
+        first, _, body = raw.partition(b'\n')
+        found = re.search(rb'body-sha256: ([0-9a-f]{64})', first)
+        self.assertIsNotNone(found, 'bundle header missing body-sha256; run npm run build')
+        self.assertEqual(found.group(1).decode('ascii'), hashlib.sha256(body).hexdigest(),
+                         'static/arena3d.js body does not match its recorded hash: run npm run build and commit it')
 
     def test_bundle_imports_only_the_shared_vendored_three(self):
         text = BUNDLE.read_text(encoding='utf-8')
